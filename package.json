@@ -1,0 +1,14 @@
+{
+    "name": "ext.jsonalyzer",
+    "version": "0.0.1",
+    "main": "jssonalyzer-ext.js",
+    "private": true,
+    "plugin": {
+        "provides": [
+            "ext.jsonalyzer"
+        ],
+        "consumes": [
+            "client-plugins"
+        ]
+    }
+}
