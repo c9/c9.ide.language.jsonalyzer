@@ -112,8 +112,10 @@ module.exports.analyze = function(path, contents, callback) {
     
     var start = new Date().getTime();
     ctags.CTags_parseTempFile(filename, contents);
-    console.log((new Date().getTime() - start) + "ms: " + filename); // DEBUG
+    // console.log((new Date().getTime() - start) + "ms: " + filename); // DEBUG
     
+    // Since the above should run synchronously, we should be done by now;
+    // make sure our callback is called
     if (!isDone) {
         callback(ctags.getLog() || "ctags analysis failed (callback not called)");
         callback = function() {

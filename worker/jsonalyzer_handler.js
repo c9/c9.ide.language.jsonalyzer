@@ -30,7 +30,7 @@ handler.KIND_DEFAULT = scopeAnalyzer.KIND_DEFAULT;
 handler.KIND_PACKAGE = scopeAnalyzer.KIND_PACKAGE;
 handler.GUID_PREFIX = "project:";
 
-handler.registerPlugin = function(plugin, guidName, languages, extensions) {
+handler.registerHandler = function(plugin, guidName, languages, extensions) {
     if (plugins.indexOf(plugin) === -1)
         plugins.push(plugin);
     plugin.guidName = guidName;

@@ -10,8 +10,14 @@ module.exports = {
     
     // ABSTRACT METHODS
     
+    /**
+     * Initializes the plugin, and calls
+     * handler.registerHandler()
+     * 
+     * Must be implemented by inheritors.
+     */
     init: function(handler) {
-        
+        throw new Error("init() not implemented by inheritor");
     },
     
     /**

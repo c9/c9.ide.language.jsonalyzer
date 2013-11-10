@@ -6,7 +6,6 @@
  */
 define(function(require, exports, module) {
 
-var handler;
 var index = require("plugins/c9.ide.language.jsonalyzer/worker/semantic_index");
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var ctags = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_ex");
@@ -14,14 +13,15 @@ var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 
 var plugin = module.exports = Object.create(PluginBase);
+var handler;
 
 var EXTENSIONS = ctags.EXTENSIONS;
 var IDLE_TIME = 50;
 
-plugin.init = function(jsonalyzer_worker) {
-    handler = jsonalyzer_worker;
+plugin.init = function(theHandler) {
+    handler = theHandler;
     var extensions = Array.prototype.concat.apply([], EXTENSIONS);
-    handler.registerPlugin(this, "ctags", [".*"], extensions);
+    handler.registerHandler(this, "ctags", [".*"], extensions);
 };
 
 plugin.findImports = function(path, doc, ast, callback) {
