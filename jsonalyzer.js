@@ -1,59 +1,71 @@
-/**
+/*
  * jsonalyzer multi-file analysis plugin
  *
  * @copyright 2012, Ajax.org B.V.
  * @author Lennart Kats <lennart add c9.io>
  */
 define(function(require, exports, module) {
+    main.consumes = [
+        "Plugin", "commands", "language", "c9", "watcher",
+        "save"
+    ];
+    main.provides = [
+        "jsonalyzer"
+    ];
+    return main;
 
-var ide = require("core/ide");
-var ext = require("core/ext");
-var editors = require("ext/editors/editors");
-var language = require("ext/language/language");
-var linereport = require("ext/linereport/linereport");
-var jsinfer = require("ext/jsinfer/jsinfer");
-
-module.exports = ext.register("ext/jsonalyzer/jsonalyzer", {
-    name    : "Multi-file analysis core",
-    dev     : "Ajax.org",
-    type    : ext.GENERAL,
-    deps    : [editors, language, linereport, jsinfer],
-    nodes   : [],
-    alone   : true,
-
-    init : function() {
-        var _self = this;
-        ide.addEventListener("init.ext/language/language", function() {
-            language.registerLanguageHandler("ext/jsonalyzer/worker/jsonalyzer_worker");
-            ide.addEventListener("beforewatcherchange", _self.onFileChange.bind(_self));
-            ide.addEventListener("afterfilesave", _self.onFileSave.bind(_self));
-            ide.addEventListener("treechange", _self.onDirChange.bind(_self));
-            ide.addEventListener("afteronline", _self.onOnlineChange.bind(_self));
-            ide.addEventListener("afteroffline", _self.onOnlineChange.bind(_self));
-            _self.onOnlineChange();
+    function main(options, imports, register) {
+        var Plugin = imports.Plugin;
+        var c9 = imports.c9;
+        var language = imports.language;
+        var watcher = imports.watcher;
+        var save = imports.save;
+        
+        var plugin = new Plugin("Ajax.org", main.consumes);
+        
+        var worker;
+        
+        var loaded = false;
+        function load() {
+            if (loaded) return false;
+            loaded = true;
+            
+            language.registerLanguageHandler(
+                "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_handler",
+                function(err, langWorker) {
+                    if (err)
+                        return console.error(err);
+                    worker = langWorker;
+                    watcher.on("change", onFileChange);
+                    watcher.on("directory", onDirChange);
+                    save.on("afterSave", onFileSave);
+                    c9.on("stateChange", onOnlineChange);
+                    onOnlineChange();
+                }
+            );
+        }
+        
+        function onFileChange(event) {
+            worker.emit("filechange", {data: {path: event.path}});
+        }
+        
+        function onFileSave(event) {
+            if (!event.silentsave)
+                worker.emit("filechange", {data: {path: event.path, value: event.document && event.document.value, isSave: true}});
+        }
+        
+        function onDirChange(event) {
+            worker.emit("dirchange", {data: event});
+        }
+        
+        function onOnlineChange(event) {
+            worker.emit("onlinechange", {data: { isOnline: c9.connected }});
+        }
+        
+        plugin.on("load", function(){
+            load();
         });
-    },
-    
-    onFileChange: function(event) {
-        language.worker.emit("filechange", {data: {path: event.path}});
-    },
-    
-    onFileSave: function(event) {
-        if (!event.silentsave)
-            language.worker.emit("filechange", {data: {path: event.oldpath, isSave: true}});
-    },
-    
-    onDirChange: function(event) {
-        language.worker.emit("dirchange", {data: event});
-    },
-    
-    onOnlineChange: function() {
-        language.worker.emit("onlinechange", {data: {isOnline: ide.onLine}});
-        // Make sure a current state arrives last in the worker
-        setTimeout(function() {
-            language.worker.emit("onlinechange", {data: {isOnline: ide.onLine}});
-        }, 3000);
+        plugin.freezePublicAPI({});
+        register(null, { jsonalyzer: plugin });
     }
-});
-
 });

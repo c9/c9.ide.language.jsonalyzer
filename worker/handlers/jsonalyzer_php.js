@@ -6,12 +6,12 @@
  */
 define(function(require, exports, module) {
 
-var jsonalyzer = require("ext/jsonalyzer/worker/jsonalyzer_worker");
-var infer = require("ext/jsinfer/infer");
-var path = require("ext/jsinfer/path");
-var jumpToDefFallback = require("ext/jsonalyzer/worker/jumptodef_generic");
-var index = require("ext/jsonalyzer/worker/semantic_index");
-var PluginBase = require("ext/jsonalyzer/languages/jsonalyzer_plugin_base");
+var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker");
+var infer = require("plugins/c9.ide.language.javascript.infer/infer");
+var path = require("plugins/c9.ide.language.javascript.infer/path");
+var jumpToDefFallback = require("plugins/c9.ide.language.jsonalyzer/worker/jumptodef_generic");
+var index = require("plugins/c9.ide.language.jsonalyzer/worker/semantic_index");
+var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 require("treehugger/traverse"); // add traversal methods
 
 var jsinferJumpToDef;
@@ -22,11 +22,11 @@ var summaries = {};
 
 handler.init = function(jsonalyzer_worker) {
     jsonalyzer = jsonalyzer_worker;
-    jsonalyzer.registerPlugin(this, ["php"], "php", ["php"]);
+    jsonalyzer.registerPlugin(this, "php", ["php"], ["php"]);
 };
 
 handler.onReceivedSummaries = function(kind, summaries) {
-    if (kind === JSONALYZER_MODULE_GUID)
+    if (kind === this.KIND_DEFAULT)
         summaries = summaries;
 };
 

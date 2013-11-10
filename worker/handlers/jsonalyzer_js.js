@@ -6,11 +6,11 @@
  */
 define(function(require, exports, module) {
 
-var jsonalyzer = require("ext/jsonalyzer/worker/jsonalyzer_worker");
-var infer = require("ext/jsinfer/infer");
-var path = require("ext/jsinfer/path");
-var jumpToDefFallback = require("ext/jsonalyzer/worker/jumptodef_generic");
-var PluginBase = require("ext/jsonalyzer/languages/jsonalyzer_plugin_base");
+var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker");
+var infer = require("plugins/c9.ide.language.javascript.infer/infer");
+var path = require("plugins/c9.ide.language.javascript.infer/path");
+var jumpToDefFallback = require("plugins/c9.ide.language.jsonalyzer/worker/jumptodef_generic");
+var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 require("treehugger/traverse"); // add traversal methods
 
 var jsinferJumpToDef;
@@ -19,13 +19,13 @@ var handler = module.exports = Object.create(PluginBase);
 
 handler.init = function(jsonalyzer_worker) {
     jsonalyzer = jsonalyzer_worker;
-    jsonalyzer.registerPlugin(this, ["javascript"], "js", ["js", "json"]);
+    jsonalyzer.registerPlugin(this, "js", ["javascript"], ["js", "json"]);
     
     // HACK: Make analyzer work with old server version
     this.guidNameRegex = /^(js(_p)?|project):/;
     
     // Patch the jsinfer jumptodef
-    var plugin = require("ext/jsinfer/infer_jumptodef");
+    var plugin = require("plugins/c9.ide.language.javascript.infer/infer_jumptodef");
     jsinferJumpToDef = plugin.jumpToDefinition.bind(plugin);
     plugin.jumpToDefinition = this.jumpToDefinitionOverride.bind(this);
 };
@@ -36,11 +36,12 @@ handler.onReceivedSummaries = function(kind, summaries) {
 
 handler.jumpToDefinitionOverride = function(doc, fullAst, pos, currentNode, callback) {
     // TODO: cleanup, this shouldn't be JavaScript-specific
+    var _self = this;
     jsinferJumpToDef(doc, fullAst, pos, currentNode, function(results) {
         if (results.length)
             return callback(results);
         jsonalyzer.findImports(doc, fullAst, true, function(imports) {
-            if (imports.length && !this.disabled && !jsonalyzer.disabled) {
+            if (imports.length && !_self.disabled && !jsonalyzer.disabled) {
                 jsonalyzer.enqueueFetchLongSummaries(imports, function() {
                     jsinferJumpToDef(doc, fullAst, pos, currentNode, function(results) {
                         if (results && results.length)
@@ -56,7 +57,7 @@ handler.jumpToDefinitionOverride = function(doc, fullAst, pos, currentNode, call
     });
 };
 
-handler.findImports = function(doc, ast, callback) {
+handler.findImports = function(path, doc, ast, callback) {
     callback(this.findImportsSync(ast));
 };
 
@@ -67,6 +68,9 @@ handler.findImports = function(doc, ast, callback) {
  * @param excludeAnalyzed  if true, don't include modules that were already analyzed
  */
 handler.findImportsSync = function(ast) {
+    if (!ast)
+        return [];
+    
     var basePath = path.getBasePath(jsonalyzer.path, jsonalyzer.workspaceDir);
     return ast.collectTopDown(
         'Call(Var("require"), [String(required)])', function(b) {
