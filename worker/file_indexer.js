@@ -151,6 +151,7 @@ function consumeQueue() {
 var findImports = module.exports.findImports = function(path, doc, ast, excludeAnalyzed, callback) {
     var plugin = handler.getPluginFor(path);
     plugin.findImports(path, doc, ast, function(err, results) {
+        results = results || [];
         if (excludeAnalyzed)
             results = results.filter(function(r) { return !index.get(r); });
         callback(null, results);

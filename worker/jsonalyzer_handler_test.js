@@ -431,6 +431,21 @@ describe("jsonalyzer handler", function(){
             done();
         });
     });
+    it("analyzes a php file", function(done) {
+        handler.path = "/testfile.php";
+        handler.analyze(
+            "function phpfun() {}",
+            null,
+            function(markers) {
+                assert(!markers, "No markers expected");
+                var result = index.get("/testfile.php");
+                assert(result);
+                assert(result.properties);
+                assert(result.properties._phpfun, "PHP function expected");
+                done();
+            }
+        );
+    });
 });
 
 if (typeof onload !== "undefined")

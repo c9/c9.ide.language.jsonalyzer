@@ -9,6 +9,8 @@ define(function(require, exports, module) {
 // TODO: don't include this directly in packed worker
 var ctags = require("./ctags");
 
+var util = require("./ctags_util");
+
 var MAX_DOCHEAD_LENGTH = 80;
 
 var CTAGS_OPTIONS = [
@@ -77,30 +79,29 @@ var EXTENSIONS = module.exports.EXTENSIONS = [
 // ctags.FS_createPath("/", "etc", true, true);
 // ctags.FS_createDataFile("/etc", ".ctags", "--help\n" + CTAGS_OPTIONS.join("\n"), true, true);
 
-module.exports.analyze = function(path, contents, callback) {
-    if (!contents)
+module.exports.analyze = function(path, doc, callback) {
+    if (!doc)
         return callback("No contents");
     
-    var document;
-    if (contents.getAllLines) {
-        document = { lines: contents.getAllLines() };
-        contents = contents.getValue();
+    var lines;
+    if (doc.getAllLines) {
+        lines = doc.getAllLines();
+        doc = doc.getValue();
     }
     else {
-        if (contents.getValue)
-            contents = contents.getValue();
-        document = stringToDocument(contents);
+        if (doc.getValue)
+            doc = doc.getValue();
+        lines = doc.split(/\n/);
     }
     
-    var doc = contents ? extractDocumentationAtRow(0, document) : undefined;
     var result = {
-        doc: doc,
+        doc: doc ? util.extractDocumentationAtRow(lines, 0) : undefined,
         properties: {}
     };
     
     var isDone = false;
     ctags.CTags_setOnTagEntry(function(name, kind, row, sourceFile, language) {
-        analyzeTag(document, name, kind, row, sourceFile, language, result.properties);
+        analyzeTag(lines, name, kind, row, sourceFile, language, result.properties);
     });
     
     ctags.CTags_setOnParsingCompleted(function() {
@@ -131,9 +132,9 @@ module.exports.analyze = function(path, contents, callback) {
     }
 };
     
-function analyzeTag(document, name, kind, row, sourceFile, language, results) {
-    var line = document.lines[row - 1] || "";
-    var doc = extractDocumentationAtRow(row - 2, document);
+function analyzeTag(lines, name, kind, row, sourceFile, language, results) {
+    var line = lines[row - 1] || "";
+    var doc = util.extractDocumentationAtRow(lines, row - 2);
 
     var docHead = line.length > MAX_DOCHEAD_LENGTH
         ? line.substr(MAX_DOCHEAD_LENGTH) + "..."
@@ -175,70 +176,6 @@ function getIconForKind(kind) {
         default:
             return "property2";
     }
-}
-    
-function stringToDocument(contents) {
-    if (!contents)
-        return [];
-    
-    return { lines: contents.split(/\n/) };
-}
-
-function extractDocumentationAtRow(row, doc) {
-    // # hash comments
-    var line = doc.lines[row];
-    if (line && line.match(/^\s*#/)) {
-        line = line.match(/^\s*#\s*(.*)/)[1];
-        var results = [line];
-        for (var start = row - 1; start >= 0; start--) {
-            line = doc.lines[start];
-            if (!line.match(/^\s*#/))
-                break;
-            results.push(line.match(/^\s*#\s*(.*)/)[1]);
-        }
-        return filterDocumentation(results.join("\n"));
-    }
-    
-    // /* c style comments */
-    var end = null;
-    for (; row >= 0; row--) {
-        line = doc.lines[row];
-        for (var col = line.length - 2; col >= 0; col--) {
-            if (!end) {
-                if (line.substr(col, 2) === "*/") {
-                    end = { sl: row, sc: col };
-                    col--;
-                } else if (!line[col].match(/[\s\/]/)) {
-                    return;
-                }
-            } else if (line.substr(col, 2) === "/*") {
-                var rows = ["", line.substr(col + 3)];
-                for (var r = row + 1; r < end.sl; r++)
-                    rows.push(doc.lines[r]);
-                rows.push(doc.lines[end.sl].substr(0, end.sc));
-                if (end.sl === row)
-                    rows = ["", line.substring(col + 3, end.sc)];
-                return filterDocumentation(rows.join("\n"));
-            }
-        }
-    }
-}
-
-function filterDocumentation(doc) {
-    return escapeHtml(doc)
-        .replace(/\n\s*\*\s*|\n\s*/g, "\n")
-        .replace(/\n\n(?!@)/g, "<br/><br/>")
-        .replace(/\n@(\w+)/, "<br/>\n@$1") // separator between summary and rest
-        .replace(/\n@param (\w+)/g, "<br/>\n<b>@param</b> <i>$1</i>")
-        .replace(/\n@(\w+)/g, "<br/>\n<b>@$1</b>");
-}
-
-function escapeHtml(str) {
-    return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
 }
 
 });

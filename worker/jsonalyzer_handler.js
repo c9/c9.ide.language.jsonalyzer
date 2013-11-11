@@ -110,7 +110,7 @@ handler.analyze = function(doc, ast, callback) {
     });
     fileIndexer.analyzeCurrent(handler.path, doc, ast, {}, function(err) {
         if (err)
-            console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
+            console.error("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
         callback();
     });
 };
