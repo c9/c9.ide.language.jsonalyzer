@@ -102,6 +102,7 @@ module.exports.analyze = function(path, contents, callback) {
     ctags.CTags_setOnTagEntry(function(name, kind, row, sourceFile, language) {
         analyzeTag(document, name, kind, row, sourceFile, language, result.properties);
     });
+    
     ctags.CTags_setOnParsingCompleted(function() {
         isDone = true;
         callback(null, result);
@@ -110,8 +111,14 @@ module.exports.analyze = function(path, contents, callback) {
     var filename = path.match(/[^\/]*$/)[0];
     ctags.FS_createPath("/", "data", true, true);
     
-    var start = new Date().getTime();
-    ctags.CTags_parseTempFile(filename, contents);
+    // var start = new Date().getTime();
+    try {
+        ctags.CTags_parseTempFile(filename, doc);
+    } catch (err) {
+        if (isDone)
+            throw err;
+        return callback("Internal error in CTags: " + err);
+    }
     // console.log((new Date().getTime() - start) + "ms: " + filename); // DEBUG
     
     // Since the above should run synchronously, we should be done by now;

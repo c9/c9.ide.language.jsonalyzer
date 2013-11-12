@@ -1,0 +1,118 @@
+/**
+ * jsonalyzer CTAGs-based analyzer utility functions
+ *
+ * @copyright 2013, Ajax.org B.V.
+ * @author Lennart Kats <lennart add c9.io>
+ */
+define(function(require, exports, module) {
+
+var assert = require("plugins/c9.util/assert");
+
+var MAX_DOCHEAD_LENGTH = 80;
+
+module.exports.MAX_DOCHEAD_LENGTH = MAX_DOCHEAD_LENGTH;
+    
+module.exports.stringToDocument = function(contents) {
+    if (!contents)
+        return [];
+    if (contents.getAllLines)
+        return { lines: contents.getAllLines() };
+    return { lines: contents.split(/\n/) };
+};
+
+module.exports.extractDocumentationAtRow = function(document, row) {
+    // # hash comments
+    var line = document.lines[row];
+    if (line && line.match(/^\s*#/)) {
+        line = line.match(/^\s*#\s*(.*)/)[1];
+        var results = [line];
+        for (var start = row - 1; start >= 0; start--) {
+            line = document.lines[start];
+            if (!line.match(/^\s*#/))
+                break;
+            results.push(line.match(/^\s*#\s*(.*)/)[1]);
+        }
+        return filterDocumentation(results.join("\n"));
+    }
+    
+    // /* c style comments */
+    var end = null;
+    for (; row >= 0; row--) {
+        line = document.lines[row];
+        for (var col = line.length - 2; col >= 0; col--) {
+            if (!end) {
+                if (line.substr(col, 2) === "*/") {
+                    end = { sl: row, sc: col };
+                    col--;
+                } else if (!line[col].match(/[\s\/]/)) {
+                    return;
+                }
+            } else if (line.substr(col, 2) === "/*") {
+                var rows = ["", line.substr(col + 3)];
+                for (var r = row + 1; r < end.sl; r++)
+                    rows.push(document.lines[r]);
+                rows.push(document.lines[end.sl].substr(0, end.sc));
+                if (end.sl === row)
+                    rows = ["", line.substring(col + 3, end.sc)];
+                return filterDocumentation(rows.join("\n"));
+            }
+        }
+    }
+};
+
+module.exports.findMatchingTags = function(document, contents, regex, kind, extractDocumentation) {
+    assert(regex.global, "Regex must use /g flag");
+    var _self = this;
+    var results = [];
+    
+    contents.replace(regex, function(fullMatch, name, offset) {
+        var row = getOffsetRow(contents,  offset);
+        var line = document[row];
+        
+        var doc, docHead;
+        if (extractDocumentation) {
+            docHead = line.length > MAX_DOCHEAD_LENGTH
+                ? line.substr(MAX_DOCHEAD_LENGTH) + "..."
+                : line;
+            doc = _self.extractDocumentationAtRow(document, row - 1);
+        }
+        results.push({
+            row: row,
+            docHead: docHead,
+            doc: doc
+        });
+        return fullMatch;
+    });
+    
+    return results;
+};
+
+function getOffsetRow(contents, offset) {
+    var result = 0;
+    var lastIndex = contents.length;
+    for (;;) {
+        lastIndex = contents.lastIndexOf("\n", lastIndex - 1);
+        if (lastIndex < 0)
+            return result;
+        result++;
+    }
+}
+
+function filterDocumentation(doc) {
+    return escapeHtml(doc)
+        .replace(/\n\s*\*\s*|\n\s*/g, "\n")
+        .replace(/\n\n(?!@)/g, "<br/><br/>")
+        .replace(/\n@(\w+)/, "<br/>\n@$1") // separator between summary and rest
+        .replace(/\n@param (\w+)/g, "<br/>\n<b>@param</b> <i>$1</i>")
+        .replace(/\n@(\w+)/g, "<br/>\n<b>@$1</b>");
+}
+
+function escapeHtml(str) {
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+});
