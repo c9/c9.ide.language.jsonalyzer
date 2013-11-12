@@ -52,11 +52,13 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
     }
 };
 
-module.exports.findMatchingTags = function(lines, contents, regex, kind, extractDocumentation, results) {
-    assert(regex.global, "Regex must use /g flag: " + regex);
+module.exports.findMatchingTags = function(lines, contents, tag, extractDocumentation, results) {
+    assert(tag.regex.global, "Regex must use /g flag: " + tag.regex);
     var _self = this;
     
-    contents.replace(regex, function(fullMatch, name, offset) {
+    contents.replace(tag.regex, function(fullMatch, name, offset) {
+        assert(typeof offset === "number", "Regex must have one capture group: " + tag.regex);
+        
         var row = getOffsetRow(contents,  offset);
         var line = lines[row];
         
@@ -67,11 +69,21 @@ module.exports.findMatchingTags = function(lines, contents, regex, kind, extract
                 : line;
             doc = _self.extractDocumentationAtRow(lines, row - 1);
         }
+        
         results["_" + name] = results["_" + name] || [];
+        
+        if (tag.docOnly) { // HACK: tag that only contributes documentation
+            if (!doc)
+                return;
+            if (results["_" + name][0])
+                return results["_" + name][0].doc = doc;
+        }
+        
         results["_" + name].push({
             row: row,
             docHead: docHead,
-            doc: doc
+            doc: doc,
+            kind: tag.kind
         });
         return fullMatch;
     });

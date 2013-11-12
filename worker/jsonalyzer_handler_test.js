@@ -446,6 +446,36 @@ describe("jsonalyzer handler", function(){
             }
         );
     });
+    it("analyzes architect files, at least somewhat", function(done) {
+        handler.path = "/testfile.js";
+        handler.analyze(
+            "define(function(require, exports, module) {\
+                main.provides = ['myplugin'];\
+                function main(options, imports, register) {\
+                    var Plugin = imports.Plugin;\
+                    var plugin = new Plugin('Ajax.org', main.consumes); \n\
+                    function foo(arg1) {}    \n\
+                    plugin.freezePublicAPI({ \n\
+                        /** Documentation */ \n\
+                        foo: foo             \n\
+                    });\
+                    register(null, { myplugin : plugin });\
+                }\
+            });",
+            null,
+            function(markers) {
+                assert(!markers, "No markers expected");
+                var result = index.get("/testfile.js");
+                assert(result);
+                assert(result.properties);
+                assert(result.properties._foo, "Must have a property foo");
+                assert(result.properties._foo.length === 1, "Must have only one property foo");
+                assert(result.properties._foo[0].doc, "Must have documentation");
+                assert(result.properties._foo[0].docHead.match(/arg1/), "Must have an argument arg1");
+                done();
+            }
+        );
+    });
 });
 
 if (typeof onload !== "undefined")

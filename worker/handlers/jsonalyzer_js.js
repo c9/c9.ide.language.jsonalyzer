@@ -17,7 +17,13 @@ var handler = module.exports = Object.create(PluginBase);
 var TAGS = [
     {
         regex: /function ([^ (]*)/g,
-        kind: "method"
+        kind: "unknown2"
+    },
+    {
+        // HACK: architect documentation contribution
+        regex: /(\w+)\s*:\s*\w+/g,
+        kind: "unknown2",
+        docOnly: true
     }
 ];
 
@@ -41,7 +47,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     TAGS.forEach(function(tag) {
         if (tag.kind === "import")
             return;
-        ctagsUtil.findMatchingTags(lines, doc, tag.regex, tag.kind, true, result.properties);
+        ctagsUtil.findMatchingTags(lines, doc, tag, true, result.properties);
     });
     callback(null, result);
 };

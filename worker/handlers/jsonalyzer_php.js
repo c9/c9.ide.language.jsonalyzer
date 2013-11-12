@@ -52,7 +52,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     TAGS.forEach(function(tag) {
         if (tag.kind === "import")
             return;
-        ctagsUtil.findMatchingTags(lines, doc, tag.regex, tag.kind, true, result.properties);
+        ctagsUtil.findMatchingTags(lines, doc, tag, true, result.properties);
     });
     callback(null, result);
 };
