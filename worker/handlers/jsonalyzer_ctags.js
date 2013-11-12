@@ -12,19 +12,19 @@ var ctags = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_ex");
 var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 
-var plugin = module.exports = Object.create(PluginBase);
+var handler = module.exports = Object.create(PluginBase);
 var handler;
 
 var EXTENSIONS = ctags.EXTENSIONS;
 var IDLE_TIME = 50;
 
-plugin.init = function(theHandler) {
+handler.init = function(theHandler) {
     handler = theHandler;
     var extensions = Array.prototype.concat.apply([], EXTENSIONS);
     handler.registerHandler(this, "ctags", [".*"], extensions);
 };
 
-plugin.findImports = function(path, doc, ast, callback) {
+handler.findImports = function(path, doc, ast, callback) {
     var openFiles = workerUtil.getOpenFiles();
     var extension = getExtension(path);
     var supported = getCompatibleExtensions(extension);
@@ -49,7 +49,7 @@ function getCompatibleExtensions(extension) {
     return [extension];
 }
 
-plugin.analyzeCurrent = function(path, doc, ast, options, callback) {
+handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")
         return callback(null, {});
         
@@ -65,9 +65,10 @@ plugin.analyzeCurrent = function(path, doc, ast, options, callback) {
     ctags.analyze(path, doc, callback);
 };
 
-plugin.analyzeOthers = function(paths, callback) {
+handler.analyzeOthers = function(paths, callback) {
     var errs = [];
     var results = [];
+    var _self = this;
     asyncForEach(
         paths,
         function(path, next) {
@@ -78,7 +79,7 @@ plugin.analyzeOthers = function(paths, callback) {
                     return next();
                 }
                 
-                plugin.analyzeCurrent(path, doc, null, {}, function(err, result) {
+                _self.analyzeCurrent(path, doc, null, {}, function(err, result) {
                     errs.push(err);
                     results.push(result);
                     next();

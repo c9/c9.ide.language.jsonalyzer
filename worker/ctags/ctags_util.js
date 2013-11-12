@@ -81,7 +81,7 @@ module.exports.findMatchingTags = function(lines, contents, regex, kind, extract
 
 function getOffsetRow(contents, offset) {
     var result = 0;
-    var lastIndex = contents.length;
+    var lastIndex = offset;
     for (;;) {
         lastIndex = contents.lastIndexOf("\n", lastIndex - 1);
         if (lastIndex < 0)

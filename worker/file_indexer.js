@@ -117,8 +117,8 @@ function consumeQueue() {
                 
                 // Help debuggers
                 var pathsCopy = task.paths.slice();
-                var resultsCopy = results.slice();
-                var errsCopy = errs.slice();
+                var resultsCopy = (results || []).slice();
+                var errsCopy = (errs || []).slice();
                 
                 while (pathsCopy.length) {
                     var err = errsCopy.pop();

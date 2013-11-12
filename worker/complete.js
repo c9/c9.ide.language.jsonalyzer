@@ -14,7 +14,9 @@ module.exports.init = function(_handler) {
 };
 
 module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
-    var line = doc.getLine(pos.row);
+    var lines = doc.getAllLines();
+    doc = doc.getValue();
+    var line = lines[pos.row];
     var identifier = completeUtil.retrievePrecedingIdentifier(line, pos.column, workerUtil.getIdentifierRegex());
     
     fileIndexer.findImports(handler.path, doc, fullAst, false, function(err, imports) {
