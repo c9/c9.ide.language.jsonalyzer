@@ -65,7 +65,17 @@ define(function(require, exports, module) {
         plugin.on("load", function(){
             load();
         });
-        plugin.freezePublicAPI({});
+        
+        /**
+         * The jsonalyzer analysis infrastructure.
+         * 
+         * @singleton
+         * @ignore Experimental.
+         */
+        plugin.freezePublicAPI({
+            // TODO: register method like the one language has
+        });
+        
         register(null, { jsonalyzer: plugin });
     }
 });

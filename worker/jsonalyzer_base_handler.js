@@ -1,11 +1,18 @@
-/**
+/*
  * jsonalyzer JavaScript analysis plugin base class
  *
- * @copyright 2012, Ajax.org B.V.
+ * @copyright 2013, Ajax.org B.V.
  * @author Lennart Kats <lennart add c9.io>
  */
 define(function(require, exports, module) {
 
+/**
+ * The jsonalyzer analysis plugin base class.
+ * 
+ * @ignore Experimental.
+ * 
+ * @class language.jsonalyzer_base_handler
+ */
 module.exports = {
     
     // ABSTRACT METHODS

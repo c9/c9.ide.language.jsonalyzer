@@ -1,4 +1,4 @@
-/**
+/*
  * jsonalyzer worker
  *
  * @copyright 2012, Ajax.org B.V.
