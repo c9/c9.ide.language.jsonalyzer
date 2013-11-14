@@ -78,7 +78,7 @@ describe("jsonalyzer handler", function(){
     it("produces an outline", function(done) {
         handler.path = "/testfile.cs";
         handler.outline(
-            "class C { void foo() {} void bar() {} }",
+            new Document("class C { void foo() {} void bar() {} }"),
             null,
             function(result) {
                 assert(result);
@@ -204,7 +204,7 @@ describe("jsonalyzer handler", function(){
         };
         
         handler.path = file1.path;
-        handler.$testDoc = file1.contents;
+        handler.$testDoc = new Document(file1.contents);
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
         workerUtil.readFile = function(file, callback) {
             callback(null, file2.contents);
@@ -232,7 +232,7 @@ describe("jsonalyzer handler", function(){
         };
         
         handler.path = file1.path;
-        handler.$testDoc = file1.contents;
+        handler.$testDoc = new Document(file1.contents);
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
         workerUtil.readFile = function(file, callback) {
             callback(null, file2.contents);
@@ -312,7 +312,7 @@ describe("jsonalyzer handler", function(){
         };
         
         handler.path = file1.path;
-        handler.$testDoc = file1.contents;
+        handler.$testDoc = new Document(file1.contents);
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
         workerUtil.readFile = function(file, callback) {
             callback(null, file2.contents);
@@ -341,7 +341,7 @@ describe("jsonalyzer handler", function(){
         };
         
         handler.path = file1.path;
-        handler.$testDoc = file1.contents;
+        handler.$testDoc = new Document(file1.contents);
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
         workerUtil.readFile = function(file, callback) {
             callback(null, file === file1.path ? file1.contents : file2.contents);
@@ -400,7 +400,7 @@ describe("jsonalyzer handler", function(){
         };
         
         handler.path = file1.path;
-        handler.$testDoc = file1.contents;
+        handler.$testDoc = new Document(file1.contents);
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
         workerUtil.readFile = function(file, callback) {
             callback(null, file === file1.path ? file1.contents : file2.contents);
