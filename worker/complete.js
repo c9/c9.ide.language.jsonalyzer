@@ -15,16 +15,16 @@ module.exports.init = function(_handler) {
 
 module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
     var lines = doc.getAllLines();
-    doc = doc.getValue();
+    var docValue = doc.getValue();
     var line = lines[pos.row];
     var identifier = completeUtil.retrievePrecedingIdentifier(line, pos.column, workerUtil.getIdentifierRegex());
     
-    fileIndexer.findImports(handler.path, doc, fullAst, false, function(err, imports) {
+    fileIndexer.findImports(handler.path, docValue, fullAst, false, function(err, imports) {
         if (err) {
             console.error(err);
             return callback();
         }
-        fileIndexer.analyzeCurrent(handler.path, doc, fullAst, { isComplete: true }, function(err, result) {
+        fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { isComplete: true }, function(err, result) {
             if (err)
                 console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
             var currentFile = index.flattenIndexEntry(result);

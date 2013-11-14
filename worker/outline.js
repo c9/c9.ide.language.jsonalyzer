@@ -15,7 +15,7 @@ module.exports.outline = function(doc, ast, callback) {
     var _self = this;
     var entry = index.get(handler.path);
     if (!entry) {
-        return fileIndexer.analyzeCurrent(handler.path, doc, ast, {}, function(err, result) {
+        return fileIndexer.analyzeCurrent(handler.path, doc.getValue(), ast, {}, function(err, result) {
             _self.outline(doc, ast, callback);
         });
     }
