@@ -47,7 +47,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     var lines = doc.split(/\n/);
     var result = {
         doc: ctagsUtil.extractDocumentationAtRow(lines, 0),
-        properties: []
+        properties: {}
     };
     TAGS.forEach(function(tag) {
         if (tag.kind === "import")

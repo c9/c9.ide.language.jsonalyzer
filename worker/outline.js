@@ -2,6 +2,7 @@ define(function(require, exports, module) {
 
 var index = require("./semantic_index");
 var fileIndexer = require("./file_indexer");
+var assert = require("plugins/c9.util/assert");
 var handler;
 
 var PRIORITY_LOW = 1;
@@ -33,6 +34,7 @@ function createOutline(name, entry) {
     };
     if (!entry.properties)
         return result;
+    assert(!Array.isArray(entry.properties));
     for (var uname in entry.properties) {
         entry.properties[uname].forEach(function(prop) {
             result.items.push(createOutline(uname.substr(1), prop));
