@@ -28,7 +28,7 @@ module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
             if (err)
                 console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
             var currentFile = index.flattenIndexEntry(result);
-            var currentResults = getCompletionResults(handler.path, PRIORITY_HIGH, identifier, currentFile);
+            var currentResults = getCompletionResults(null, PRIORITY_HIGH, identifier, currentFile);
             var otherResults = [];
             imports.forEach(function(path) {
                 // TODO: optimize -- avoid flatten here?
@@ -52,7 +52,7 @@ module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
 function getCompletionResults(path, priority, identifier, flatEntry) {
     var allIdentifiers = Object.keys(flatEntry);
     var completions = completeUtil.findCompletions("_" + identifier, allIdentifiers);
-    var file = path.match(/[^\/]*$/)[0];
+    var file = path && path.match(/[^\/]*$/)[0];
     
     var results = [];
     completions.forEach(function(uname) {
