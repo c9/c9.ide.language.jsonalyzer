@@ -16,7 +16,7 @@ var handler = module.exports = Object.create(PluginBase);
 
 var TAGS = [
     {
-        regex: /function ([^ (]+)/g,
+        regex: /function\s*([A-Za-z0-9$_]+)\s*\(/g,
         kind: "unknown2"
     },
     {
