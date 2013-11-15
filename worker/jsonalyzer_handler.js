@@ -19,7 +19,6 @@ var fileIndexer = require("./file_indexer");
 require("treehugger/traverse"); // add traversal methods
 
 var handler = module.exports = Object.create(baseLanguageHandler);
-var afterWatcherTimeout;
 var isOnline = false;
 var supportedLanguages = "";
 var supportedExtensions = "";
@@ -118,17 +117,11 @@ handler.analyze = function(doc, ast, callback) {
     });
 };
 
-handler.complete = function(doc, fullAst, pos, currentNode, callback) {
-    complete.complete(doc, fullAst, pos, currentNode, callback);
-};
+handler.complete = complete.complete.bind(complete);
 
-handler.outline = function(doc, ast, callback) {
-    outline.outline(doc, ast, callback);
-};
+handler.outline = outline.outline.bind(outline);
 
-handler.jumpToDefinition = function(doc, fullAst, pos, currentNode, callback) {
-    jumptodef.jumpToDefinition(doc, fullAst, pos, currentNode, callback);
-};
+handler.jumpToDefinition = jumptodef.jumpToDefinition.bind(jumptodef);
 
 handler.onOnlineChange = function(event) {
     isOnline = event.data.isOnline;

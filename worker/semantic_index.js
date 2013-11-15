@@ -65,7 +65,7 @@ index.setBroken = function(path, reason) {
  */
 index.flattenIndexEntry = function(entry, result) {
     if (!entry)
-        return null;
+        return {};
     result = result || {};
     
     var that = this;
