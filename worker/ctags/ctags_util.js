@@ -95,7 +95,9 @@ function getOffsetRow(contents, offset) {
     var result = 0;
     var lastIndex = offset;
     for (;;) {
-        lastIndex = contents.lastIndexOf("\n", lastIndex - 1);
+        lastIndex = lastIndex === 0
+            ? -1
+            : contents.lastIndexOf("\n", lastIndex - 1);
         if (lastIndex < 0)
             return result;
         result++;
