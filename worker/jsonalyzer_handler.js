@@ -91,6 +91,9 @@ handler.handlesLanguage = function(language) {
 };
 
 handler.onDocumentOpen = function(path, doc, oldPath, callback) {
+    if (!path.match(supportedExtensions))
+        return;
+    
     // Analyze any opened document to make completions more rapid
     fileIndexer.analyzeOthers([path]);
 };
