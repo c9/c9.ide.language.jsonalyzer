@@ -125,7 +125,7 @@ handler.outline = outline.outline.bind(outline);
 
 handler.jumpToDefinition = jumptodef.jumpToDefinition.bind(jumptodef);
 
-handler.onRefactoringTest = refactor.onRefactoringTest.bind(refactor);
+handler.getRefactorings = refactor.getRefactorings.bind(refactor);
 
 handler.getRenamePositions = refactor.getRenamePositions.bind(refactor);
 

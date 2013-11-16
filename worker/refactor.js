@@ -10,9 +10,9 @@ module.exports.init = function(_handler) {
     handler = _handler;
 };
 
-module.exports.onRefactoringTest = function(doc, fullAst, pos, currentNode, callback) {
+module.exports.getRefactorings = function(doc, fullAst, pos, currentNode, callback) {
     getEntry(doc, fullAst, pos, function(pos, identifier, entry) {
-        callback({ enableRefactorings: entry ? ["renameVariable"] : [] });
+        callback({ refactorings: entry ? ["renameVariable"] : [] });
     });
 };
 
