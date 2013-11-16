@@ -154,6 +154,9 @@ var findImports = module.exports.findImports = function(path, doc, ast, excludeA
         results = results || [];
         if (excludeAnalyzed)
             results = results.filter(function(r) { return !index.get(r); });
+        results = results.filter(function(r) {
+            return r !== path;
+        });
         callback(null, results);
     });
 };
