@@ -4,6 +4,7 @@ var index = require("./semantic_index");
 var fileIndexer = require("./file_indexer");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 var handler;
+var lastSummary;
 
 module.exports.init = function(_handler) {
     handler = _handler;
@@ -35,10 +36,9 @@ module.exports.getRenamePositions = function(doc, fullAst, pos, currentNode, cal
 module.exports.commitRename = function(doc, oldId, newName, isGeneric, callback) {
     if (!isGeneric)
         return callback();
-    var summary = index.flattenIndexEntry(index.get(handler.path));
-    if (!summary)
+    if (!lastSummary)
         return callback();
-    callback(summary["_" + newName] && "Name '" + newName + "' is already used.");
+    callback(lastSummary["_" + newName] && "Name '" + newName + "' is already used.");
 }
 
 function getEntry(doc, fullAst, pos, callback) {
@@ -54,7 +54,7 @@ function getEntry(doc, fullAst, pos, callback) {
     fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { isComplete: true }, function(err, result) {
         if (err)
             console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
-        var summary = index.flattenIndexEntry(result);
+        var summary = lastSummary = index.flattenIndexEntry(result);
         var entry = summary["_" + identifier];
         if (!entry)
             return callback();
