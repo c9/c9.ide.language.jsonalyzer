@@ -48,6 +48,10 @@ module.exports.jumpToDefinition = function(doc, fullAst, pos, currentNode, callb
                 function done() {
                     var summaries = index.getAny(imports);
                     results = findInSummaries(summaries, identifier, results);
+                    if (doc.region)
+                        results.forEach(function(result) {
+                            result.row -= doc.region.sl;
+                        });
                     callback(results);
                 }
             });
