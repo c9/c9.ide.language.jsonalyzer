@@ -14,20 +14,16 @@ module.exports.init = function(_handler) {
 
 module.exports.outline = function(doc, ast, callback) {
     var _self = this;
-    var entry = index.get(handler.path);
-    if (!entry) {
-        return fileIndexer.analyzeCurrent(handler.path, doc.getValue(), ast, {}, function(err, result) {
-            _self.outline(doc, ast, callback);
-        });
-    }
-    var result = createOutline(null, entry);
-    result.isGeneric = true;
-    callback(result);
+    return fileIndexer.analyzeCurrent(handler.path, doc.getValue(), ast, {}, function(err, entry) {
+        var result = createOutline(null, entry);
+        result.isGeneric = true;
+        callback(result);
+    });
 };
 
 function createOutline(name, entry) {
     var result = {
-        icon: entry.icon,
+        icon: entry.icon || entry.kind,
         name: name,
         pos: { sl: entry.row, sc: entry.column },
         items: []
