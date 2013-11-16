@@ -13,6 +13,7 @@ var assert = require("plugins/c9.util/assert");
 var jumptodef = require("./jumptodef");
 var complete = require("./complete");
 var outline = require("./outline");
+var refactor = require("./refactor");
 var scopeAnalyzer = require('plugins/c9.ide.language.javascript/scope_analyzer');
 var directoryIndexer = require("./directory_indexer");
 var fileIndexer = require("./file_indexer");
@@ -72,6 +73,7 @@ handler.init = function(callback) {
     jumptodef.init(this);
     complete.init(this);
     outline.init(this);
+    refactor.init(this);
     plugins.forEach(function(p) {
         p.init(_self);
     });
@@ -122,6 +124,10 @@ handler.complete = complete.complete.bind(complete);
 handler.outline = outline.outline.bind(outline);
 
 handler.jumpToDefinition = jumptodef.jumpToDefinition.bind(jumptodef);
+
+handler.onRefactoringTest = refactor.onRefactoringTest.bind(refactor);
+
+handler.getRenamePositions = refactor.getRenamePositions.bind(refactor);
 
 handler.onOnlineChange = function(event) {
     isOnline = event.data.isOnline;
