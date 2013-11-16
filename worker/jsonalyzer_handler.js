@@ -103,16 +103,20 @@ handler.analyze = function(doc, ast, callback) {
     // Only eagerly analyze if the current file was actually edited
     // if (!handler.isEagerAnalysis)
     //     return callback();
+    
+    // Ignore embedded languages and just use the full document,
+    // since we can't handle multiple segments in the index atm
+    var fullDoc = this.doc.getValue();
         
     // Analyze imports without blocking other analyses
     assert(handler.path);
-    fileIndexer.findImports(handler.path, doc, ast, true, function(err, imports) {
+    fileIndexer.findImports(handler.path, fullDoc, ast, true, function(err, imports) {
         if (err)
             console.error(err);
         if (imports && imports.length)
             fileIndexer.analyzeOthers(imports, true);
     });
-    fileIndexer.analyzeCurrent(handler.path, doc, ast, {}, function(err) {
+    fileIndexer.analyzeCurrent(handler.path, fullDoc, ast, {}, function(err) {
         if (err)
             console.error("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
         callback();
