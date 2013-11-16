@@ -10,13 +10,13 @@ module.exports.init = function(_handler) {
 };
 
 module.exports.onRefactoringTest = function(doc, fullAst, pos, currentNode, callback) {
-    getCurrentEntry(doc, fullAst, pos, function(pos, identifier, entry) {
+    getEntry(doc, fullAst, pos, function(pos, identifier, entry) {
         callback({ enableRefactorings: entry ? ["renameVariable"] : [] });
     });
 };
 
 module.exports.getRenamePositions = function(doc, fullAst, pos, currentNode, callback) {
-    getCurrentEntry(doc, fullAst, pos, function(pos, identifier, entry) {
+    getEntry(doc, fullAst, pos, function(pos, identifier, entry) {
         if (!entry)
             return callback();
         workerUtil.getTokens(doc, [identifier, identifier+"()"], function(err, results) {
@@ -32,7 +32,16 @@ module.exports.getRenamePositions = function(doc, fullAst, pos, currentNode, cal
     });
 };
 
-function getCurrentEntry(doc, fullAst, pos, callback) {
+module.exports.commitRename = function(doc, oldId, newName, isGeneric, callback) {
+    if (!isGeneric)
+        return callback();
+    var summary = index.flattenIndexEntry(index.get(handler.path));
+    if (!summary)
+        return callback();
+    callback(summary["_" + newName] && "Name '" + newName + "' is already used.");
+}
+
+function getEntry(doc, fullAst, pos, callback) {
     if (handler.language === "javascript") // optimization
         return callback();
     

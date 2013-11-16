@@ -129,6 +129,8 @@ handler.onRefactoringTest = refactor.onRefactoringTest.bind(refactor);
 
 handler.getRenamePositions = refactor.getRenamePositions.bind(refactor);
 
+handler.commitRename = refactor.commitRename.bind(refactor);
+
 handler.onOnlineChange = function(event) {
     isOnline = event.data.isOnline;
 },
