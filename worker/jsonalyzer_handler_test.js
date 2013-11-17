@@ -37,6 +37,7 @@ describe("jsonalyzer handler", function(){
         handler.sender = {
             on: function() {}
         };
+        workerUtil.getTokens = function() { throw new Error("not mocked"); };
         worker.$lastWorker = {
             $openDocuments: [],
             getIdentifierRegex: function() { return (/[A-Za-z0-9]/); },
@@ -483,6 +484,87 @@ describe("jsonalyzer handler", function(){
                 assert(result.properties._foo.length === 1, "Must have only one property foo");
                 assert(result.properties._foo[0].doc, "Must have documentation");
                 assert(result.properties._foo[0].docHead.match(/arg1/), "Must have an argument arg1");
+                done();
+            }
+        );
+    });
+    it("recognizes where to refactor", function(done) {
+        var file1 = {
+            path: "/testfile.cs",
+            contents: "class Child : Parent {}\n\
+                       class Parent {}",
+            cursor: { row: 0, column: 15 }
+        };
+        
+        handler.path = file1.path;
+        handler.getRefactorings(
+            new Document(file1.contents), null, file1.cursor, null,
+            function(results) {
+                assert(results.refactorings && results.refactorings.length, "Results expected");
+                done();
+            }
+        );
+    });
+    it("recognizes where not to refactor", function(done) {
+        var file1 = {
+            path: "/testfile.cs",
+            contents: "class Child : Parent {}\n\
+                       class Parent {}",
+            cursor: { row: 0, column: 2 }
+        };
+        
+        handler.path = file1.path;
+        handler.getRefactorings(
+            new Document(file1.contents), null, file1.cursor, null,
+            function(results) {
+                assert(!results.refactorings || !results.refactorings.length, "No results expected");
+                done();
+            }
+        );
+    });
+    it("doesn't do refactoring in the wrong place", function(done) {
+        var file1 = {
+            path: "/testfile.cs",
+            contents: "class Child : Parent {}\n\
+                       class Parent {}",
+            cursor: { row: 0, column: 2 }
+        };
+        
+        handler.path = file1.path;
+        handler.getRenamePositions(
+            new Document(file1.contents), null, file1.cursor, null,
+            function(results) {
+                assert(!results, "No results expected");
+                done();
+            }
+        );
+    });
+    it("does rename refactoring", function(done) {
+        var file1 = {
+            path: "/testfile.cs",
+            contents: "class Child : Parent {}\n\
+                       class Parent {}",
+            cursor: { row: 0, column: 15 }
+        };
+        
+        // Mock getTokens
+        workerUtil.getTokens = function(doc, identifiers, callback) {
+            callback(null, [
+                { row: 0, column: 14, value: "Parent" },
+                { row: 1, column: 6, value: "Parent" }
+            ]);
+        };
+        
+        handler.path = file1.path;
+        handler.getRenamePositions(
+            new Document(file1.contents), null, file1.cursor, null,
+            function(results) {
+                assert(results);
+                assert.equal(results.length, "Parent".length);
+                assert.equal(results.pos.row, 0);
+                assert.equal(results.pos.column, 14);
+                assert(results.others.length > 0);
+                assert(results.isGeneric);
                 done();
             }
         );
