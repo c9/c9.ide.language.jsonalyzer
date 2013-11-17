@@ -20,6 +20,10 @@ var TAGS = [
         kind: "unknown2"
     },
     {
+        regex: /exports\.([A-Za-z0-9$_]+)\s*=\s*function\b/g,
+        kind: "unknown2"
+    },
+    {
         // HACK: architect documentation contribution
         regex: /(\w+)\s*:\s*\w+/g,
         kind: "unknown2",
