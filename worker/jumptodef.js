@@ -6,7 +6,6 @@
  */
 define(function(require, exports, module) {
 
-var inferJumpToDef = require("plugins/c9.ide.language.javascript.infer/infer_jumptodef");
 var index = require("./semantic_index");
 var handler /*: require("plugins/c9.ide.language.jsonalyzer/jsonalyzer")*/;
 var worker = require("plugins/c9.ide.language/worker");
@@ -23,54 +22,39 @@ module.exports.jumpToDefinition = function(doc, fullAst, pos, currentNode, callb
     var identifier = workerUtil.getIdentifier(line, pos.column);
 
     // We're first getting the very latest outline, which might come
-    // from us or from another outliner, and we'll use as a local
+    // from us or from another outliner, and we'll use it as a local
     // list of definitions to jump to.
-    analyzeIfNeeded(handler.path, docValue, fullAst, function() {
-        worker.$lastWorker.getOutline(function(outline) {
-            var results = outline && outline.items
-                ? findInOutline(outline.items, identifier)
-                : [];
-            
-            // Next, get results based on the indices of our imports
-            fileIndexer.findImports(handler.path, docValue, fullAst, false, function(err, imports) {
-                if (err) {
-                    console.error(err);
-                    return callback(results);
-                }
+    worker.$lastWorker.getOutline(function(outline) {
+        var results = outline && outline.items
+            ? findInOutline(outline.items, identifier)
+            : [];
+        
+        // Next, get results based on the indices of our imports
+        fileIndexer.findImports(handler.path, docValue, fullAst, false, function(err, imports) {
+            if (err) {
+                console.error(err);
+                return callback(results);
+            }
 
-                // We only actually download & analyze new files if really needed
-                var needAllImports = !results.length;
-                if (needAllImports)
-                    fileIndexer.analyzeOthers(imports, needAllImports, done);
-                else
-                    done();
-                
-                function done() {
-                    var summaries = index.getAny(imports);
-                    results = findInSummaries(summaries, identifier, results);
-                    if (doc.region)
-                        results.forEach(function(result) {
-                            result.row -= doc.region.sl;
-                        });
-                    callback(results);
-                }
-            });
+            // We only actually download & analyze new files if really needed
+            var needAllImports = !results.length;
+            if (needAllImports)
+                fileIndexer.analyzeOthers(imports, needAllImports, done);
+            else
+                done();
+            
+            function done() {
+                var summaries = index.getAny(imports);
+                results = findInSummaries(summaries, identifier, results);
+                if (doc.region)
+                    results.forEach(function(result) {
+                        result.row -= doc.region.sl;
+                    });
+                callback(results);
+            }
         });
     });
 };
-
-/**
- * Immediately analyze a file if it is marked as "dirty",
- * or just return the last analyzed result.
- */
-function analyzeIfNeeded(path, docValue, fullAst, callback) {
-    var entry = index.get(path);
-    if (entry || !worker.$lastWorker.scheduledUpdate)
-        return callback();
-    fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { isJumpToDefinition: true}, function(err, result) {
-        callback();
-    });
-}
 
 function findInSummaries(summaries, identifier, results) {
     summaries.forEach(function(summary) {
