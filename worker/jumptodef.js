@@ -58,19 +58,21 @@ module.exports.jumpToDefinition = function(doc, fullAst, pos, currentNode, callb
 
 function findInSummaries(summaries, identifier, results) {
     summaries.forEach(function(summary) {
-        var flatSummary = index.flattenIndexEntry(summary);
-        (flatSummary["_" + identifier] || []).forEach(function(entry) {
-            results.push({
-                row: entry.row,
-                column: entry.column,
-                path: summary.path,
-                icon: entry.icon
-                    || entry.kind === "package" && "package"
-                    || entry.kind === "event" && "event"
-                    || "unknown2",
-                isGeneric: true
+        var entries = index.findEntries(summary, identifier);
+        for (var uname in entries) {
+            entries[uname].forEach(function(entry) {
+                results.push({
+                    row: entry.row,
+                    column: entry.column,
+                    path: summary.path,
+                    icon: entry.icon
+                        || entry.kind === "package" && "package"
+                        || entry.kind === "event" && "event"
+                        || "unknown2",
+                    isGeneric: true
+                });
             });
-        });
+        }
     });
     return results;
 }

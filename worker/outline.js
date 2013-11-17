@@ -1,19 +1,14 @@
 define(function(require, exports, module) {
 
-var index = require("./semantic_index");
 var fileIndexer = require("./file_indexer");
 var assert = require("plugins/c9.util/assert");
 var handler;
-
-var PRIORITY_LOW = 1;
-var PRIORITY_HIGH = 2;
 
 module.exports.init = function(_handler) {
     handler = _handler;
 };
 
 module.exports.outline = function(doc, ast, callback) {
-    var _self = this;
     return fileIndexer.analyzeCurrent(handler.path, doc.getValue(), ast, {}, function(err, entry) {
         var result = createOutline(null, entry);
         result.isGeneric = true;

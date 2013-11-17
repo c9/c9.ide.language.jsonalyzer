@@ -29,7 +29,7 @@ module.exports.getRenamePositions = function(doc, fullAst, pos, currentNode, cal
                 others: results,
                 isGeneric: true
             });
-        })
+        });
     });
 };
 
@@ -38,8 +38,9 @@ module.exports.commitRename = function(doc, oldId, newName, isGeneric, callback)
         return callback();
     if (!lastSummary)
         return callback();
-    callback(lastSummary["_" + newName] && "Name '" + newName + "' is already used.");
-}
+    var matchingDef = !!Object.keys(index.findEntries(lastSummary, newName)).length;
+    callback(matchingDef && "Name '" + newName + "' is already used.");
+};
 
 function getEntry(doc, fullAst, pos, callback) {
     if (handler.language === "javascript") // optimization
@@ -49,16 +50,16 @@ function getEntry(doc, fullAst, pos, callback) {
     var line = doc.getLine(pos.row);
     var identifier = workerUtil.getIdentifier(line, pos.column);
     var prefix = workerUtil.getPrecedingIdentifier(line, pos.column);
-    var pos = { row: pos.row, column: pos.column - prefix.length };
+    var realPos = { row: pos.row, column: pos.column - prefix.length };
     
     fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { isComplete: true }, function(err, result) {
         if (err)
             console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
-        var summary = lastSummary = index.flattenIndexEntry(result);
-        var entry = summary["_" + identifier];
+        lastSummary = result;
+        var entry = index.findEntries(result, identifier);
         if (!entry)
             return callback();
-        callback(pos, identifier, entry);
+        callback(realPos, identifier, entry);
     });
     
 }

@@ -30,26 +30,48 @@ index.init = function(_handler) {
     }, GC_INTERVAL);
 };
 
-// getAssociatedSummaries
+/**
+ * Get zero or more summaries matching given guids or paths.
+ * 
+ * @param {String} guidOrPaths
+ */
 index.getAny = function(guidsOrPaths) {
     return guidsOrPaths.map(index.get.bind(index)).filter(function(i) {
         return !!i;
     });
 };
 
+/**
+ * Get a summary given a guid or file path.
+ * 
+ * @param {String} guidOrPath
+ */
 index.get = function(guidOrPath) {
     accessedSinceGC["_" + guidOrPath] = true;
     var guid = pathGuids["_" + guidOrPath];
     return guid ? summaries["_" + guid] : summaries["_" + guidOrPath];
 };
 
-index.set = function(path, guidPrefix, entry) {
-    var guid = entry.guid || guidPrefix + path;
-    entry.path = path;
+/**
+ * Set a summary for file path.
+ * 
+ * @param {String} path
+ * @param {String} guidPrefix
+ * @param summary
+ */
+index.set = function(path, guidPrefix, summary) {
+    var guid = summary.guid || guidPrefix + path;
+    summary.path = path;
     pathGuids["_" + path] = guid;
-    summaries["_" + guid] = entry;
+    summaries["_" + guid] = summary;
 };
 
+/**
+ * Mark a summary for file path as broken.
+ * 
+ * @param {String} path
+ * @param {String} [reason]
+ */
 index.setBroken = function(path, reason) {
     var guid = "broken:" + path;
     pathGuids["_" + path] = guid;
@@ -59,31 +81,65 @@ index.setBroken = function(path, reason) {
 };
 
 /**
- * Flatten index entries into a single entry object.
+ * Flatten index entries into a single associative object.
  *
- * @param entry
+ * @param summary
+ * @return {Object}
  */
-index.flattenIndexEntry = function(entry, result) {
-    if (!entry)
+index.flattenSummary = function(summary, result) {
+    if (!summary)
         return {};
     result = result || {};
     
     var that = this;
-    if (Array.isArray(entry)) {
-        entry.forEach(function(e) { that.flattenIndexEntry(e, result)});
+    if (Array.isArray(summary)) {
+        summary.forEach(function(e) { that.flattenSummary(e, result)});
         return result;
     }
-    if (!entry || !entry.properties)
+    if (!summary || !summary.properties)
         return result;
     
-    for (var p in entry.properties) {
+    for (var p in summary.properties) {
         if (!result[p])
-            result[p] = entry.properties[p];
+            result[p] = summary.properties[p];
         else
-            result[p] = result[p].concat(entry.properties[p]);
-        this.flattenIndexEntry(entry.properties[p], result);
+            result[p] = result[p].concat(summary.properties[p]);
+        this.flattenSummary(summary.properties[p], result);
     }
     
+    return result;
+};
+
+/**
+ * Find entries in a summary that match a given name,
+ * and return them as an associative object.
+ * 
+ * @param summary
+ * @param {String} entry
+ * @param {Boolean matchByPrefix  Use prefix matching to find entries
+ * @return {Object}
+ */
+index.findEntries = function(summary, entry, matchByPrefix, result) {
+    function findUnderscoreEntries(properties, uentry) {
+        if (!matchByPrefix && properties[uentry])
+            result[uentry] = (result[uentry] || []).concat(properties[uentry]);
+        
+        for (var p in properties) {
+            if (matchByPrefix && p.indexOf(uentry) === 0)
+                result[p] = (result[p] || []).concat(properties[p]);
+            if (!properties[p].properties)
+                continue;
+            findUnderscoreEntries(properties[p].properties, uentry);
+        }
+    }
+    
+    if (!summary.properties)
+        return {};
+    if (entry === "" && matchByPrefix)
+        return this.flattenSummary(summary);
+        
+    var result = {};
+    findUnderscoreEntries(summary.properties, "_" + entry);
     return result;
 };
 

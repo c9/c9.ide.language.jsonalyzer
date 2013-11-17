@@ -28,15 +28,14 @@ module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
         fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { isComplete: true }, function(err, result) {
             if (err)
                 console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
-            var currentFile = index.flattenIndexEntry(result);
+            var currentFile = result;
             var currentResults = getCompletionResults(null, PRIORITY_HIGH, identifier, currentFile);
             var otherResults = [];
             imports.forEach(function(path) {
-                // TODO: optimize -- avoid flatten here?
-                var flatEntry = index.flattenIndexEntry(index.get(path));
-                if (flatEntry)
+                var summary = index.get(path);
+                if (summary)
                     otherResults = otherResults.concat(
-                        getCompletionResults(path, PRIORITY_LOW, identifier, flatEntry));
+                        getCompletionResults(path, PRIORITY_LOW, identifier, summary));
             });
             callback(currentResults.concat(otherResults));
         });
@@ -50,17 +49,17 @@ module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
         }
     });
 };
-function getCompletionResults(path, priority, identifier, flatEntry) {
-    var allIdentifiers = Object.keys(flatEntry);
-    var completions = completeUtil.findCompletions("_" + identifier, allIdentifiers);
+
+function getCompletionResults(path, priority, identifier, summary) {
+    var entries = index.findEntries(summary, identifier, true);
     var file = path && path.match(/[^\/]*$/)[0];
     
     var results = [];
-    completions.forEach(function(uname) {
-        flatEntry[uname].forEach(function(e) {
+    for (var uname in entries) {
+        entries[uname].forEach(function(e) {
             results.push(toCompletionResult(file, uname.substr(1), priority, e));
         });
-    });
+    }
     return results;
 }
 
