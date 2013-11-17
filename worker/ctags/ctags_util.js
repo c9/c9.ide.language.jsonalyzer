@@ -95,10 +95,10 @@ module.exports.findMatchingTags = function(lines, contents, tag, extractDocument
 };
 
 module.exports.guessFargs = function(line, name) {
-    var guess = /\([A-Za-z0-9$_,\s]*\)/;
+    var guess = /\([A-Za-z0-9$_,\s]*(\))?/;
     guess.lastIndex = line.indexOf(name) + name.length;
     var match = guess.exec(line);
-    return match && match[0] || "";
+    return match && match[0] + (match[1] ? "" : "...") || "";
 };
 
 function getOffsetRow(contents, offset) {
