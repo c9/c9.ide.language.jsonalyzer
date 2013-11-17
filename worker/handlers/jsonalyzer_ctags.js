@@ -13,14 +13,13 @@ var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 
 var handler = module.exports = Object.create(PluginBase);
-var handler;
 
-var EXTENSIONS = ctags.EXTENSIONS;
+var EXTENSION_GROUPS = ctags.LANGUAGES.map(function(l) { return l.extensions; });
 var IDLE_TIME = 50;
 
 handler.init = function(theHandler) {
     handler = theHandler;
-    var extensions = Array.prototype.concat.apply([], EXTENSIONS);
+    var extensions = Array.prototype.concat.apply([], EXTENSION_GROUPS);
     handler.registerHandler(this, "ctags", [".*"], extensions);
 };
 
@@ -42,9 +41,9 @@ function getExtension(path) {
  * Get an array of compatible extensions, e.g. ["js", "html"] for "js".
  */
 function getCompatibleExtensions(extension) {
-    for (var i = 0; i < EXTENSIONS.length; i++) {
-        if (EXTENSIONS[i].indexOf(extension) > -1)
-            return EXTENSIONS[i];
+    for (var i = 0; i < EXTENSION_GROUPS.length; i++) {
+        if (EXTENSION_GROUPS[i].indexOf(extension) > -1)
+            return EXTENSION_GROUPS[i];
     }
     return [extension];
 }

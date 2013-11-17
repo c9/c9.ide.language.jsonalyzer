@@ -57,23 +57,38 @@ var CTAGS_OPTIONS = [
     '--regex-ActionScript=/.*\\.prototype\\.([A-Za-z0-9 ]+)=([ \\t]?)function([ \\t]?)*\\(/\\1/f,function/',
 ];
 
-var EXTENSIONS = module.exports.EXTENSIONS = [
-    ["as"],
-    ["sh"],
-    ["js", "html"],
-    ["coffee"],
-    ["bas"],
-    ["asp"],
-    ["c", "cc", "cpp", "cxx", "h", "hh", "hpp"],
-    ["cs"],
-    ["ltx", "tex"],
-    ["php", "php3", "phtml", "inc"],
-    ["py"],
-    ["sh"],
-    ["java"],
-    ["rb", "ru"],
-    ["ss"],
-    ["md", "markdown"]
+/**
+ * All languages supported by ctags_ex, with their file extensions,
+ * and whether it's possible to guess the formal arguments of
+ * functions (i.e., they use parantheses + comma separated arguments).
+ */
+var LANGUAGES = module.exports.LANGUAGES = [
+    { guessFargs: true,  extensions: ["as"] },
+    { guessFargs: false, extensions: ["asm", "a"] },
+    { guessFargs: true,  extensions: ["sh"] },
+    { guessFargs: true,  extensions: ["js", "html"] },
+    { guessFargs: true,  extensions: ["coffee"] },
+    { guessFargs: true,  extensions: ["bas"] },
+    { guessFargs: true,  extensions: ["asp"] },
+    { guessFargs: true,  extensions: ["c", "cc", "cpp", "cxx", "h", "hh", "hpp"] },
+    { guessFargs: true,  extensions: ["cs"] },
+    { guessFargs: false, extensions: ["e", "ge"], extractDocs: false}, // Eiffel
+    { guessFargs: true,  extensions: ["erl", "hrl"] },
+    { guessFargs: true,  extensions: ["lisp", "cl", "lsp"] },
+    { guessFargs: true, extensions: ["lua"] },
+    { guessFargs: false, extensions: ["cob"] },
+    { guessFargs: true,  extensions: ["pas", "p"] },
+    { guessFargs: true,  extensions: ["scm", "sm", "scheme", "oak"] },
+    { guessFargs: true,  extensions: ["pl", "pm"] },
+    { guessFargs: false, extensions: ["prolog"] },
+    { guessFargs: false, extensions: ["ltx", "tex", "bib", "sty", "cls", "clo"] },
+    { guessFargs: true,  extensions: ["php", "php3", "phtml", "inc"] },
+    { guessFargs: true,  extensions: ["py"] },
+    { guessFargs: true,  extensions: ["sh"] },
+    { guessFargs: false, extensions: ["y", "ym"] },
+    { guessFargs: true,  extensions: ["java"] },
+    { guessFargs: true,  extensions: ["rb", "ru"] },
+    { guessFargs: true,  extensions: ["ss"] }
 ];
 
 // ctags.FS_createPath("/", "etc", true, true);
@@ -100,8 +115,10 @@ module.exports.analyze = function(path, doc, callback) {
     };
     
     var isDone = false;
+    var language = getLanguage(path);
+    var guessFargs = language && language.guessFargs;
     ctags.CTags_setOnTagEntry(function(name, kind, row, sourceFile, language) {
-        analyzeTag(lines, name, kind, row, sourceFile, language, result.properties);
+        analyzeTag(lines, name, kind, row, sourceFile, guessFargs, result.properties);
     });
     
     ctags.CTags_setOnParsingCompleted(function() {
@@ -131,8 +148,15 @@ module.exports.analyze = function(path, doc, callback) {
         };
     }
 };
+
+function getLanguage(path) {
+    var ext = path.match(/\.([^.]+)/)[1];
+    return LANGUAGES.filter(function(l) {
+        return l.extensions.indexOf(ext) > -1;
+    })[0];
+}
     
-function analyzeTag(lines, name, kind, row, sourceFile, language, results) {
+function analyzeTag(lines, name, kind, row, sourceFile, guessFargs, results) {
     var line = lines[row - 1] || "";
     var doc = util.extractDocumentationAtRow(lines, row - 2);
 
@@ -153,6 +177,7 @@ function analyzeTag(lines, name, kind, row, sourceFile, language, results) {
     
     // Mark functions with unknown return type
     if (icon === "method" || icon === "method2") {
+        result.guessFargs = guessFargs;
         result.properties = {
             _return: []
         };

@@ -52,7 +52,7 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
     }
 };
 
-module.exports.findMatchingTags = function(lines, contents, tag, extractDocumentation, results) {
+module.exports.findMatchingTags = function(lines, contents, tag, extractDocumentation, guessFargs, results) {
     assert(tag.regex.global, "Regex must use /g flag: " + tag.regex);
     var _self = this;
     
@@ -75,13 +75,16 @@ module.exports.findMatchingTags = function(lines, contents, tag, extractDocument
         if (tag.docOnly) { // HACK: tag that only contributes documentation
             if (!doc)
                 return;
-            if (results["_" + name][0])
-                return results["_" + name][0].doc = doc;
+            if (results["_" + name][0]) {
+                results["_" + name][0].doc = doc;
+                return;
+            }
         }
         
         results["_" + name].push({
             row: row,
             docHead: docHead,
+            guessFargs: guessFargs,
             doc: doc,
             kind: tag.kind
         });
@@ -89,6 +92,13 @@ module.exports.findMatchingTags = function(lines, contents, tag, extractDocument
     });
     
     return results;
+};
+
+module.exports.guessFargs = function(line, name) {
+    var guess = /\([A-Za-z0-9$_,\s]*\)/;
+    guess.lastIndex = line.indexOf(name) + name.length;
+    var match = guess.exec(line);
+    return match && match[0] || "";
 };
 
 function getOffsetRow(contents, offset) {

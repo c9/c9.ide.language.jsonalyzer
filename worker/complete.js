@@ -4,6 +4,7 @@ var index = require("./semantic_index");
 var fileIndexer = require("./file_indexer");
 var completeUtil = require("plugins/c9.ide.language/complete_util");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
+var ctagsUtil = require("./ctags/ctags_util");
 var handler;
 
 var PRIORITY_LOW = 1;
@@ -64,9 +65,13 @@ function getCompletionResults(path, priority, identifier, flatEntry) {
 }
 
 function toCompletionResult(file, name, priority, entry) {
-    // TODO: arg names?
+    var fullName = entry.guessFargs
+        ? name + ctagsUtil.guessFargs(entry.docHead, name)
+        : name;
+    
     return {
-        name        : name,
+        id          : name,
+        name        : fullName,
         replaceText : name,
         icon        : "unknown2",
         meta        : file,
