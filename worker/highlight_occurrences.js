@@ -23,22 +23,56 @@ module.exports.highlightOccurrences = function(doc, fullAst, pos, currentNode, c
     var line = doc.getLine(pos.row);
     var identifier = workerUtil.getIdentifier(line, pos.column);
     
-    var entries = index.hasEntries(identifier);
+    var entries = index.findEntries(summary, identifier);
     if (Object.keys(entries).length)
-        return callback(getOccurrences(pos, identifier, entries["_" + identifier]));
+        return callback(getOccurrences(doc, pos, identifier, entries["_" + identifier]));
     
     var imports = index.getImports(handler.path);
     var others = index.getAny(imports);
     for (var i = 0; i < others.length; i++) {
         if (index.hasEntries(others[i], identifier))
-            return callback(pos, identifier, []);
+            return callback(getOccurrences(doc, pos, identifier, []));
     }
     
     callback();
 };
 
-function getOccurrences(pos, identifier, entryList) {
-    debugger
+function getOccurrences(doc, pos, identifier, entryList) {
+    var line = doc.getLine(pos.row);
+    var prefix = workerUtil.getPrecedingIdentifier(line, pos.column);
+    var realColumn = pos.column - prefix.length;
+    
+    var results = [{
+        pos: {
+            sl: pos.row,
+            el: pos.row,
+            sc: realColumn,
+            ec: realColumn + identifier.length
+        },
+        type: "occurrence_other"
+    }];
+    
+    var foundSelf = false;
+    entryList.forEach(function(entry) {
+        if (!entry.column) { // guess the column
+            var entryLine = doc.getLine(entry.row);
+            entry.column = entryLine.indexOf(identifier);
+            if (entry.column < 0)
+                return;
+        }
+        if (entry.row === pos.row && entry.column === realColumn)
+            return foundSelf = true;
+        results.push({
+            pos: {
+                sl: entry.row,
+                el: entry.row,
+                sc: entry.column,
+                ec: entry.column + identifier.length
+            },
+            type: "occurrence_main"
+        });
+    });
+    return { markers: foundSelf ? [] : results, isGeneric: true };
 }
 
 });

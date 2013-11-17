@@ -14,6 +14,7 @@ var jumptodef = require("./jumptodef");
 var complete = require("./complete");
 var outline = require("./outline");
 var refactor = require("./refactor");
+var highlight = require("./highlight_occurrences");
 var scopeAnalyzer = require('plugins/c9.ide.language.javascript/scope_analyzer');
 var directoryIndexer = require("./directory_indexer");
 var fileIndexer = require("./file_indexer");
@@ -68,12 +69,13 @@ handler.init = function(callback) {
     
     directoryIndexer.init(this);
     fileIndexer.init(this);
-    
     index.init(this);
     jumptodef.init(this);
     complete.init(this);
     outline.init(this);
     refactor.init(this);
+    highlight.init(this);
+    
     plugins.forEach(function(p) {
         p.init(_self);
     });
@@ -133,6 +135,8 @@ handler.getRefactorings = refactor.getRefactorings.bind(refactor);
 handler.getRenamePositions = refactor.getRenamePositions.bind(refactor);
 
 handler.commitRename = refactor.commitRename.bind(refactor);
+
+handler.highlightOccurrences = highlight.highlightOccurrences.bind(highlight);
 
 handler.onOnlineChange = function(event) {
     isOnline = event.data.isOnline;

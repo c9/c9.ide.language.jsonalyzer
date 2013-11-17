@@ -551,7 +551,7 @@ describe("jsonalyzer handler", function(){
         workerUtil.getTokens = function(doc, identifiers, callback) {
             callback(null, [
                 { row: 0, column: 14, value: "Parent" },
-                { row: 1, column: 6, value: "Parent" }
+                { row: 1, column: 29, value: "Parent" }
             ]);
         };
         
@@ -568,6 +568,70 @@ describe("jsonalyzer handler", function(){
                 done();
             }
         );
+    });
+    it("highlights occurrences", function(done) {
+        var file1 = {
+            path: "/testfile.cs",
+            contents: "class Child : Parent {}\n\
+                       class Parent {}",
+            cursor: { row: 0, column: 15 }
+        };
+        
+        // Analyze first; highlighter doesn't analyze itself
+        handler.path = file1.path;
+        fileIndexer.analyzeCurrent(file1.path, file1.contents, null, {}, function() {
+            handler.highlightOccurrences(
+                new Document(file1.contents), null, file1.cursor, null,
+                function(results) {
+                    assert(results);
+                    assert.equal(results.markers.length, 2);
+                    assert.equal(results.markers[0].pos.sc, 14);
+                    assert.equal(results.markers[0].type, "occurrence_other");
+                    assert.equal(results.markers[1].pos.sc, 29);
+                    done();
+                }
+            );
+        });
+    });
+    it("doesn't highlight non-occurrences", function(done) {
+        var file1 = {
+            path: "/testfile.cs",
+            contents: "class Child : Parent {}\n\
+                       class Parent {}",
+            cursor: { row: 0, column: 2 }
+        };
+        
+        // Analyze first; highlighter doesn't analyze itself
+        handler.path = file1.path;
+        fileIndexer.analyzeCurrent(file1.path, file1.contents, null, {}, function() {
+            handler.highlightOccurrences(
+                new Document(file1.contents), null, file1.cursor, null,
+                function(results) {
+                    assert(!results, results);
+                    done();
+                }
+            );
+        });
+    });
+    it("doesn't highlight when a definiton is selected", function(done) {
+        var file1 = {
+            path: "/testfile.cs",
+            contents: "class Child : Parent {}\n\
+                       class Parent {}",
+            cursor: { row: 1, column: 8 }
+        };
+        
+        // Analyze first; highlighter doesn't analyze itself
+        handler.path = file1.path;
+        fileIndexer.analyzeCurrent(file1.path, file1.contents, null, {}, function() {
+            handler.highlightOccurrences(
+                new Document(file1.contents), null, file1.cursor, null,
+                function(results) {
+                    assert(!results, results);
+                    done();
+                }
+            );
+        });
     });
 });
 
