@@ -20,26 +20,20 @@ module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
     var line = lines[pos.row];
     var identifier = completeUtil.retrievePrecedingIdentifier(line, pos.column, workerUtil.getIdentifierRegex());
     
-    fileIndexer.findImports(handler.path, docValue, fullAst, false, function(err, imports) {
-        if (err) {
-            console.error(err);
-            return callback();
-        }
-        fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { isComplete: true }, function(err, result) {
-            if (err)
-                console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
-            var currentFile = result;
-            var currentResults = getCompletionResults(null, PRIORITY_HIGH, identifier, currentFile);
-            var otherResults = [];
-            imports.forEach(function(path) {
-                var summary = index.get(path);
-                if (summary)
-                    otherResults = otherResults.concat(
-                        getCompletionResults(path, PRIORITY_LOW, identifier, summary));
-            });
-            callback(currentResults.concat(otherResults));
+    fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { isComplete: true }, function(err, result, imports) {
+        if (err)
+            console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
+        var currentFile = result;
+        var currentResults = getCompletionResults(null, PRIORITY_HIGH, identifier, currentFile);
+        var otherResults = [];
+        imports.forEach(function(path) {
+            var summary = index.get(path);
+            if (summary)
+                otherResults = otherResults.concat(
+                    getCompletionResults(path, PRIORITY_LOW, identifier, summary));
         });
-        
+        callback(currentResults.concat(otherResults));
+
         // Try to fetch any additional imports, and reopen the completer if needed
         var unresolved = imports.filter(function(i) { return !index.get(i); });
         if (unresolved.length) {

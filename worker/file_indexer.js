@@ -30,7 +30,7 @@ indexer.init = function(_handler) {
  * 
  * @param {String} path
  * @param {String} docValue
- * @param {Object} ast  The AST, if available
+ * @param {Object} ast                  The AST, if available
  * @param {Object} options
  * @param {Boolean} options.isSave
  * @param {Boolean} options.isComplete
@@ -41,7 +41,7 @@ indexer.init = function(_handler) {
 indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
     var entry = index.get(path);
     if (entry && !worker.$lastWorker.scheduledUpdate)
-        return callback(null, entry);
+        return callback(null, entry, index.getImports(path));
     
     var plugin = handler.getPluginFor(path);
     return plugin.analyzeCurrent(path, docValue, ast, options, function(err, result) {
@@ -51,7 +51,15 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
         }
         assert(result, "jsonalyzer handler must return a summary");
         index.set(path, plugin.guidName + ":", result);
-        callback(null, result);
+        plugin.findImports(path, docValue, ast, function(err, imports) {
+            if (err) {
+                console.error("[jsonalyzer] error finding imports for " + path + ": " + err);
+                imports = [];
+            }
+            imports = imports.filter(function(i) { return i !== path; });
+            index.set(path, plugin.guidName + ":", result, imports);
+            callback(null, result, imports);
+        });
     });
 };
 
@@ -151,20 +159,6 @@ function consumeQueue() {
         callbacks.forEach(function(callback) { callback() });
     }
 }
-
-// TODO: (re)move this helper?
-var findImports = module.exports.findImports = function(path, doc, ast, excludeAnalyzed, callback) {
-    var plugin = handler.getPluginFor(path);
-    plugin.findImports(path, doc, ast, function(err, results) {
-        results = results || [];
-        if (excludeAnalyzed)
-            results = results.filter(function(r) { return !index.get(r); });
-        results = results.filter(function(r) {
-            return r !== path;
-        });
-        callback(null, results);
-    });
-};
 
 });
 

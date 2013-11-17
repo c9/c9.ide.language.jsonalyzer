@@ -224,6 +224,7 @@ describe("jsonalyzer handler", function(){
             new Document(file1.contents), null, file1.cursor, null,
             function(results) {
                 assert(results && results.length, "Results expected: " + JSON.stringify(results));
+                assert.equal(results.length, 1);
                 assert.equal(results[0].path, file2.path);
                 done();
             }
@@ -333,6 +334,7 @@ describe("jsonalyzer handler", function(){
             function(results) {
                 assert(results, "Results expected");
                 assert.equal(results[0].icon, "package");
+                assert.equal(results.length, 1);
                 assert(results[0].path !== file2.path);
                 done();
             }

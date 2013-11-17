@@ -42,17 +42,18 @@ module.exports = {
     
     /**
      * Find all imports in a file.
+     * Likely to be called each time analyzeCurrent is called.
      * 
-     * May not be overridden by inheritors.
+     * May be overridden by inheritors.
      * 
      * @param {String} path
-     * @param {String} doc
+     * @param {String} value
      * @param {Object} ast                         The AST, if available
      * @param {Function} callback
      * @param {String} callback.err
      * @param {Object} callback.result
      */
-    findImports: function(path, doc, ast, callback) {
+    findImports: function(path, value, ast, callback) {
         callback();
     },
     
@@ -62,7 +63,7 @@ module.exports = {
      * Should be overridden by inheritors.
      * 
      * @param {String} path
-     * @param {String} doc
+     * @param {String} value
      * @param {Object} ast                         The AST, if available
      * @param {Object} options
      * @param {Boolean} options.isSave             Triggered by a save
@@ -72,7 +73,7 @@ module.exports = {
      * @param {String} callback.err
      * @param {Object} callback.result
      */
-    analyzeCurrent: function(path, doc, ast, options, callback) {
+    analyzeCurrent: function(path, value, ast, options, callback) {
         callback();
     },
     
@@ -82,8 +83,6 @@ module.exports = {
      * May not be overridden by inheritors.
      * 
      * @param {String} paths
-     * @param {String} doc
-     * @param {Object} ast  The AST, if available
      * @param {Function} callback
      * @param {String[]} callback.errs
      * @param {String} callback.result

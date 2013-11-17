@@ -20,6 +20,7 @@ var analyzedFiles = {};
 var pathGuids = {};
 var accessedSinceGC = {};
 var summaries = {};
+var imports = {};
     
 index.init = function(_handler) {
     handler = _handler;
@@ -53,17 +54,37 @@ index.get = function(guidOrPath) {
 };
 
 /**
+ * Get the imports of given a guid or file path.
+ * 
+ * @param {String} guidOrPath
+ * @param {Boolean} excludeAnalyzed   Don't include imports that exist in the index
+ */
+index.getImports = function(guidOrPath, excludeAnalyzed) {
+    accessedSinceGC["_" + guidOrPath] = true;
+    var guid = pathGuids["_" + guidOrPath];
+    var results = guid ? imports["_" + guid] : imports["_" + guidOrPath];
+    if (!results)
+        return [];
+    if (excludeAnalyzed)
+        results = results.filter(function(r) { return !index.get(r); });
+    return results;
+};
+
+/**
  * Set a summary for file path.
  * 
  * @param {String} path
  * @param {String} guidPrefix
  * @param summary
+ * @param {String[]} [pathImports]
  */
-index.set = function(path, guidPrefix, summary) {
+index.set = function(path, guidPrefix, summary, pathImports) {
     var guid = summary.guid || guidPrefix + path;
     summary.path = path;
     pathGuids["_" + path] = guid;
     summaries["_" + guid] = summary;
+    if (pathImports)
+        imports["_" + guid] = pathImports;
 };
 
 /**
@@ -78,6 +99,7 @@ index.setBroken = function(path, reason) {
     summaries["_" + guid] = {
         broken: reason || "broken"
     };
+    imports["_" + guid] = [];
 };
 
 /**
@@ -119,7 +141,7 @@ index.flattenSummary = function(summary, result) {
  * @param {Boolean matchByPrefix  Use prefix matching to find entries
  * @return {Object}
  */
-index.findEntries = function(summary, entry, matchByPrefix, result) {
+index.findEntries = function(summary, entry, matchByPrefix) {
     function findUnderscoreEntries(properties, uentry) {
         if (!matchByPrefix && properties[uentry])
             result[uentry] = (result[uentry] || []).concat(properties[uentry]);
@@ -161,7 +183,9 @@ index.removeByPathPrefix = function(pathPrefixes) {
         if (matches.length === 0)
             continue;
         
-        delete summaries["_" + pathGuids[upath]];
+        var uguid = "_" + pathGuids[upath];
+        delete summaries[uguid];
+        delete imports[uguid];
         delete pathGuids[upath];
     }
 };
@@ -182,6 +206,7 @@ index.gc = function() {
         
         delete pathGuids[upath];
         delete summaries["_" + guid];
+        delete imports["_" + guid];
     }
     accessedSinceGC = {};
 };
@@ -189,6 +214,7 @@ index.gc = function() {
 index.clear = function() {
     pathGuids = {};
     summaries = {};
+    imports = {};
     accessedSinceGC = {};
 };
 
