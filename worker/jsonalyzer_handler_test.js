@@ -20,12 +20,20 @@ var fileIndexer = require("./file_indexer");
 var directoryIndexer = require("./directory_indexer");
 var Document  = require("ace/document").Document;
 
+// Auto-init handler.doc
+var oldAnalyze = handler.analyze.bind(handler);
+handler.analyze = function(doc, ast, callback) {
+    handler.doc = new Document(doc);
+    oldAnalyze(doc, ast, callback);
+};
+
 describe("jsonalyzer handler", function(){
     
     beforeEach(function(done) {
         index.clear();
         
-        // Mock
+        // Mock / defaults
+        handler.doc = null;
         handler.sender = {
             on: function() {}
         };
@@ -138,7 +146,8 @@ describe("jsonalyzer handler", function(){
         
         function onFullComplete(results) {
             assert(results && results.length > 0);
-            assert.equal(results[0].name, "foo");
+            assert.equal(results[0].id, "foo");
+            assert.equal(results[0].name, "foo()");
             assert.equal(results[0].meta, "testfile2.js");
             done();
         }
@@ -214,7 +223,7 @@ describe("jsonalyzer handler", function(){
         handler.jumpToDefinition(
             new Document(file1.contents), null, file1.cursor, null,
             function(results) {
-                assert(results, "Results expected");
+                assert(results && results.length, "Results expected: " + JSON.stringify(results));
                 assert.equal(results[0].path, file2.path);
                 done();
             }
@@ -382,7 +391,7 @@ describe("jsonalyzer handler", function(){
             null,
             function(results) {
                 assert(results && results.length > 0);
-                assert.equal(results[0].name, "foo");
+                assert.equal(results[0].name, "foo()");
                 assert(results[0].doc.match(/foo something/));
                 done();
             }

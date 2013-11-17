@@ -8,6 +8,7 @@ define(function(require, exports, module) {
 
 var indexer = module.exports;
 var index = require("./semantic_index");
+var worker = require("plugins/c9.ide.language/worker");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 var assert = require("plugins/c9.util/assert");
 var handler;
@@ -28,7 +29,7 @@ indexer.init = function(_handler) {
  * Check with the index first whether analysis is required.
  * 
  * @param {String} path
- * @param {String} doc
+ * @param {String} docValue
  * @param {Object} ast  The AST, if available
  * @param {Object} options
  * @param {Boolean} options.isSave
@@ -37,16 +38,20 @@ indexer.init = function(_handler) {
  * @param {String} callback.err
  * @param {Object} callback.result
  */
-indexer.analyzeCurrent = function(path, doc, ast, options, callback) {
+indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
+    var entry = index.get(path);
+    if (entry && !worker.$lastWorker.scheduledUpdate)
+        return callback(null, entry);
+    
     var plugin = handler.getPluginFor(path);
-    return plugin.analyzeCurrent(path, doc, ast, options, function(err, result) {
+    return plugin.analyzeCurrent(path, docValue, ast, options, function(err, result) {
         if (err) {
             index.setBroken(path, err);
             return callback(err);
         }
-        assert(result);
+        assert(result, "jsonalyzer handler must return a summary");
         index.set(path, plugin.guidName + ":", result);
-        callback(null, result || index.get(path));
+        callback(null, result);
     });
 };
 
