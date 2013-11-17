@@ -141,14 +141,20 @@ index.flattenSummary = function(summary, result) {
  * @param {Boolean matchByPrefix  Use prefix matching to find entries
  * @return {Object}
  */
-index.findEntries = function(summary, entry, matchByPrefix) {
+index.findEntries = function(summary, entry, matchByPrefix, dontFindAll) {
     function findUnderscoreEntries(properties, uentry) {
-        if (!matchByPrefix && properties[uentry])
+        if (!matchByPrefix && properties[uentry]) {
             result[uentry] = (result[uentry] || []).concat(properties[uentry]);
+            if (dontFindAll)
+                return;
+        }
         
         for (var p in properties) {
-            if (matchByPrefix && p.indexOf(uentry) === 0)
+            if (matchByPrefix && p.indexOf(uentry) === 0) {
                 result[p] = (result[p] || []).concat(properties[p]);
+                if (dontFindAll)
+                    return;
+            }
             if (!properties[p].properties)
                 continue;
             findUnderscoreEntries(properties[p].properties, uentry);
@@ -163,6 +169,10 @@ index.findEntries = function(summary, entry, matchByPrefix) {
     var result = {};
     findUnderscoreEntries(summary.properties, "_" + entry);
     return result;
+};
+
+index.hasEntries = function(summary, entry, matchByPrefix) {
+    return !!Object.keys(this.findEntries(summary, entry, matchByPrefix, true)).length;
 };
 
 index.removeByPath = function(path) {

@@ -11,14 +11,14 @@ module.exports.init = function(_handler) {
 };
 
 module.exports.getRefactorings = function(doc, fullAst, pos, currentNode, callback) {
-    getEntry(doc, fullAst, pos, function(pos, identifier, entry) {
-        callback({ refactorings: entry ? ["renameVariable"] : [] });
+    findEntries(doc, fullAst, pos, function(pos, identifier, hasEntries) {
+        callback({ refactorings: hasEntries ? ["renameVariable"] : [] });
     });
 };
 
 module.exports.getRenamePositions = function(doc, fullAst, pos, currentNode, callback) {
-    getEntry(doc, fullAst, pos, function(pos, identifier, entry) {
-        if (!entry)
+    findEntries(doc, fullAst, pos, function(pos, identifier, hasEntries) {
+        if (!hasEntries)
             return callback();
         workerUtil.getTokens(doc, [identifier, identifier+"()"], function(err, results) {
             if (err)
@@ -42,7 +42,7 @@ module.exports.commitRename = function(doc, oldId, newName, isGeneric, callback)
     callback(matchingDef && "Name '" + newName + "' is already used.");
 };
 
-function getEntry(doc, fullAst, pos, callback) {
+function findEntries(doc, fullAst, pos, callback) {
     if (handler.language === "javascript") // optimization
         return callback();
     
@@ -56,10 +56,7 @@ function getEntry(doc, fullAst, pos, callback) {
         if (err)
             console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
         lastSummary = result;
-        var entry = index.findEntries(result, identifier);
-        if (!entry)
-            return callback();
-        callback(realPos, identifier, entry);
+        callback(realPos, identifier, index.hasEntries(result, identifier));
     });
     
 }
