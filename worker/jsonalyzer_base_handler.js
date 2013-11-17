@@ -6,6 +6,9 @@
  */
 define(function(require, exports, module) {
 
+var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
+var workerUtil = require("plugins/c9.ide.language/worker_util");
+
 /**
  * The jsonalyzer analysis plugin base class.
  * 
@@ -14,6 +17,16 @@ define(function(require, exports, module) {
  * @class language.jsonalyzer_base_handler
  */
 module.exports = {
+    
+    // HELPERS (AUTOMATICALLY SET)
+    
+    guidName: null,
+    
+    guidNameRegex: null,
+    
+    supportedLanguages: [],
+    
+    supportedExtensions: "",
     
     // ABSTRACT METHODS
     
@@ -30,6 +43,8 @@ module.exports = {
     /**
      * Find all imports in a file.
      * 
+     * May not be overridden by inheritors.
+     * 
      * @param {String} path
      * @param {String} doc
      * @param {Object} ast                         The AST, if available
@@ -43,6 +58,8 @@ module.exports = {
     
     /**
      * Analyze the current file.
+     * 
+     * Should be overridden by inheritors.
      * 
      * @param {String} path
      * @param {String} doc
@@ -62,6 +79,8 @@ module.exports = {
     /**
      * Analyze the other/imported files.
      * 
+     * May not be overridden by inheritors.
+     * 
      * @param {String} paths
      * @param {String} doc
      * @param {Object} ast  The AST, if available
@@ -73,19 +92,46 @@ module.exports = {
         callback();
     },
     
+    /**
+     * @internal Design to be revisited.
+     */
     analyzeWorkspaceRoot: function(callback) {
         callback();
     },
     
-    // HELPERS (AUTOMATICALLY SET ON REGISTRATION)
+    // UTILITY
     
-    guidName: null,
-    
-    guidNameRegex: null,
-    
-    supportedLanguages: [],
-    
-    supportedExtensions: ""
+    /**
+     * Utility function to call analyzeCurrent on a list of paths.
+     * 
+     * Should not be overridden by inheritors.
+     */
+    analyzeCurrentAll: function(paths, callback) {
+        var errs = [];
+        var results = [];
+        var _self = this;
+        asyncForEach(
+            paths,
+            function(path, next) {
+                workerUtil.readFile(path, function(err, doc) {
+                    if (err) {
+                        errs.push(err);
+                        results.push(null);
+                        return next();
+                    }
+                    
+                    _self.analyzeCurrent(path, doc, null, {}, function(err, result) {
+                        errs.push(err);
+                        results.push(result);
+                        next();
+                    });
+                });
+            },
+            function() {
+                callback(errs, results);
+            }
+        );
+    },
     
 };
 
