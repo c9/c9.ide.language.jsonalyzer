@@ -150,8 +150,8 @@ module.exports.analyze = function(path, doc, callback) {
 };
 
 function getLanguage(path) {
-    var ext = path.match(/\.([^.]+)/)[1];
-    return LANGUAGES.filter(function(l) {
+    var ext = path.substr(path.lastIndexOf(".") + 1);
+    return ext && LANGUAGES.filter(function(l) {
         return l.extensions.indexOf(ext) > -1;
     })[0];
 }
