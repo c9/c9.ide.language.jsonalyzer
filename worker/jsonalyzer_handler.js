@@ -187,20 +187,5 @@ handler.getAllPlugins = function() {
     return plugins;
 };
 
-handler.registerSummaries = function(kind, summaries, filenamesFilter) {
-    plugins.forEach(function(plugin) {
-        if (!plugin.guidNameRegex)
-            return;
-        if (filenamesFilter && !plugin.isOneExtensionSupported(filenamesFilter))
-            return;
-        var pluginSummaries = {};
-        for (var summary in summaries) {
-            if (summary.match(plugin.guidNameRegex))
-                pluginSummaries[summary] = summaries[summary];
-        }
-        plugin.onReceivedSummaries(kind, pluginSummaries);
-    });
-};
-
 });
 
