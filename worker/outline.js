@@ -50,7 +50,8 @@ function addDisplayPos(outline, parent) {
         var item = outline.items[i];
         var next = outline.items[i + 1];
         var nextLine = next ? next.pos.sl : parent.displayPos.el;
-        item.displayPos = {
+        item.displayPos = item.pos;
+        item.pos = {
             sl: item.pos.sl,
             sc: item.pos.sc,
             el: nextLine,
