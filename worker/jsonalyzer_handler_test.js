@@ -633,6 +633,21 @@ describe("jsonalyzer handler", function(){
             );
         });
     });
+    it("analyzes an md file", function(done) {
+        handler.path = "/testfile.md";
+        handler.analyze(
+            "# hello",
+            null,
+            function(markers) {
+                assert(!markers, "No markers expected");
+                var result = index.get("/testfile.md");
+                assert(result);
+                assert(result.properties);
+                assert(result.properties._hello, "Header expected");
+                done();
+            }
+        );
+    });
 });
 
 if (typeof onload !== "undefined")
