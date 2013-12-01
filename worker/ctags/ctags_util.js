@@ -1,16 +1,19 @@
-/**
+/*
  * jsonalyzer CTAGs-based analyzer utility functions
  *
- * @copyright 2013, Ajax.org B.V.
- * @author Lennart Kats <lennart add c9.io>
+ * @class ctags_util
  */
 define(function(require, exports, module) {
 
 var assert = require("plugins/c9.util/assert");
+var ctags = require("./ctags_ex");
+var workerUtil = require("plugins/c9.ide.language/worker_util");
 
 var MAX_DOCHEAD_LENGTH = 80;
+var EXTENSION_GROUPS = ctags.LANGUAGES.map(function(l) { return l.extensions; });
 
 module.exports.MAX_DOCHEAD_LENGTH = MAX_DOCHEAD_LENGTH;
+module.exports.EXTENSION_GROUPS = EXTENSION_GROUPS;
 
 module.exports.extractDocumentationAtRow = function(lines, row) {
     // # hash comments
@@ -52,6 +55,19 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
     }
 };
 
+/**
+ * Find all summary entries that match the given tags.
+ *
+ * @param {String[]} lines
+ * @param {String} contents
+ * @param {Object} tag
+ * @param {RegExp} tag.regex
+ * @param {String} tag.kind
+ * @param {Boolean} tag.docOnly
+ * @param {Boolean} extractDocumentation
+ * @param {Boolean} guessFargs
+ * @param {Object[]} [results]
+ */
 module.exports.findMatchingTags = function(lines, contents, tag, extractDocumentation, guessFargs, results) {
     assert(tag.regex.global, "Regex must use /g flag: " + tag.regex);
     var _self = this;
@@ -94,12 +110,43 @@ module.exports.findMatchingTags = function(lines, contents, tag, extractDocument
     return results;
 };
 
+/**
+ * Find all open files with a file extension that matches that of the current path.
+ *
+ * @param {String} path
+ * @return {String[]}
+ */
+module.exports.findMatchingOpenFiles = function(path) {
+    var openFiles = workerUtil.getOpenFiles();
+    var extension = getExtension(path);
+    var supported = getCompatibleExtensions(extension);
+    var imports = openFiles.filter(function(path) {
+        return supported.indexOf(getExtension(path)) > -1;
+    });
+    return imports;
+};
+
 module.exports.guessFargs = function(line, name) {
     var guess = /\([A-Za-z0-9$_,\s]*(\))?/;
     guess.lastIndex = line.indexOf(name) + name.length;
     var match = guess.exec(line);
     return match && match[0] + (match[1] ? "" : "...") || "";
 };
+
+function getExtension(path) {
+    return path.match(/[^\.]*$/)[0];
+}
+
+/**
+ * Get an array of compatible extensions, e.g. ["js", "html"] for "js".
+ */
+function getCompatibleExtensions(extension) {
+    for (var i = 0; i < EXTENSION_GROUPS.length; i++) {
+        if (EXTENSION_GROUPS[i].indexOf(extension) > -1)
+            return EXTENSION_GROUPS[i];
+    }
+    return [extension];
+}
 
 function getOffsetRow(contents, offset) {
     var result = 0;
