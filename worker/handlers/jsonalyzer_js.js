@@ -1,5 +1,5 @@
 /**
- * jsonalyzer JavaScript analysis
+ * jsonalyzer basic JavaScript analysis
  *
  * @copyright 2013, Ajax.org B.V.
  * @author Lennart Kats <lennart add c9.io>
@@ -9,10 +9,6 @@ define(function(require, exports, module) {
 var jsonalyzer;
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
-var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
-var workerUtil = require("plugins/c9.ide.language/worker_util");
-
-var handler = module.exports = Object.create(PluginBase);
 
 var TAGS = [
     {
@@ -32,10 +28,14 @@ var TAGS = [
 ];
 var GUESS_FARGS = true;
 var EXTRACT_DOCS = true;
+var LANGUAGES = ["javascript"];
+var EXTENSIONS = ["js"];
+
+var handler = module.exports = Object.create(PluginBase);
 
 handler.init = function(jsonalyzer_worker) {
     jsonalyzer = jsonalyzer_worker;
-    jsonalyzer.registerHandler(this, "js", ["javascript"], ["js"]);
+    jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
 };
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {

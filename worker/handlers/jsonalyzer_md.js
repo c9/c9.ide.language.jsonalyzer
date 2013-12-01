@@ -10,8 +10,6 @@ var jsonalyzer;
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 
-var handler = module.exports = Object.create(PluginBase);
-
 var TAGS = [
     { regex: /(?:^|\n)# (.*?)#*(?:\n|$)/g, kind: "property" },
     { regex: /(?:^|\n)[A-Za-z0-9](.*)\n={2,}(?:\n|$)/g, kind: "property" },
@@ -20,10 +18,14 @@ var TAGS = [
 ];
 var GUESS_FARGS = false;
 var EXTRACT_DOCS = false;
+var LANGUAGES = ["markdown"];
+var EXTENSIONS = ["md", "markdown"];
+
+var handler = module.exports = Object.create(PluginBase);
 
 handler.init = function(jsonalyzer_worker) {
     jsonalyzer = jsonalyzer_worker;
-    jsonalyzer.registerHandler(this, "markdown", ["markdown"], ["md", "markdown"]);
+    jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
 };
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {

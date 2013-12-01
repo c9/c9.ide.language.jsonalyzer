@@ -10,8 +10,6 @@ var jsonalyzer;
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 
-var handler = module.exports = Object.create(PluginBase);
-
 var TAGS = [
     { regex: /abstract class ([^ ]*)/g, kind: "package" },
     { regex: /interface ([^ ]*)/g, kind: "package" },
@@ -31,10 +29,14 @@ var TAGS = [
 ];
 var GUESS_FARGS = true;
 var EXTRACT_DOCS = true;
+var LANGUAGES = ["php"];
+var EXTENSIONS = ["php"];
+
+var handler = module.exports = Object.create(PluginBase);
 
 handler.init = function(jsonalyzer_worker) {
     jsonalyzer = jsonalyzer_worker;
-    jsonalyzer.registerHandler(this, "php", ["php"], ["php"]);
+    jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
 };
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {

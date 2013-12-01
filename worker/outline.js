@@ -11,7 +11,10 @@ module.exports.init = function(_handler) {
 module.exports.outline = function(doc, ast, callback) {
     return fileIndexer.analyzeCurrent(handler.path, doc.getValue(), ast, {}, function(err, entry) {
         var result = createOutline(null, entry);
-        result = addDisplayPos(result, { displayPos: { el: doc.getLength() - 1 }});
+        var rootInfo = {
+            displayPos: { el: doc.getLength() - 1 }
+        };
+        result = addDisplayPos(result, rootInfo);
         result.isGeneric = true;
         callback(result);
     });
