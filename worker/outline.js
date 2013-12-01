@@ -11,6 +11,7 @@ module.exports.init = function(_handler) {
 module.exports.outline = function(doc, ast, callback) {
     return fileIndexer.analyzeCurrent(handler.path, doc.getValue(), ast, {}, function(err, entry) {
         var result = createOutline(null, entry);
+        result = addDisplayPos(result, { displayPos: { el: doc.getLength() - 1 }});
         result.isGeneric = true;
         callback(result);
     });
@@ -31,7 +32,33 @@ function createOutline(name, entry) {
             result.items.push(createOutline(uname.substr(1), prop));
         });
     }
+    result.items = sortOutline(result.items);
     return result;
+}
+
+function sortOutline(items) {
+    return items.sort(function(a, b) {
+        return a.pos.sl - b.pos.sl;
+    });
+}
+
+function addDisplayPos(outline, parent) {
+    if (!outline.items)
+        return outline;
+    var last;
+    for (var i = 0; i < outline.items.length; i++) {
+        var item = outline.items[i];
+        var next = outline.items[i + 1];
+        var nextLine = next ? next.pos.sl : parent.displayPos.el;
+        item.displayPos = {
+            sl: item.pos.sl,
+            sc: item.pos.sc,
+            el: nextLine,
+            ec: nextLine > item.pos.sl ? 0 : item.pos.ec
+        };
+        addDisplayPos(item, outline);
+    }
+    return outline;
 }
 
 });
