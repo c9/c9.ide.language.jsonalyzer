@@ -8,12 +8,18 @@ define(function(require, exports, module) {
 var assert = require("plugins/c9.util/assert");
 var ctags = require("./ctags_ex");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
+var jsonalyzer;
 
 var MAX_DOCHEAD_LENGTH = 80;
 var EXTENSION_GROUPS = ctags.LANGUAGES.map(function(l) { return l.extensions; });
 
 module.exports.MAX_DOCHEAD_LENGTH = MAX_DOCHEAD_LENGTH;
+
 module.exports.EXTENSION_GROUPS = EXTENSION_GROUPS;
+
+module.exports.init = function(_jsonalyzer) {
+    jsonalyzer = _jsonalyzer;
+};
 
 module.exports.extractDocumentationAtRow = function(lines, row) {
     // # hash comments
@@ -58,8 +64,8 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
 /**
  * Find all summary entries that match the given tags.
  *
- * @param {String[]} lines
- * @param {String} contents
+ * @param {String} path
+ * @param {String} docValue
  * @param {Object} tag
  * @param {RegExp} tag.regex
  * @param {String} tag.kind
@@ -68,15 +74,18 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
  * @param {Boolean} guessFargs
  * @param {Object[]} [results]
  */
-module.exports.findMatchingTags = function(lines, contents, tag, extractDocumentation, guessFargs, results) {
+module.exports.findMatchingTags = function(path, docValue, tag, extractDocumentation, guessFargs, results) {
     assert(tag.regex.global, "Regex must use /g flag: " + tag.regex);
     var _self = this;
+    var lines = path === jsonalyzer.path && jsonalyzer.doc
+        ? jsonalyzer.doc.getAllLines()
+        : docValue.split(/\n/);
     
-    contents.replace(tag.regex, function(fullMatch, name, offset) {
+    docValue.replace(tag.regex, function(fullMatch, name, offset) {
         assert(typeof offset === "number", "Regex must have exactly one capture group: " + tag.regex);
         
         var addedOffset = fullMatch.indexOf(name);
-        var row = getOffsetRow(contents, offset + (addedOffset === -1 ? 0 : addedOffset));
+        var row = getOffsetRow(docValue, offset + (addedOffset === -1 ? 0 : addedOffset));
         var line = lines[row];
         
         var doc, docHead;

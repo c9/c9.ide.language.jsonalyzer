@@ -45,18 +45,13 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc.length > jsonalyzer.getMaxFileSizeSupported())
         return callback();
     
-    var lines = jsonalyzer.doc.getAllLines();
-    var result = {
-        doc: ctagsUtil.extractDocumentationAtRow(lines, 0),
-        properties: {}
-    };
+    var results = {};
     TAGS.forEach(function(tag) {
         if (tag.kind === "import")
             return;
-        ctagsUtil.findMatchingTags(
-            lines, doc, tag, EXTRACT_DOCS, GUESS_FARGS, result.properties);
+        ctagsUtil.findMatchingTags(path, doc, tag, EXTRACT_DOCS, GUESS_FARGS, results);
     });
-    callback(null, result);
+    callback(null, { properties: results });
 };
 
 handler.analyzeOthers = handler.analyzeCurrentAll;
