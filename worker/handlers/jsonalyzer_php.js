@@ -44,7 +44,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc.length > jsonalyzer.getMaxFileSizeSupported())
         return callback();
     
-    var lines = doc.split(/\n/);
+    var lines = jsonalyzer.doc.getAllLines();
     var result = {
         doc: ctagsUtil.extractDocumentationAtRow(lines, 0),
         properties: {}
@@ -62,7 +62,7 @@ handler.analyzeOthers = handler.analyzeCurrentAll;
 
 handler.findImports = function(path, doc, ast, callback) {
     // TODO: get open files + guess imports
-    require("./jsonalyzer_ctags").findImports(path, doc, ast, callback);
+    callback(null, ctagsUtil.findMatchingOpenFiles(path));
 };
 
 

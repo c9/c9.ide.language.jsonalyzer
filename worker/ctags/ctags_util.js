@@ -73,9 +73,10 @@ module.exports.findMatchingTags = function(lines, contents, tag, extractDocument
     var _self = this;
     
     contents.replace(tag.regex, function(fullMatch, name, offset) {
-        assert(typeof offset === "number", "Regex must have one capture group: " + tag.regex);
+        assert(typeof offset === "number", "Regex must have exactly one capture group: " + tag.regex);
         
-        var row = getOffsetRow(contents,  offset);
+        var addedOffset = fullMatch.indexOf(name);
+        var row = getOffsetRow(contents, offset + (addedOffset === -1 ? 0 : addedOffset));
         var line = lines[row];
         
         var doc, docHead;

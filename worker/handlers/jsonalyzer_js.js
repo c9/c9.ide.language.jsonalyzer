@@ -45,7 +45,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc.length > jsonalyzer.getMaxFileSizeSupported())
         return callback();
     
-    var lines = doc.split(/\n/);
+    var lines = jsonalyzer.doc.getAllLines();
     var result = {
         doc: ctagsUtil.extractDocumentationAtRow(lines, 0),
         properties: {}
