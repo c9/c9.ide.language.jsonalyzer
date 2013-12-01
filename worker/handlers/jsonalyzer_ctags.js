@@ -10,12 +10,12 @@ var index = require("plugins/c9.ide.language.jsonalyzer/worker/semantic_index");
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_handler");
 var ctags = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_ex");
+var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 
 var handler = module.exports = Object.create(PluginBase);
 
-var EXTENSION_GROUPS = ctags.LANGUAGES.map(function(l) { return l.extensions; });
 var IDLE_TIME = 50;
 
 handler.languages = [".*"];
@@ -23,29 +23,8 @@ handler.languages = [".*"];
 handler.extensions = Array.prototype.concat.apply([], EXTENSION_GROUPS);
 
 handler.findImports = function(path, doc, ast, callback) {
-    var openFiles = workerUtil.getOpenFiles();
-    var extension = getExtension(path);
-    var supported = getCompatibleExtensions(extension);
-    var imports = openFiles.filter(function(path) {
-        return supported.indexOf(getExtension(path)) > -1;
-    });
-    callback(null, imports);
+    callback(null, ctagsUtil.findMatchingOpenFiles(path));
 };
-
-function getExtension(path) {
-    return path.match(/[^\.]*$/)[0];
-}
-
-/**
- * Get an array of compatible extensions, e.g. ["js", "html"] for "js".
- */
-function getCompatibleExtensions(extension) {
-    for (var i = 0; i < EXTENSION_GROUPS.length; i++) {
-        if (EXTENSION_GROUPS[i].indexOf(extension) > -1)
-            return EXTENSION_GROUPS[i];
-    }
-    return [extension];
-}
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")

@@ -9,6 +9,8 @@ define(function(require, exports, module) {
 var jsonalyzer;
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
+var pathUtil = require("plugins/c9.ide.language.javascript.infer/path");
+var architectResolver = require("./architect_runtime_resolver");
 
 var TAGS = [
     {
@@ -54,33 +56,47 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
 handler.analyzeOthers = handler.analyzeCurrentAll;
 
 handler.findImports = function(path, doc, ast, callback) {
-    // TODO: get open files + guess imports
-    require("./jsonalyzer_ctags").findImports(path, doc, ast, callback);
+    var archImports = architectResolver.findImports(path, doc, ast);
+    var openFiles = ctagsUtil.findMatchingOpenFiles(path);
+    var astImports = findImportsInAST(path, ast);
+        
+    callback(null, archImports.concat(openFiles, astImports));
 };
 
-/*
-handler.findImports = function(path, doc, ast, callback) {
-    callback(this.findImportsSync(ast));
-};
-
-function findImportsSync(ast) {
+function findImportsInAST(path, ast) {
     if (!ast)
         return [];
     
-    var basePath = path.getBasePath(jsonalyzer.path, jsonalyzer.workspaceDir);
+    var basePath = path.match(/^(.*?)(\/[^\/]+)?$/)[1];
     return ast.collectTopDown(
         'Call(Var("require"), [String(required)])', function(b) {
             var name = b.required.value;
             if (name.match(/^text!/))
                 return;
-            var isFilePath = path.isRelativePath(name) || path.isAbsolutePath(name);
-            var result = isFilePath ? path.canonicalizePath(name, basePath) : "js_p:" + name;
+            var isFilePath = pathUtil.isAbsolutePath(name) || pathUtil.isRelativePath(name);
+            
+            // HACK: we only support file paths right now
+            if (!isFilePath)
+                name = guessFilePath(basePath, name);
+            if (!name)
+                return;
+            
+            var result = isFilePath ? pathUtil.canonicalizePath(name, basePath) : "js_p:" + name;
             if (isFilePath && !result.match(/\.js$/))
                 result += ".js";
             return result;
         }
     ).toArray();
 };
-*/
+
+function guessFilePath(basePath, importPath) {
+    var baseDir = importPath.match(/[^\/]+/)[0];
+    if (!baseDir)
+        return;
+    var i = basePath.indexOf(baseDir);
+    if (i === -1)
+        return;
+    return basePath.substr(0, i) + importPath;
+}
 
 });
