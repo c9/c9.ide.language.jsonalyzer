@@ -144,7 +144,7 @@ module.exports.guessFargs = function(line, name) {
 };
 
 function getExtension(path) {
-    return path.match(/[^\.]*$/)[0];
+    return path.match(/[^\.\\\/]*$/)[0];
 }
 
 /**
