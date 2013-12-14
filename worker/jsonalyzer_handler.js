@@ -39,12 +39,12 @@ handler.registerHandler = function(plugin, guidName, languages, extensions) {
     plugin.guidNameRegex = new RegExp("^" + guidName + ":");
     plugin.supportedLanguages = [];
     languages.forEach(function(e) {
-        supportedLanguages += (supportedLanguages ? "|" : "") + e;
-        plugin.supportedLanguages += (plugin.supportedExtensions ? "|" : "") + e;
+        supportedLanguages += (supportedLanguages ? "|^" : "^") + e;
+        plugin.supportedLanguages += (plugin.supportedExtensions ? "|^" : "^") + e + "$";
     });
     extensions.forEach(function(e) {
-        supportedExtensions += (supportedExtensions ? "|" : "") + e;
-        plugin.supportedExtensions += (plugin.supportedExtensions ? "|" : "") + e;
+        supportedExtensions += (supportedExtensions ? "|^" : "^") + e + "$";
+        plugin.supportedExtensions += (plugin.supportedExtensions ? "|^" : "^") + e + "$";
     });
 };
 
@@ -92,11 +92,16 @@ handler.handlesLanguage = function(language) {
     // since ctags does any language right now
     return language
         && !!language.match(supportedLanguages)
-        && this.path.match(/[^.]*$/)[0].match(supportedExtensions);
+        && this.$handlesPath(this.path);
+};
+
+handler.$handlesPath = function(path) {
+    var extension = path.match(/[^.\/]*$/)[0];
+    return !!extension.match(supportedExtensions);
 };
 
 handler.onDocumentOpen = function(path, doc, oldPath, callback) {
-    if (!path.match(supportedExtensions))
+    if (!this.$handlesPath(path))
         return;
     
     // Analyze any opened document to make completions more rapid
@@ -149,7 +154,7 @@ handler.onFileChange = function(event) {
         return;
     var path = event.data.path.replace(/^\/((?!workspace)[^\/]+\/[^\/]+\/)?workspace\//, "");
     
-    if (!path.match(supportedExtensions))
+    if (!this.$handlesPath(path))
         return;
     
     if (event.data.isSave && path === this.path)
