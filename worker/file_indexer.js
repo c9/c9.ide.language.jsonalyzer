@@ -14,9 +14,11 @@ var assert = require("plugins/c9.util/assert");
 var handler;
 
 var QUEUE_DELAY = 5 * 1000;
+var QUEUE_MAX_TIME = 120 * 1000;
 
 var queueSet = {};
 var queueTimer;
+var queueWatcher;
 var isJobActive = false;
 var queueCallbacks = [];
 
@@ -79,9 +81,6 @@ var enqueue = indexer.analyzeOthers = function(paths, now, callback) {
         queueSet["_" + paths[i]] = paths[i];
     }
     
-    if (isJobActive)
-        return;
-    
     if (now)
         return consumeQueue();
     
@@ -94,6 +93,7 @@ function consumeQueue() {
     if (isJobActive)
         return;
     isJobActive = true;
+    updateQueueWatcher();
     
     var paths = [];
     for (var item in queueSet) {
@@ -127,6 +127,7 @@ function consumeQueue() {
                  
             task.plugin.analyzeOthers(task.paths, function(errs, results) {
                 assert(!errs || Array.isArray(errs));
+                updateQueueWatcher();
                 
                 // Help debuggers
                 var pathsCopy = task.paths.slice();
@@ -154,9 +155,19 @@ function consumeQueue() {
     
     function done() {
         isJobActive = false;
+        clearTimeout(queueWatcher);
         var callbacks = queueCallbacks;
         queueCallbacks = [];
         callbacks.forEach(function(callback) { callback() });
+    }
+    
+    function updateQueueWatcher() {
+        clearTimeout(queueWatcher);
+        queueWatcher = setTimeout(function() {
+            isJobActive = false;
+            console.error("Warning: file_indexer plugin timeout, restarting");
+            consumeQueue();
+        }, QUEUE_MAX_TIME);
     }
 }
 
