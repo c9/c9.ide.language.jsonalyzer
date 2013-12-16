@@ -93,6 +93,7 @@ var LANGUAGES = module.exports.LANGUAGES = [
 
 // ctags.FS_createPath("/", "etc", true, true);
 // ctags.FS_createDataFile("/etc", ".ctags", "--help\n" + CTAGS_OPTIONS.join("\n"), true, true);
+util.init(module.exports);
 
 module.exports.analyze = function(path, doc, callback) {
     if (!doc)

@@ -19,6 +19,7 @@ var scopeAnalyzer = require('plugins/c9.ide.language.javascript/scope_analyzer')
 var directoryIndexer = require("./directory_indexer");
 var fileIndexer = require("./file_indexer");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
+var ctagsEx =  require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_ex");
 require("treehugger/traverse"); // add traversal methods
 
 var handler = module.exports = Object.create(baseLanguageHandler);
@@ -76,7 +77,7 @@ handler.init = function(callback) {
     outline.init(this);
     refactor.init(this);
     highlight.init(this);
-    ctagsUtil.init(this);
+    ctagsUtil.init(ctagsEx, this);
     
     plugins.forEach(function(p) {
         p.init(_self);

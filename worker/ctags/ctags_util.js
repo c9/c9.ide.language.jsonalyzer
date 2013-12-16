@@ -6,19 +6,19 @@
 define(function(require, exports, module) {
 
 var assert = require("plugins/c9.util/assert");
-var ctags = require("./ctags_ex");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 var jsonalyzer;
 
 var MAX_DOCHEAD_LENGTH = 80;
-var EXTENSION_GROUPS = ctags.LANGUAGES.map(function(l) { return l.extensions; });
+var EXTENSION_GROUPS;
 
 module.exports.MAX_DOCHEAD_LENGTH = MAX_DOCHEAD_LENGTH;
 
 module.exports.EXTENSION_GROUPS = EXTENSION_GROUPS;
 
-module.exports.init = function(_jsonalyzer) {
-    jsonalyzer = _jsonalyzer;
+module.exports.init = function(ctags, _jsonalyzer) {
+    jsonalyzer = _jsonalyzer || jsonalyzer;
+    EXTENSION_GROUPS = ctags.LANGUAGES.map(function(l) { return l.extensions; });
 };
 
 module.exports.extractDocumentationAtRow = function(lines, row) {
