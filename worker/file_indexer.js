@@ -10,7 +10,7 @@ var indexer = module.exports;
 var index = require("./semantic_index");
 var worker = require("plugins/c9.ide.language/worker");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
-var assert = require("plugins/c9.util/assert");
+var assert = require("c9/assert");
 var handler;
 
 var QUEUE_DELAY = 5 * 1000;

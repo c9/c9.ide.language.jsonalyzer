@@ -5,7 +5,7 @@
  */
 define(function(require, exports, module) {
 
-var assert = require("plugins/c9.util/assert");
+var assert = require("c9/assert");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 var jsonalyzer;
 

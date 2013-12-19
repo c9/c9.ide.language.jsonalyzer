@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
 
 var fileIndexer = require("./file_indexer");
-var assert = require("plugins/c9.util/assert");
+var assert = require("c9/assert");
 var handler;
 
 module.exports.init = function(_handler) {

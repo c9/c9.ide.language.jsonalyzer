@@ -9,7 +9,7 @@ define(function(require, exports, module) {
 var baseLanguageHandler = require("plugins/c9.ide.language/base_handler");
 var index = require("./semantic_index");
 var plugins = require("plugins/c9.ide.language.jsonalyzer/worker/handlers/index");
-var assert = require("plugins/c9.util/assert");
+var assert = require("c9/assert");
 var jumptodef = require("./jumptodef");
 var complete = require("./complete");
 var outline = require("./outline");
