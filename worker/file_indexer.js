@@ -105,6 +105,8 @@ function consumeQueue() {
     
     var pathsPerPlugin = {};
     for (var i = 0; i < paths.length; i++) {
+        if (!handler.$handlesPath(paths[i])) // path added when not fully initialized yet
+            continue;
         var plugin = handler.getPluginFor(paths[i]);
         if (!pathsPerPlugin[plugin.guidName]) {
             pathsPerPlugin[plugin.guidName] = {

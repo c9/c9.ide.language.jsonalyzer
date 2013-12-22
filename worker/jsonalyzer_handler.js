@@ -98,11 +98,12 @@ handler.handlesLanguage = function(language) {
 
 handler.$handlesPath = function(path) {
     var extension = path.match(/[^.\/]*$/)[0];
-    return !!extension.match(supportedExtensions);
+    return extension && !!extension.match(supportedExtensions);
 };
 
 handler.onDocumentOpen = function(path, doc, oldPath, callback) {
-    if (!this.$handlesPath(path))
+    // Check path validity if inited; otherwise do check later
+    if (this.$isInited && !this.$handlesPath(path))
         return;
     
     // Analyze any opened document to make completions more rapid
