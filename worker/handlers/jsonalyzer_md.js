@@ -12,9 +12,9 @@ var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_u
 
 var TAGS = [
     { regex: /(?:^|\n)# (.*?)[#\s]*(?:\n|$)/g, kind: "property" },
-    { regex: /(?:^|\n)[A-Za-z0-9](.*?)\s*\n={2,}(?:\n|$)/g, kind: "property" },
+    { regex: /(?:^|\n)([A-Za-z0-9].*?)\s*\n={2,}(?:\n|$)/g, kind: "property" },
     { regex: /(?:^|\n)#{2,} (.*?)[#\s]*(?:\n|$)/g, kind: "property2" },
-    { regex: /(?:^|\n)[A-Za-z0-9](.*?)\s*\n-{2,}(?:\n|$)/g, kind: "property2" },
+    { regex: /(?:^|\n)([A-Za-z0-9].*?)\s*\n-{2,}(?:\n|$)/g, kind: "property2" },
 ];
 var GUESS_FARGS = false;
 var EXTRACT_DOCS = false;
