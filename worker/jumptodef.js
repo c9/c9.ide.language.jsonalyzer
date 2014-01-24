@@ -25,9 +25,9 @@ module.exports.jumpToDefinition = function(doc, fullAst, pos, currentNode, callb
     // from us or from another outliner, and we'll use it as a local
     // list of definitions to jump to.
     worker.$lastWorker.getOutline(function(outline) {
-        var results = outline && outline.items
-            ? findInOutline(outline.items, identifier)
-            : [];
+        var results = [];
+        if (outline && outline.items)
+            results = findInOutline(outline.items, identifier);
         
         // Next, get results based on the summaries of our imports
         fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, {}, function(err, result, imports) {
@@ -35,6 +35,10 @@ module.exports.jumpToDefinition = function(doc, fullAst, pos, currentNode, callb
                 console.error(err);
                 return callback(results);
             }
+            
+            // Maybe we can get it from the summary instead of the outline
+            if (!results.length)
+                results = findInSummaries([result], identifier, results);
 
             // We only actually download & analyze new files if really needed
             var needAllImports = !results.length;
