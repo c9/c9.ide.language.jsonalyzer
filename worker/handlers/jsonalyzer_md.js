@@ -33,7 +33,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         return callback(null, {});
         
     if (doc.length > jsonalyzer.getMaxFileSizeSupported())
-        return callback();
+        return callback(null, {});
     
     var results = {};
     TAGS.forEach(function(tag) {
