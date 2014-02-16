@@ -7,7 +7,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "Plugin", "commands", "language", "c9", "watcher",
-        "save", "language.complete", "dialog.error"
+        "save", "language.complete", "dialog.error", "ext"
     ];
     main.provides = [
         "jsonalyzer"
@@ -23,10 +23,12 @@ define(function(require, exports, module) {
         var complete = imports["language.complete"];
         var showAlert = imports["dialog.error"].show;
         var hideAlert = imports["dialog.error"].hide;
+        var ext = imports.ext;
         
         var plugin = new Plugin("Ajax.org", main.consumes);
         
         var worker;
+        var server;
         
         var loaded = false;
         function load() {
@@ -35,6 +37,17 @@ define(function(require, exports, module) {
             
             var loadedWorker;
             var warning;
+
+            ext.loadRemotePlugin("jsonalyzer_server", {
+                // code: "",
+                code: require("text!./jsonalyzer_server.js"),
+                redefine: true
+            }, function(err, api) {
+                console.error(err);
+                server = api;
+                debugger;
+            });
+            
             language.registerLanguageHandler(
                 "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_handler",
                 function(err, langWorker) {
