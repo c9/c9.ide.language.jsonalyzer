@@ -33,11 +33,9 @@ handler.KIND_DEFAULT = scopeAnalyzer.KIND_DEFAULT;
 handler.KIND_PACKAGE = scopeAnalyzer.KIND_PACKAGE;
 handler.GUID_PREFIX = "project:";
 
-handler.registerHandler = function(plugin, guidName, languages, extensions) {
+handler.registerHandler = function(plugin, languages, extensions) {
     if (plugins.indexOf(plugin) === -1)
         plugins.push(plugin);
-    plugin.guidName = guidName;
-    plugin.guidNameRegex = new RegExp("^" + guidName + ":");
     languages.forEach(function(e) {
         supportedLanguages += (supportedLanguages ? "|^" : "^") + e;
         plugin.supportedLanguages += (plugin.supportedLanguages ? "|^" : "^") + e + "$";
@@ -180,7 +178,7 @@ handler.getPluginFor = function(path, language) {
     
     // Defer ctags plugin
     if (results.length > 1)
-        results = results.filter(function(r) { return r.guidName !== "ctags"; });
+        results = results.filter(function(r) { return !r.isGeneric; });
     
     return results[0];
 };

@@ -18,15 +18,12 @@ var TAGS = [
 ];
 var GUESS_FARGS = false;
 var EXTRACT_DOCS = false;
-var LANGUAGES = ["markdown"];
-var EXTENSIONS = ["md", "markdown"];
 
 var handler = module.exports = Object.create(PluginBase);
 
-handler.init = function(jsonalyzer_worker) {
-    jsonalyzer = jsonalyzer_worker;
-    jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
-};
+handler.languages = ["markdown"];
+
+handler.extensions = ["md", "markdown"];
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")

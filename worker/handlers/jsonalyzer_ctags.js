@@ -17,11 +17,9 @@ var handler = module.exports = Object.create(PluginBase);
 var EXTENSION_GROUPS = ctags.LANGUAGES.map(function(l) { return l.extensions; });
 var IDLE_TIME = 50;
 
-handler.init = function(theHandler) {
-    handler = theHandler;
-    var extensions = Array.prototype.concat.apply([], EXTENSION_GROUPS);
-    handler.registerHandler(this, "ctags", ["<<ctags requires matching extensions>>"], extensions);
-};
+handler.languages = [".*"];
+
+handler.extensions = Array.prototype.concat.apply([], EXTENSION_GROUPS);
 
 handler.findImports = function(path, doc, ast, callback) {
     var openFiles = workerUtil.getOpenFiles();

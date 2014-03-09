@@ -29,15 +29,12 @@ var TAGS = [
 ];
 var GUESS_FARGS = true;
 var EXTRACT_DOCS = true;
-var LANGUAGES = ["php"];
-var EXTENSIONS = ["php"];
 
 var handler = module.exports = Object.create(PluginBase);
 
-handler.init = function(jsonalyzer_worker) {
-    jsonalyzer = jsonalyzer_worker;
-    jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
-};
+handler.languages = ["php"];
+
+handler.extensions = ["php"];
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")

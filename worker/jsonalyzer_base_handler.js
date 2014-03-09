@@ -17,29 +17,13 @@ var workerUtil = require("plugins/c9.ide.language/worker_util");
  * @class language.jsonalyzer_base_handler
  */
 module.exports = {
+
+    // ABSTRACT MEMBERS
+
+    languages: [],
     
-    // HELPERS (AUTOMATICALLY SET)
-    
-    guidName: null,
-    
-    guidNameRegex: null,
-    
-    supportedLanguages: "",
-    
-    supportedExtensions: "",
-    
-    // ABSTRACT METHODS
-    
-    /**
-     * Initializes the plugin, and calls
-     * handler.registerHandler()
-     * 
-     * Must be implemented by inheritors.
-     */
-    init: function(handler) {
-        throw new Error("init() not implemented by inheritor");
-    },
-    
+    extensions: [],
+
     /**
      * Find all imports in a file.
      * Likely to be called each time analyzeCurrent is called.

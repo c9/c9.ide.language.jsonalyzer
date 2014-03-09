@@ -16,6 +16,8 @@ define(function(require, exports, module) {
 
     function main(options, imports, register) {
         var Plugin = imports.Plugin;
+        var plugin = new Plugin("Ajax.org", main.consumes);
+        var emit = plugin.getEmitter();
         var c9 = imports.c9;
         var language = imports.language;
         var watcher = imports.watcher;
@@ -24,8 +26,21 @@ define(function(require, exports, module) {
         var showAlert = imports["dialog.error"].show;
         var hideAlert = imports["dialog.error"].hide;
         var ext = imports.ext;
+        var async = require("async");
         
-        var plugin = new Plugin("Ajax.org", main.consumes);
+        var PLUGINS = [
+            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_js",
+            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_md",
+            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_php",
+            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
+        ];
+        
+        var SERVER_HELPER_PLUGINS = [
+            "plugins/c9.ide.language/complete_util",
+            "plugins/c9.ide.language/worker_util",
+            "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler",
+            "plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util",
+        ];
         
         var worker;
         var server;
@@ -38,14 +53,15 @@ define(function(require, exports, module) {
             var loadedWorker;
             var warning;
 
-            ext.loadRemotePlugin("jsonalyzer_server", {
-                // code: "",
-                code: require("text!./jsonalyzer_server.js"),
-                redefine: true
-            }, function(err, api) {
-                console.error(err);
-                server = api;
-                debugger;
+            PLUGINS.forEach(function(plugin) {
+                registerHandler(plugin, null, plugin.match(/ctags/));
+            });
+            
+            loadServer(function(err, result) {
+                if (err) return console.error("[jsonalyzer] fatal error loading server", err);
+                
+                server = result;
+                emit.sticky("initServer");
             });
             
             language.registerLanguageHandler(
@@ -59,7 +75,7 @@ define(function(require, exports, module) {
                     watcher.on("directory", onDirChange);
                     save.on("afterSave", onFileSave);
                     c9.on("stateChange", onOnlineChange);
-                    complete.on("replaceText", onReplaceText);
+                    worker.on("jsonalyzerServerRegister", onServerRegister);
                     onOnlineChange();
                     if (warning)
                         hideAlert(warning);
@@ -71,6 +87,34 @@ define(function(require, exports, module) {
                         warning = showAlert("Language worker could not be loaded; some language features have been disabled");
                 }, 50);
             }, 30000);
+        }
+        
+        function loadServer(callback) {
+            ext.loadRemotePlugin("jsonalyzer_server", {
+                code: require("text!./jsonalyzer_server.js"),
+                redefine: true
+            }, function(err, server) {
+                if (err) return callback(err);
+                
+                server.registerHelper(
+                    "plugins/c9.ide.language/worker",
+                    "['$lastWorker', 'sender'].forEach(function(p) { \
+                        Object.defineProperty(module.exports, p, { \
+                            get: function() { throw new Error('Unavailable in server context: worker.' + p); } \
+                        }); \
+                     }); \
+                     module.exports.asyncForEach = require('async').forEach;",
+                    function(err) {
+                        if (err) return callback(err);
+                        
+                        async.forEach(SERVER_HELPER_PLUGINS, function(path, next) {
+                            require(["text!" + path + ".js"], function(content) {
+                                server.registerHelper(path, content, next);
+                            });
+                        }, callback);
+                    }
+                );
+            });
         }
         
         function onFileChange(event) {
@@ -90,8 +134,19 @@ define(function(require, exports, module) {
             worker.emit("onlinechange", {data: { isOnline: c9.connected }});
         }
         
-        function onReplaceText(event) {
-            worker.emit("replaceText", { data: event });
+        function onServerRegister(event) {
+            plugin.once("serverInit", function() {
+                server.registerHandler(event.filename, event.content, function(err) {
+                    if (err) return console.error(err);
+                });
+            });
+        }
+        
+        function registerHandler(path, contents, clientOnly, serverOnly) {
+            language.getWorker(function(err, worker) {
+                if (err) return console.error(err);
+                worker.emit("jsonalyzerRegister", { path: path });
+            });
         }
         
         plugin.on("load", function(){
@@ -106,6 +161,7 @@ define(function(require, exports, module) {
          */
         plugin.freezePublicAPI({
             // TODO: register method like the one language has
+            registerHandler : registerHandler
         });
         
         register(null, { jsonalyzer: plugin });
