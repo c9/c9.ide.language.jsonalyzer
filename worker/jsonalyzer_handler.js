@@ -97,8 +97,8 @@ handler.handlesLanguage = function(language) {
 };
 
 handler.$handlesPath = function(path) {
-    var extension = path.match(/[^.\/]*$/)[0];
-    return extension && !!extension.match(supportedExtensions);
+    var extension = path.match(/\.([^/.]*)$/);
+    return (extension && extension[1] || "").match(supportedExtensions) && 1;
 };
 
 handler.onDocumentOpen = function(path, doc, oldPath, callback) {
@@ -174,7 +174,8 @@ handler.onDirChange = function(event) {
 };
 
 handler.getPluginFor = function(path) {
-    var extension = path.match(/[^.]*$/)[0];
+    var match = path.match(/\.([^/.]*)$/);
+    var extension = match && match[1] || "";
     if (!extension.match(supportedExtensions))
         throw new Error("No jsonalyzer plugin for " + extension);
     
