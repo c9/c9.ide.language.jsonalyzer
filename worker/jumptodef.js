@@ -82,8 +82,9 @@ function findInSummaries(summaries, identifier, results) {
 }
 
 function isNameMatch(identifier, indexName) {
-    // TODO: consider index names like foo.bar or foo()
-    return identifier === indexName;
+    // Match name from outline, considering index names like foo.bar or foo()
+    return identifier === indexName
+        || identifier === indexName.replace(/(.*\.)?([^.]*?)(\([^\]]*\))?$/, "$2");
 }
 
 function findInOutline(outline, identifier, results) {
