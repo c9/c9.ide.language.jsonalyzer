@@ -7,7 +7,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "Plugin", "commands", "language", "c9", "watcher",
-        "save"
+        "save", "language.complete"
     ];
     main.provides = [
         "jsonalyzer"
@@ -20,6 +20,7 @@ define(function(require, exports, module) {
         var language = imports.language;
         var watcher = imports.watcher;
         var save = imports.save;
+        var complete = imports["language.complete"];
         
         var plugin = new Plugin("Ajax.org", main.consumes);
         
@@ -40,6 +41,7 @@ define(function(require, exports, module) {
                     watcher.on("directory", onDirChange);
                     save.on("afterSave", onFileSave);
                     c9.on("stateChange", onOnlineChange);
+                    complete.on("replaceText", onReplaceText);
                     onOnlineChange();
                 }
             );
@@ -60,6 +62,10 @@ define(function(require, exports, module) {
         
         function onOnlineChange(event) {
             worker.emit("onlinechange", {data: { isOnline: c9.connected }});
+        }
+        
+        function onReplaceText(event) {
+            worker.emit("replaceText", { data: event });
         }
         
         plugin.on("load", function(){
