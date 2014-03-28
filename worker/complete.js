@@ -61,11 +61,12 @@ function toCompletionResult(file, name, priority, entry) {
     var fullName = entry.guessFargs
         ? name + ctagsUtil.guessFargs(entry.docHead, name)
         : name;
+    var braces = fullName !== name ? "(^^)" : "";
     
     return {
         id          : name,
         name        : fullName,
-        replaceText : name,
+        replaceText : name + braces,
         icon        : "unknown2",
         meta        : file,
         doc         : entry.doc,
