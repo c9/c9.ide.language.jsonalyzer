@@ -20,7 +20,7 @@ var IDLE_TIME = 50;
 handler.init = function(theHandler) {
     handler = theHandler;
     var extensions = Array.prototype.concat.apply([], EXTENSION_GROUPS);
-    handler.registerHandler(this, "ctags", [".*"], extensions);
+    handler.registerHandler(this, "ctags", ["<<ctags requires matching extensions>>"], extensions);
 };
 
 handler.findImports = function(path, doc, ast, callback) {

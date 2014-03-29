@@ -26,6 +26,8 @@ handler.init = function(jsonalyzer_worker) {
     jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
 };
 
+handler.supportedPaths = "(^|\/)Makefile.*";
+
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")
         return callback(null, {});

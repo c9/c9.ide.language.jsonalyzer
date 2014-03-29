@@ -89,16 +89,17 @@ handler.init = function(callback) {
 };
 
 handler.handlesLanguage = function(language) {
-    // Let's cheat a little bit and use the path as well,
-    // since ctags does any language right now
-    return language
-        && !!language.match(supportedLanguages)
-        && this.$handlesPath(this.path);
+    if (language && language.match(supportedLanguages))
+        return true;
+    // ctags may only match by extension
+    if (this.$handlesPath(this.path) && this.getPluginFor(this.path).guidName === "ctags")
+        return true;
+    return false;
 };
 
 handler.$handlesPath = function(path) {
     var extension = path.match(/\.([^/.]*)$/);
-    return (extension && extension[1] || "").match(supportedExtensions) && 1;
+    return !!(extension && extension[1] || "").match(supportedExtensions);
 };
 
 handler.onDocumentOpen = function(path, doc, oldPath, callback) {
@@ -173,24 +174,29 @@ handler.onDirChange = function(event) {
     directoryIndexer.enqueue(event.data.path);
 };
 
-handler.getPluginFor = function(path) {
+handler.getPluginFor = function(path, language) {
+    language = language || handler.path === path && handler.language;
+    
     var match = path.match(/\.([^/.]*)$/);
     var extension = match && match[1] || "";
-    if (!extension.match(supportedExtensions))
-        throw new Error("No jsonalyzer plugin for " + extension);
+    if (!extension.match(supportedExtensions) && !(language || "").match(supportedLanguages))
+        throw new Error("No jsonalyzer plugin for " + path + " / " + language);
     
     var results = plugins.filter(function(p) {
-        return extension.match(p.supportedExtensions);
-    });
+        return language && language.match(p.supportedLanguages);
+    }).concat(
+    plugins.filter(function(p) {
+        return extension.match(p.supportedExtensions)
+            && (!p.supportedPaths || path.match(p.supportedPaths));
+    }));
+    
     // Defer ctags plugin
     if (results.length > 1)
         results = results.filter(function(r) { return r.guidName !== "ctags"; });
     
-    switch (results.length) {
-        case 1: return results[0];
-        case 0: throw new Error("No jsonalyzer plugin for " + extension);
-        default: throw new Error("More than one jsonalyzer plugin registered for " + extension);
-    }
+    if (!results.length)
+        throw new Error("No jsonalyzer plugin found for " + path + " / " + language)
+    return results[0];
 };
 
 handler.getAllPlugins = function() {
