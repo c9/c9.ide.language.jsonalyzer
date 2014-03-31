@@ -394,7 +394,7 @@ describe("jsonalyzer handler", function(){
             null,
             function(results) {
                 assert(results && results.length > 0);
-                assert.equal(results[0].name, "foo()");
+                assert.equal(results[0].name, "foo");
                 assert(results[0].doc.match(/foo something/));
                 done();
             }

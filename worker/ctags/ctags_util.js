@@ -74,7 +74,7 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
  * @param {Boolean} guessFargs
  * @param {Object[]} [results]
  */
-module.exports.findMatchingTags = function(path, docValue, tag, extractDocumentation, guessFargs, results) {
+module.exports.findMatchingTags = function(path, docValue, tag, guessFargs, extractDocumentation, results) {
     assert(tag.regex.global, "Regex must use /g flag: " + tag.regex);
     var _self = this;
     var lines = path === jsonalyzer.path && jsonalyzer.doc
@@ -137,6 +137,8 @@ module.exports.findMatchingOpenFiles = function(path) {
 };
 
 module.exports.guessFargs = function(line, name) {
+    if (!line)
+        return "";
     var guess = /\([A-Za-z0-9$_,\s]*(\))?/;
     guess.lastIndex = line.indexOf(name) + name.length;
     var match = guess.exec(line);
