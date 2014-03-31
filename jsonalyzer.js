@@ -7,7 +7,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "Plugin", "commands", "language", "c9", "watcher",
-        "save", "language.complete"
+        "save", "language.complete", "dialog.error"
     ];
     main.provides = [
         "jsonalyzer"
@@ -21,6 +21,7 @@ define(function(require, exports, module) {
         var watcher = imports.watcher;
         var save = imports.save;
         var complete = imports["language.complete"];
+        var showAlert = imports["dialog.error"].show;
         
         var plugin = new Plugin("Ajax.org", main.consumes);
         
@@ -31,11 +32,13 @@ define(function(require, exports, module) {
             if (loaded) return false;
             loaded = true;
             
+            var loadedWorker;
             language.registerLanguageHandler(
                 "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_handler",
                 function(err, langWorker) {
                     if (err)
-                        return console.error(err);
+                        return showError(err);
+                    loadedWorker = true;
                     worker = langWorker;
                     watcher.on("change", onFileChange);
                     watcher.on("directory", onDirChange);
@@ -45,6 +48,10 @@ define(function(require, exports, module) {
                     onOnlineChange();
                 }
             );
+            setTimeout(function() {
+                if (!loadedWorker)
+                    showError("Language worker could not be loaded; some language features have been disabled");
+            }, 30000);
         }
         
         function onFileChange(event) {
