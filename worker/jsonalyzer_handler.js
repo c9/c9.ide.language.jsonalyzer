@@ -38,10 +38,9 @@ handler.registerHandler = function(plugin, guidName, languages, extensions) {
         plugins.push(plugin);
     plugin.guidName = guidName;
     plugin.guidNameRegex = new RegExp("^" + guidName + ":");
-    plugin.supportedLanguages = [];
     languages.forEach(function(e) {
         supportedLanguages += (supportedLanguages ? "|^" : "^") + e;
-        plugin.supportedLanguages += (plugin.supportedExtensions ? "|^" : "^") + e + "$";
+        plugin.supportedLanguages += (plugin.supportedLanguages ? "|^" : "^") + e + "$";
     });
     extensions.forEach(function(e) {
         supportedExtensions += (supportedExtensions ? "|^" : "^") + e + "$";
@@ -89,22 +88,12 @@ handler.init = function(callback) {
 };
 
 handler.handlesLanguage = function(language) {
-    if (language && language.match(supportedLanguages))
-        return true;
-    // ctags may only match by extension
-    if (this.$handlesPath(this.path) && this.getPluginFor(this.path).guidName === "ctags")
-        return true;
-    return false;
-};
-
-handler.$handlesPath = function(path) {
-    var extension = path.match(/\.([^/.]*)$/);
-    return !!(extension && extension[1] || "").match(supportedExtensions);
+    return this.getPluginFor(this.path, language);
 };
 
 handler.onDocumentOpen = function(path, doc, oldPath, callback) {
     // Check path validity if inited; otherwise do check later
-    if (this.$isInited && !this.$handlesPath(path))
+    if (this.$isInited && !this.getPluginFor(path, null))
         return;
     
     // Analyze any opened document to make completions more rapid
@@ -157,7 +146,7 @@ handler.onFileChange = function(event) {
         return;
     var path = event.data.path.replace(/^\/((?!workspace)[^\/]+\/[^\/]+\/)?workspace\//, "");
     
-    if (!this.$handlesPath(path))
+    if (!this.getPluginFor(path, null))
         return;
     
     if (event.data.isSave && path === this.path)
@@ -180,7 +169,7 @@ handler.getPluginFor = function(path, language) {
     var match = path.match(/\.([^/.]*)$/);
     var extension = match && match[1] || "";
     if (!extension.match(supportedExtensions) && !(language || "").match(supportedLanguages))
-        throw new Error("No jsonalyzer plugin for " + path + " / " + language);
+        return null;
     
     var results = plugins.filter(function(p) {
         return language && language.match(p.supportedLanguages);
@@ -194,8 +183,6 @@ handler.getPluginFor = function(path, language) {
     if (results.length > 1)
         results = results.filter(function(r) { return r.guidName !== "ctags"; });
     
-    if (!results.length)
-        throw new Error("No jsonalyzer plugin found for " + path + " / " + language)
     return results[0];
 };
 

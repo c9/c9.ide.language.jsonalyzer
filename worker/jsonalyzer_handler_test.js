@@ -21,10 +21,10 @@ var directoryIndexer = require("./directory_indexer");
 var Document  = require("ace/document").Document;
 
 // Auto-init handler.doc
-var oldAnalyze = handler.analyze.bind(handler);
+var realAnalyze = handler.analyze.bind(handler);
 handler.analyze = function(doc, ast, callback) {
     handler.doc = new Document(doc);
-    oldAnalyze(doc, ast, callback);
+    realAnalyze(doc, ast, callback);
 };
 
 describe("jsonalyzer handler", function(){
@@ -34,6 +34,8 @@ describe("jsonalyzer handler", function(){
         
         // Mock / defaults
         handler.doc = null;
+        handler.path = null;
+        handler.language = null;
         handler.sender = {
             on: function() {}
         };
@@ -647,6 +649,38 @@ describe("jsonalyzer handler", function(){
                 done();
             }
         );
+    });
+    it("doesn't handle json files", function(done) {
+        handler.path = "/testfile.json";
+        assert(!handler.getPluginFor(handler.path));
+        done();
+    });
+    it("doesn't handle json-language files", function(done) {
+        handler.path = "/testfile.json";
+        handler.language = "json";
+        assert(!handler.getPluginFor(handler.path));
+        
+        handler.path = "/testfile";
+        handler.language = "json";
+        assert(!handler.getPluginFor(handler.path));
+        done();
+    });
+    it("does handle sh files", function(done) {
+        handler.path = "/testfile.sh";
+        assert(handler.getPluginFor(handler.path));
+        done();
+    });
+    it("does, apparently, handle sh files in json language", function(done) {
+        handler.path = "/testfile.sh";
+        handler.language = "json";
+        assert(handler.getPluginFor(handler.path));
+        done();
+    });
+    it("does handle json files in sh language", function(done) {
+        handler.path = "/testfile.json";
+        handler.language = "sh";
+        assert(handler.getPluginFor(handler.path));
+        done();
     });
 });
 

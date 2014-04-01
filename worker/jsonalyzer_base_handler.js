@@ -24,7 +24,7 @@ module.exports = {
     
     guidNameRegex: null,
     
-    supportedLanguages: [],
+    supportedLanguages: "",
     
     supportedExtensions: "",
     
