@@ -37,7 +37,7 @@ define(function(require, exports, module) {
                 "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_handler",
                 function(err, langWorker) {
                     if (err)
-                        return showError(err);
+                        return showAlert(err);
                     loadedWorker = true;
                     worker = langWorker;
                     watcher.on("change", onFileChange);
@@ -50,7 +50,7 @@ define(function(require, exports, module) {
             );
             setTimeout(function() {
                 if (!loadedWorker)
-                    showError("Language worker could not be loaded; some language features have been disabled");
+                    showAlert("Language worker could not be loaded; some language features have been disabled");
             }, 30000);
         }
         
