@@ -21,9 +21,11 @@ var directoryIndexer = require("./directory_indexer");
 var Document  = require("ace/document").Document;
 
 // Auto-init handler.doc
+var analyzed = 0;
 var realAnalyze = handler.analyze.bind(handler);
 handler.analyze = function(doc, ast, callback) {
-    handler.doc = new Document(doc);
+    handler.doc = typeof doc === "string" ? new Document(doc) : doc;
+    analyzed++;
     realAnalyze(doc, ast, callback);
 };
 
@@ -102,7 +104,7 @@ describe("jsonalyzer handler", function(){
     it("completes your code", function(done) {
         handler.path = "/testfile.cs";
         handler.complete(
-            new Document("f function foo() {}"),
+            new Document("f \nfunction foo() {}"),
             null,
             { row: 0, col: 1 },
             null,
@@ -112,6 +114,22 @@ describe("jsonalyzer handler", function(){
                 done();
             }
         );
+    });
+    it("doesn't immediately reanalyze when it completes your code", function(done) {
+        handler.path = "/testfile.cs";
+        handler.analyze("f \nfunction foo() {}", null, function() {
+            var analyzedBefore = analyzed;
+            handler.complete(
+                new Document("f \nfunction foo() {}"),
+                null,
+                { row: 0, col: 1 },
+                null,
+                function(results) {
+                    assert.equal(analyzedBefore, analyzed);
+                    done();
+                }
+            );
+        });
     });
     it("completes code accross multiple files", function(done) {
         var file1 = {

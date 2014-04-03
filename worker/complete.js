@@ -16,15 +16,14 @@ module.exports.init = function(_handler) {
 
 module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
     var lines = doc.getAllLines();
-    var docValue = doc.getValue();
     var line = lines[pos.row];
     var identifier = completeUtil.retrievePrecedingIdentifier(line, pos.column, workerUtil.getIdentifierRegex());
     
-    fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { isComplete: true }, function(err, result, imports) {
+    getCurrentLazy(handler.path, doc, fullAst, function(err, result, imports) {
         if (err)
             console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
         var currentFile = result;
-        var currentResults = getCompletionResults(null, PRIORITY_HIGH, identifier, currentFile);
+        var currentResults = getCompletionResults(null, PRIORITY_HIGH, identifier, currentFile, pos.row);
         var otherResults = [];
         imports.forEach(function(path) {
             var summary = index.get(path);
@@ -44,13 +43,24 @@ module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
     });
 };
 
-function getCompletionResults(path, priority, identifier, summary) {
+function getCurrentLazy(path, doc, fullAst, callback) {
+    var result = index.get(path);
+    if (result)
+        return callback(null, result, index.getImports(path));
+    fileIndexer.analyzeCurrent(handler.path, doc.getValue(), fullAst, { isComplete: true }, callback);
+}
+
+function getCompletionResults(path, priority, identifier, summary, skipRow) {
     var entries = index.findEntries(summary, identifier, true);
     var file = path && path.match(/[^\/]*$/)[0];
     
     var results = [];
     for (var uname in entries) {
         entries[uname].forEach(function(e) {
+            // Don't show entries from the current row
+            // when we use a cached summary
+            if (e.row == skipRow)
+                return;
             results.push(toCompletionResult(file, uname.substr(1), priority, e));
         });
     }
