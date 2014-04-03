@@ -11,9 +11,8 @@ var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_b
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 
 var TAGS = [
-    { regex: /(?:^|\n)\s*function ([A-Za-z0-9_]+)/g, kind: "method" },
     { regex: /(?:^|\n)\s*([A-Za-z0-9_]+)\(\)/g, kind: "method" },
-    { regex: /(?:^|\n)\s*(\.|source)\s+([A-Za-z0-9_]+)/g, kind: "import" }
+    { regex: /(?:^|\n)\s*(\.|source)\s+([A-Za-z0-9_]+)(?:\S|\Z)/g, kind: "import" }
 ];
 var GUESS_FARGS = false;
 var EXTRACT_DOCS = true;

@@ -21,7 +21,7 @@ var TAGS = [
     },
     {
         // HACK: architect documentation contribution
-        regex: /(\w+)\s*:\s*\w+/g,
+        regex: /\s(\w+)\s*:\s*\w+(?:\s|,)/g,
         kind: "unknown2",
         docOnly: true
     }
