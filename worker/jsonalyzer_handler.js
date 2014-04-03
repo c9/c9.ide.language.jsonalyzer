@@ -100,10 +100,9 @@ handler.onDocumentOpen = function(path, doc, oldPath, callback) {
     fileIndexer.analyzeOthers([path]);
 };
 
-handler.analyze = function(doc, ast, callback) {
-    // Only eagerly analyze if the current file was actually edited
-    // if (!handler.isEagerAnalysis)
-    //     return callback();
+handler.analyze = function(doc, ast, callback, minimalAnalysis) {
+    if (minimalAnalysis && index.get(handler.path))
+        return callback();
     
     // Ignore embedded languages and just use the full document,
     // since we can't handle multiple segments in the index atm
