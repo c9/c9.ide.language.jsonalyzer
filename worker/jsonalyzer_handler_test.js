@@ -115,6 +115,20 @@ describe("jsonalyzer handler", function(){
             }
         );
     });
+    it("completes your code on the same line", function(done) {
+        handler.path = "/testfile.cs";
+        handler.complete(
+            new Document("f function foo() {}"),
+            null,
+            { row: 0, col: 1 },
+            null,
+            function(results) {
+                assert(results && results.length > 0);
+                assert.equal(results[0].name, "foo");
+                done();
+            }
+        );
+    });
     it("doesn't immediately reanalyze when it completes your code", function(done) {
         handler.path = "/testfile.cs";
         handler.analyze("f \nfunction foo() {}", null, function() {
