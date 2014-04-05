@@ -100,7 +100,7 @@ function findInOutline(outline, identifier, results) {
             });
         }
         if (outline[i].items)
-            findInOutline(outline[i].items, results);
+            findInOutline(outline[i].items, identifier, results);
     }
     return results;
 }
