@@ -8,6 +8,7 @@ define(function(require, exports, module) {
 
 var index = require("plugins/c9.ide.language.jsonalyzer/worker/semantic_index");
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
+var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_handler");
 var ctags = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_ex");
 var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
 var workerUtil = require("plugins/c9.ide.language/worker_util");
@@ -50,7 +51,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")
         return callback(null, {});
         
-    if (doc.length > handler.getMaxFileSizeSupported())
+    if (doc.length > jsonalyzer.getMaxFileSizeSupported())
         return callback();
 
     // Let's not slow down completion, since other handlers

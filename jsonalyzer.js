@@ -22,20 +22,25 @@ define(function(require, exports, module) {
         var language = imports.language;
         var watcher = imports.watcher;
         var save = imports.save;
-        var complete = imports["language.complete"];
         var showAlert = imports["dialog.error"].show;
         var hideAlert = imports["dialog.error"].hide;
         var ext = imports.ext;
         var async = require("async");
+        var assert = require("assert");
         
         var PLUGINS = [
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_js",
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_md",
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_php",
-            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
         ];
         
-        var SERVER_HELPER_PLUGINS = [
+        var PLUGINS_WORKER = PLUGINS.concat([
+            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
+        ]);
+        
+        var PLUGINS_SERVER = PLUGINS;
+        
+        var SERVER_HELPERS = [
             "plugins/c9.ide.language/complete_util",
             "plugins/c9.ide.language/worker_util",
             "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler",
@@ -52,18 +57,8 @@ define(function(require, exports, module) {
             
             var loadedWorker;
             var warning;
-
-            PLUGINS.forEach(function(plugin) {
-                registerHandler(plugin, null, plugin.match(/ctags/));
-            });
             
-            loadServer(function(err, result) {
-                if (err) return console.error("[jsonalyzer] fatal error loading server", err);
-                
-                server = result;
-                emit.sticky("initServer");
-            });
-            
+            // Load worker
             language.registerLanguageHandler(
                 "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_handler",
                 function(err, langWorker) {
@@ -75,8 +70,8 @@ define(function(require, exports, module) {
                     watcher.on("directory", onDirChange);
                     save.on("afterSave", onFileSave);
                     c9.on("stateChange", onOnlineChange);
-                    worker.on("jsonalyzerServerRegister", onServerRegister);
                     onOnlineChange();
+                    emit.sticky("initWorker");
                     if (warning)
                         hideAlert(warning);
                 }
@@ -87,6 +82,25 @@ define(function(require, exports, module) {
                         warning = showAlert("Language worker could not be loaded; some language features have been disabled");
                 }, 50);
             }, 30000);
+            
+            // Load server
+            loadServer(function(err, result) {
+                if (err) {
+                    showAlert("Language server could not be loaded; some language features have been disabled");
+                    return console.error(err);
+                }
+                
+                server = result;
+                emit.sticky("initServer");
+            });
+
+            // Load plugins
+            PLUGINS_SERVER.forEach(function(plugin) {
+                registerServerHandler(plugin, null);
+            });
+            PLUGINS_WORKER.forEach(function(plugin) {
+                registerWorkerHandler(plugin, null);
+            });
         }
         
         function loadServer(callback) {
@@ -107,11 +121,13 @@ define(function(require, exports, module) {
                     function(err) {
                         if (err) return callback(err);
                         
-                        async.forEach(SERVER_HELPER_PLUGINS, function(path, next) {
+                        async.forEach(SERVER_HELPERS, function(path, next) {
                             require(["text!" + path + ".js"], function(content) {
                                 server.registerHelper(path, content, next);
                             });
-                        }, callback);
+                        }, function() {
+                            callback(null, server);
+                        });
                     }
                 );
             });
@@ -133,19 +149,36 @@ define(function(require, exports, module) {
         function onOnlineChange(event) {
             worker.emit("onlinechange", {data: { isOnline: c9.connected }});
         }
-        
-        function onServerRegister(event) {
-            plugin.once("serverInit", function() {
-                server.registerHandler(event.filename, event.content, function(err) {
-                    if (err) return console.error(err);
-                });
+               
+        function registerServerHandler(path, contents, callback) {
+            plugin.on("initServer", function() {
+                server.registerHandler(path, contents, callback);
+            });
+        }
+               
+        function registerServerHelper(path, contents, callback) {
+            plugin.on("initServer", function() {
+                server.registerHandler(path, contents, callback);
             });
         }
         
-        function registerHandler(path, contents, clientOnly, serverOnly) {
+        function registerWorkerHandler(modulePath, contents, callback) {
             language.getWorker(function(err, worker) {
-                if (err) return console.error(err);
-                worker.emit("jsonalyzerRegister", { path: path });
+                plugin.on("initWorker", function() {
+                    if (err) return console.error(err);
+                    
+                    worker.emit("jsonalyzerRegister", { data: {
+                        modulePath: modulePath,
+                        contents: contents
+                    }});
+                    
+                    worker.on("jsonalyzedRegistered", function listen(e) {
+                        if (e.modulePath !== modulePath)
+                            return;
+                        worker.off(listen);
+                        callback && callback(e.err);
+                    });
+                });
             });
         }
         
@@ -160,8 +193,11 @@ define(function(require, exports, module) {
          * @ignore Experimental.
          */
         plugin.freezePublicAPI({
-            // TODO: register method like the one language has
-            registerHandler : registerHandler
+            registerWorkerHandler : registerWorkerHandler,
+            
+            registerServerHandler : registerServerHandler,
+            
+            registerServerHelper : registerServerHelper
         });
         
         register(null, { jsonalyzer: plugin });

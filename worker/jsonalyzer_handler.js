@@ -8,7 +8,6 @@ define(function(require, exports, module) {
 
 var baseLanguageHandler = require("plugins/c9.ide.language/base_handler");
 var index = require("./semantic_index");
-var plugins = require("plugins/c9.ide.language.jsonalyzer/worker/handlers/index");
 var assert = require("c9/assert");
 var jumptodef = require("./jumptodef");
 var complete = require("./complete");
@@ -26,32 +25,14 @@ var handler = module.exports = Object.create(baseLanguageHandler);
 var isOnline = false;
 var supportedLanguages = "";
 var supportedExtensions = "";
+var plugins = [];
+var isInWebWorker = typeof window == "undefined" || !window.location || !window.document;
 
 handler.$isInited = false;
 handler.DEBUG = true;
 handler.KIND_DEFAULT = scopeAnalyzer.KIND_DEFAULT;
 handler.KIND_PACKAGE = scopeAnalyzer.KIND_PACKAGE;
 handler.GUID_PREFIX = "project:";
-
-handler.registerHandler = function(plugin, languages, extensions) {
-    if (plugins.indexOf(plugin) === -1)
-        plugins.push(plugin);
-    languages.forEach(function(e) {
-        supportedLanguages += (supportedLanguages ? "|^" : "^") + e;
-        plugin.supportedLanguages += (plugin.supportedLanguages ? "|^" : "^") + e + "$";
-    });
-    extensions.forEach(function(e) {
-        supportedExtensions += (supportedExtensions ? "|^" : "^") + e + "$";
-        plugin.supportedExtensions += (plugin.supportedExtensions ? "|^" : "^") + e + "$";
-    });
-};
-
-function addToRegex(string, regex) {
-    if (!string)
-        string = regex;
-    else
-        string += "|" + regex;
-}
 
 handler.init = function(callback) {
     var _self = this;
@@ -65,6 +46,14 @@ handler.init = function(callback) {
     handler.sender.on("dirchange", function(event) {
         _self.onDirChange(event);
     });
+    handler.sender.on("jsonalyzerRegister", function(event) {
+        _self.loadPlugin(event.data.modulePath, event.data.contents, function(err, plugin) {
+            handler.sender.emit("jsonalyzedRegistered", { modulePath: event.data.modulePath, err: err });
+            if (err) return console.error(err);
+            plugin.$source = event.data.modulePath;
+            _self.registerPlugin(plugin);
+        });
+    });
     
     directoryIndexer.init(this);
     fileIndexer.init(this);
@@ -76,13 +65,55 @@ handler.init = function(callback) {
     highlight.init(this);
     ctagsUtil.init(ctagsEx, this);
     
-    plugins.forEach(function(p) {
-        p.init(_self);
-    });
-    
     // Calling the callback to register/activate the plugin
     // (calling it late wouldn't delay anything else)
     callback();
+};
+
+handler.loadPlugin = function(modulePath, contents, callback) {
+    // This follows the same approach as c9.ide.language/worker.register();
+    // see the comments there for more background.
+    if (contents) {
+        try {
+            eval.call(null, contents);
+        } catch (e) {
+            return callback("Could not load language handler " + modulePath + ": " + e);
+        }
+    }
+    var handler;
+    try {
+        handler = require(modulePath);
+        if (!handler)
+            throw new Error("Unable to load required module: " + modulePath);
+    } catch (e) {
+        if (isInWebWorker)
+            return callback("Could not load language handler " + modulePath + ": " + e);
+        
+        // In ?noworker=1 debugging mode, synchronous require doesn't work
+        return require([modulePath], function(handler) {
+            if (!handler)
+                return callback("Could not load language handler " + modulePath);
+            callback(null, handler);
+        });
+    }
+    callback(null, handler);
+};
+
+handler.registerPlugin = function(plugin) {
+    var languages = plugin.languages;
+    var extensions = plugin.extensions;
+    assert(languages && extensions, "Plugins must have a languages and extensions property");
+    
+    if (plugins.indexOf(plugin) === -1)
+        plugins.push(plugin);
+    languages.forEach(function(e) {
+        supportedLanguages += (supportedLanguages ? "|^" : "^") + e;
+        plugin.supportedLanguages += (plugin.supportedLanguages ? "|^" : "^") + e + "$";
+    });
+    extensions.forEach(function(e) {
+        supportedExtensions += (supportedExtensions ? "|^" : "^") + e + "$";
+        plugin.supportedExtensions += (plugin.supportedExtensions ? "|^" : "^") + e + "$";
+    });
 };
 
 handler.handlesLanguage = function(language) {
