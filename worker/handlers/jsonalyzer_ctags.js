@@ -8,7 +8,7 @@ define(function(require, exports, module) {
 
 var index = require("plugins/c9.ide.language.jsonalyzer/worker/semantic_index");
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
-var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_handler");
+var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker");
 var ctags = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_ex");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;

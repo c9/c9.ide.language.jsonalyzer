@@ -65,7 +65,7 @@ define(function(require, exports, module) {
             
             // Load worker
             language.registerLanguageHandler(
-                "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_handler",
+                "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker",
                 function(err, langWorker) {
                     if (err)
                         return showAlert(err);

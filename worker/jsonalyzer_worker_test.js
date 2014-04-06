@@ -14,7 +14,7 @@ define(function(require, exports, module) {
 var assert = require("ace/test/assertions");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 var worker = require("plugins/c9.ide.language/worker");
-var handler = require("./jsonalyzer_handler");
+var handler = require("./jsonalyzer_worker");
 var index = require("./semantic_index");
 var fileIndexer = require("./file_indexer");
 var directoryIndexer = require("./directory_indexer");
