@@ -5,6 +5,29 @@
  * @author Lennart Kats <lennart add c9.io>
  */
 define(function(require, exports, module) {
+    var PLUGINS = [
+        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_js",
+        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_md",
+        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_php",
+    ];
+    
+    var PLUGINS_WORKER = PLUGINS.concat([
+        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
+    ]);
+    
+    var PLUGINS_SERVER = PLUGINS;
+    
+    var HELPERS_SERVER = [
+        "plugins/c9.ide.language/complete_util",
+        "plugins/c9.ide.language/worker_util",
+        "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler",
+        "plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util",
+    ];
+    
+    var HELPERS_WORKER = [
+        "plugins/c9.ide.language.jsonalyzer/worker/architect_runtime_resolver",
+    ];
+    
     main.consumes = [
         "Plugin", "commands", "language", "c9", "watcher",
         "save", "language.complete", "dialog.error", "ext"
@@ -12,6 +35,7 @@ define(function(require, exports, module) {
     main.provides = [
         "jsonalyzer"
     ];
+    main.workerPlugins = PLUGINS_WORKER.concat(HELPERS_WORKER);
     return main;
 
     function main(options, imports, register) {
@@ -27,25 +51,6 @@ define(function(require, exports, module) {
         var ext = imports.ext;
         var async = require("async");
         var assert = require("assert");
-        
-        var PLUGINS = [
-            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_js",
-            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_md",
-            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_php",
-        ];
-        
-        var PLUGINS_WORKER = PLUGINS.concat([
-            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
-        ]);
-        
-        var PLUGINS_SERVER = PLUGINS;
-        
-        var SERVER_HELPERS = [
-            "plugins/c9.ide.language/complete_util",
-            "plugins/c9.ide.language/worker_util",
-            "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler",
-            "plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util",
-        ];
         
         var worker;
         var server;
@@ -121,7 +126,7 @@ define(function(require, exports, module) {
                     function(err) {
                         if (err) return callback(err);
                         
-                        async.forEach(SERVER_HELPERS, function(path, next) {
+                        async.forEach(HELPERS_SERVER, function(path, next) {
                             require(["text!" + path + ".js"], function(content) {
                                 server.registerHelper(path, content, next);
                             });
