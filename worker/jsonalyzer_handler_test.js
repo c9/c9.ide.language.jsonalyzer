@@ -106,7 +106,7 @@ describe("jsonalyzer handler", function(){
         handler.complete(
             new Document("f \nfunction foo() {}"),
             null,
-            { row: 0, col: 1 },
+            { row: 0, column: 1 },
             null,
             function(results) {
                 assert(results && results.length > 0);
@@ -120,7 +120,7 @@ describe("jsonalyzer handler", function(){
         handler.complete(
             new Document("f function foo() {}"),
             null,
-            { row: 0, col: 1 },
+            { row: 0, column: 1 },
             null,
             function(results) {
                 assert(results && results.length > 0);
@@ -136,7 +136,7 @@ describe("jsonalyzer handler", function(){
             handler.complete(
                 new Document("f \nfunction foo() {}"),
                 null,
-                { row: 0, col: 1 },
+                { row: 0, column: 1 },
                 null,
                 function(results) {
                     assert.equal(analyzedBefore, analyzed);
@@ -408,7 +408,7 @@ describe("jsonalyzer handler", function(){
             new Document("/** herro */ \n\
                           function foo() {}"),
             null,
-            { row: 0, col: 1 },
+            { row: 0, column: 1 },
             null,
             function(results) {
                 assert(results && results.length > 0);
@@ -424,7 +424,7 @@ describe("jsonalyzer handler", function(){
             new Document("# foo something \n\
                           foo() {}"),
             null,
-            { row: 0, col: 1 },
+            { row: 0, column: 1 },
             null,
             function(results) {
                 assert(results && results.length > 0);

@@ -23,7 +23,7 @@ module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
         if (err)
             console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
         var currentFile = result;
-        var currentResults = getCompletionResults(null, PRIORITY_HIGH, identifier, currentFile, pos.row, line);
+        var currentResults = getCompletionResults(null, PRIORITY_HIGH, identifier, currentFile, pos, line);
         var otherResults = [];
         imports.forEach(function(path) {
             var summary = index.get(path);
@@ -50,7 +50,7 @@ function getCurrentLazy(path, doc, fullAst, callback) {
     fileIndexer.analyzeCurrent(handler.path, doc.getValue(), fullAst, { isComplete: true }, callback);
 }
 
-function getCompletionResults(path, priority, identifier, summary, skipRow, skipLine) {
+function getCompletionResults(path, priority, identifier, summary, skipPos, skipLine) {
     var entries = index.findEntries(summary, identifier, true);
     var file = path && path.match(/[^\/]*$/)[0];
     
@@ -60,12 +60,20 @@ function getCompletionResults(path, priority, identifier, summary, skipRow, skip
             var name = uname.substr(1);
             // Don't show entries from the current row
             // when we use a cached summary
-            if (e.row === skipRow && skipLine.indexOf(name) === skipLine.lastIndexOf(name))
+            if (skipPos && e.row === skipPos.row && !isDefinedInLine(skipLine, name, skipPos, identifier))
                 return;
             results.push(toCompletionResult(file, name, priority, e));
         });
     }
     return results;
+}
+
+function isDefinedInLine(line, name, skipPos, skipPrefix) {
+    var first = line.indexOf(name);
+    var last = line.lastIndexOf(name);
+    if (first !== last)
+        return true;
+    return first !== skipPos.column - skipPrefix.length;
 }
 
 function toCompletionResult(file, name, priority, entry) {
