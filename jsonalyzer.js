@@ -22,6 +22,7 @@ define(function(require, exports, module) {
         var save = imports.save;
         var complete = imports["language.complete"];
         var showAlert = imports["dialog.error"].show;
+        var hideAlert = imports["dialog.error"].hide;
         
         var plugin = new Plugin("Ajax.org", main.consumes);
         
@@ -33,6 +34,7 @@ define(function(require, exports, module) {
             loaded = true;
             
             var loadedWorker;
+            var warning;
             language.registerLanguageHandler(
                 "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_handler",
                 function(err, langWorker) {
@@ -46,11 +48,15 @@ define(function(require, exports, module) {
                     c9.on("stateChange", onOnlineChange);
                     complete.on("replaceText", onReplaceText);
                     onOnlineChange();
+                    if (warning)
+                        hideAlert(warning);
                 }
             );
             setTimeout(function() {
-                if (!loadedWorker)
-                    showAlert("Language worker could not be loaded; some language features have been disabled");
+                setTimeout(function() { // wait a bit longer in case we were debugging
+                    if (!loadedWorker)
+                        warning = showAlert("Language worker could not be loaded; some language features have been disabled");
+                }, 50);
             }, 30000);
         }
         
