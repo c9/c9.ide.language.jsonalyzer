@@ -165,7 +165,7 @@ handler.onDirChange = function(event) {
 handler.getPluginFor = function(path, language) {
     language = language || handler.path === path && handler.language;
     
-    var match = path.match(/\.([^/.]*)$/);
+    var match = path && path.match(/\.([^/.]*)$/);
     var extension = match && match[1] || "";
     if (!extension.match(supportedExtensions) && !(language || "").match(supportedLanguages))
         return null;
@@ -175,7 +175,7 @@ handler.getPluginFor = function(path, language) {
     }).concat(
     plugins.filter(function(p) {
         return extension.match(p.supportedExtensions)
-            && (!p.supportedPaths || path.match(p.supportedPaths));
+            && (!p.supportedPaths || (path && path.match(p.supportedPaths)));
     }));
     
     // Defer ctags plugin
