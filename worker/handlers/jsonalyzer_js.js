@@ -6,7 +6,7 @@
  */
 define(function(require, exports, module) {
 
-var jsonalyzer;
+var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker");
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 var pathUtil = require("plugins/c9.ide.language.javascript.infer/path");

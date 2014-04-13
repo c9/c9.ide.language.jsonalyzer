@@ -109,7 +109,8 @@ handler.registerPlugin = function(plugin) {
     var extensions = plugin.extensions;
     assert(languages && extensions, "Plugins must have a languages and extensions property");
     
-    
+    plugin.supportedLanguages = "";
+    plugin.supportedExtensions = "";
     plugins.push(plugin);
     languages.forEach(function(e) {
         supportedLanguages += (supportedLanguages ? "|^" : "^") + e;
@@ -197,7 +198,7 @@ handler.onDirChange = function(event) {
 };
 
 handler.getPluginFor = function(path, language) {
-    language = language || handler.path === path && handler.language;
+    language = language || (handler.path === path && handler.language);
     
     var match = path && path.match(/\.([^/.]*)$/);
     var extension = match && match[1] || "";

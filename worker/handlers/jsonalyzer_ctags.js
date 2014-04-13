@@ -22,6 +22,8 @@ handler.languages = [".*"];
 
 handler.extensions = Array.prototype.concat.apply([], ctags.EXTENSION_GROUPS);
 
+handler.isGeneric = true;
+
 handler.findImports = function(path, doc, ast, callback) {
     callback(null, ctagsUtil.findMatchingOpenFiles(path));
 };
