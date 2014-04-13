@@ -37,6 +37,10 @@ handler.extensions = ["js"];
 
 handler.languages = ["javascript"];
 
+handler.init = function(jsonalyzer) {
+    architectResolver.init(jsonalyzer);
+};
+
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")
         return callback(null, {});

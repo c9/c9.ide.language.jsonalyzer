@@ -24,9 +24,7 @@ define(function(require, exports, module) {
         "plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util",
     ];
     
-    var HELPERS_WORKER = [
-        "plugins/c9.ide.language.jsonalyzer/worker/architect_resolver_worker",
-    ];
+    var HELPERS_WORKER = [];
     
     main.consumes = [
         "Plugin", "commands", "language", "c9", "watcher",
@@ -109,7 +107,7 @@ define(function(require, exports, module) {
         
         function loadServer(callback) {
             ext.loadRemotePlugin("jsonalyzer_server", {
-                code: require("text!./jsonalyzer_server.js"),
+                code: require("text!./server/jsonalyzer_server.js"),
                 redefine: true
             }, function(err, server) {
                 if (err) return callback(err);
@@ -176,8 +174,8 @@ define(function(require, exports, module) {
                         contents: contents
                     }});
                     
-                    worker.on("jsonalyzedRegistered", function listen(e) {
-                        if (e.modulePath !== modulePath)
+                    worker.on("jsonalyzerRegistered", function listen(e) {
+                        if (e.data.modulePath !== modulePath)
                             return;
                         worker.off(listen);
                         callback && callback(e.err);

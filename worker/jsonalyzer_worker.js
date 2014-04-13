@@ -48,10 +48,10 @@ handler.init = function(callback) {
     });
     handler.sender.on("jsonalyzerRegister", function(event) {
         _self.loadPlugin(event.data.modulePath, event.data.contents, function(err, plugin) {
-            handler.sender.emit("jsonalyzedRegistered", { modulePath: event.data.modulePath, err: err });
             if (err) return console.error(err);
             plugin.$source = event.data.modulePath;
             _self.registerPlugin(plugin);
+            handler.sender.emit("jsonalyzerRegistered", { modulePath: event.data.modulePath, err: err });
         });
     });
     
@@ -144,12 +144,11 @@ handler.analyze = function(doc, ast, callback, minimalAnalysis) {
     var fullDoc = this.doc.getValue();
         
     assert(handler.path);
-    fileIndexer.analyzeCurrent(handler.path, fullDoc, ast, {}, function(err) {
+    fileIndexer.analyzeCurrent(handler.path, fullDoc, ast, {}, function(err, result, imports) {
         if (err)
             console.error("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
             
         // Analyze imports without blocking other analyses
-        var imports = index.getImports(handler.path, true);
         if (imports && imports.length)
             fileIndexer.analyzeOthers(imports, true);
         
