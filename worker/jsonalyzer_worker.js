@@ -100,12 +100,17 @@ handler.loadPlugin = function(modulePath, contents, callback) {
 };
 
 handler.registerPlugin = function(plugin) {
+    if (plugins.indexOf(plugin) > -1)
+        return;
+    
+    plugin.init && plugin.init(this);
+
     var languages = plugin.languages;
     var extensions = plugin.extensions;
     assert(languages && extensions, "Plugins must have a languages and extensions property");
     
-    if (plugins.indexOf(plugin) === -1)
-        plugins.push(plugin);
+    
+    plugins.push(plugin);
     languages.forEach(function(e) {
         supportedLanguages += (supportedLanguages ? "|^" : "^") + e;
         plugin.supportedLanguages += (plugin.supportedLanguages ? "|^" : "^") + e + "$";

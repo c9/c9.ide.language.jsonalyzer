@@ -10,7 +10,7 @@ var jsonalyzer;
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 var pathUtil = require("plugins/c9.ide.language.javascript.infer/path");
-var architectResolver = require("./architect_runtime_resolver");
+var architectResolver = require("../architect_resolver_worker");
 
 var TAGS = [
     {

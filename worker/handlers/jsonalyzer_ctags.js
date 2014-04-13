@@ -20,7 +20,7 @@ var IDLE_TIME = 50;
 
 handler.languages = [".*"];
 
-handler.extensions = Array.prototype.concat.apply([], EXTENSION_GROUPS);
+handler.extensions = Array.prototype.concat.apply([], ctags.EXTENSION_GROUPS);
 
 handler.findImports = function(path, doc, ast, callback) {
     callback(null, ctagsUtil.findMatchingOpenFiles(path));

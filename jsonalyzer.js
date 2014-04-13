@@ -25,7 +25,7 @@ define(function(require, exports, module) {
     ];
     
     var HELPERS_WORKER = [
-        "plugins/c9.ide.language.jsonalyzer/worker/architect_runtime_resolver",
+        "plugins/c9.ide.language.jsonalyzer/worker/architect_resolver_worker",
     ];
     
     main.consumes = [
@@ -50,7 +50,6 @@ define(function(require, exports, module) {
         var hideAlert = imports["dialog.error"].hide;
         var ext = imports.ext;
         var async = require("async");
-        var assert = require("assert");
         
         var worker;
         var server;
