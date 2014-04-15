@@ -37,7 +37,8 @@ module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
         var unresolved = imports.filter(function(i) { return !index.get(i); });
         if (unresolved.length) {
             fileIndexer.analyzeOthers(unresolved, true, function() {
-                workerUtil.completeUpdate(pos, line);
+                if (index.getAny(unresolved).length)
+                    workerUtil.completeUpdate(pos, line);
             });
         }
     });
