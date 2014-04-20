@@ -44,10 +44,12 @@ define(function(require, exports, module) {
         var language = imports.language;
         var watcher = imports.watcher;
         var save = imports.save;
-        var showAlert = imports["dialog.error"].show;
-        var hideAlert = imports["dialog.error"].hide;
+        var showError = imports["dialog.error"].show;
+        var hideError = imports["dialog.error"].hide;
         var ext = imports.ext;
         var async = require("async");
+        
+        var useCollab = options.useCollab;
         
         var worker;
         var server;
@@ -65,7 +67,7 @@ define(function(require, exports, module) {
                 "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker",
                 function(err, langWorker) {
                     if (err)
-                        return showAlert(err);
+                        return showError(err);
                     loadedWorker = true;
                     worker = langWorker;
                     watcher.on("change", onFileChange);
@@ -75,25 +77,31 @@ define(function(require, exports, module) {
                     onOnlineChange();
                     emit.sticky("initWorker");
                     if (warning)
-                        hideAlert(warning);
+                        hideError(warning);
                 }
             );
             setTimeout(function() {
                 setTimeout(function() { // wait a bit longer in case we were debugging
                     if (!loadedWorker)
-                        warning = showAlert("Language worker could not be loaded; some language features have been disabled");
+                        warning = showError("Language worker could not be loaded; some language features have been disabled");
+                    if (!server)
+                        showError("Language server could not be loaded; some language features have been disabled");
                 }, 50);
             }, 30000);
             
             // Load server
             loadServer(function(err, result) {
                 if (err) {
-                    showAlert("Language server could not be loaded; some language features have been disabled");
+                    showError("Language server could not be loaded; some language features have been disabled");
                     return console.error(err);
                 }
                 
-                server = result;
-                emit.sticky("initServer");
+                if (!useCollab)
+                    console.warning("Collab is disabled: certain language server features won't work");
+                result.init(useCollab, function() {
+                    server = result;
+                    emit.sticky("initServer");
+                });
             });
 
             // Load plugins

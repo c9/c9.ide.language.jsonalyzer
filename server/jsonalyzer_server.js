@@ -5,6 +5,7 @@ var vm = require("vm");
 var Module = require("module");
 var dirname = require("path").dirname;
 var assert = require("assert");
+var collabServer;
 
 var plugins = {
     "c9/assert": assert
@@ -13,11 +14,24 @@ var handlers = [];
 
 module.exports = function(vfs, options, register) {
     register(null, {
+        init: init,
+        
         registerHelper: registerHelper,
         
         registerHandler: registerHandler
     });
 };
+
+function init(useCollab, callback) {
+    if (!useCollab)
+        return callback();
+    
+    require(["collab-server"], function(plugin) {
+        collabServer = plugin;
+        // TODO: use collabServer
+        return callback();
+    });
+}
 
 function registerHelper(path, content, callback) {
     loadPlugin(path, content, function(err, result) {
