@@ -16,15 +16,12 @@ var TAGS = [
 ];
 var GUESS_FARGS = false;
 var EXTRACT_DOCS = true;
-var LANGUAGES = ["sh"];
-var EXTENSIONS = ["sh"];
 
 var handler = module.exports = Object.create(PluginBase);
 
-handler.init = function(jsonalyzer_worker) {
-    jsonalyzer = jsonalyzer_worker;
-    jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
-};
+handler.languages = ["sh"];
+
+handler.extensions = ["sh"];
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")

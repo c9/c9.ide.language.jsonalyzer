@@ -9,6 +9,7 @@ define(function(require, exports, module) {
         "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_js",
         "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_md",
         "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_php",
+        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_sh",
     ];
     
     var PLUGINS_WORKER = PLUGINS.concat([
