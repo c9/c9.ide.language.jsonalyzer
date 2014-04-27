@@ -19,39 +19,38 @@ var directoryIndexer = require("./directory_indexer");
 var fileIndexer = require("./file_indexer");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 var ctagsEx =  require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_ex");
+var HandlerRegistry = require("plugins/c9.ide.language.jsonalyzer/worker/handler_registry").HandlerRegistry;
 require("treehugger/traverse"); // add traversal methods
 
-var handler = module.exports = Object.create(baseLanguageHandler);
+var worker = module.exports = Object.create(baseLanguageHandler);
 var isOnline = false;
-var supportedLanguages = "";
-var supportedExtensions = "";
-var plugins = [];
 var isInWebWorker = typeof window == "undefined" || !window.location || !window.document;
+var handlers = new HandlerRegistry();
 
-handler.$isInited = false;
-handler.DEBUG = true;
-handler.KIND_DEFAULT = scopeAnalyzer.KIND_DEFAULT;
-handler.KIND_PACKAGE = scopeAnalyzer.KIND_PACKAGE;
-handler.GUID_PREFIX = "project:";
+worker.$isInited = false;
+worker.DEBUG = true;
+worker.KIND_DEFAULT = scopeAnalyzer.KIND_DEFAULT;
+worker.KIND_PACKAGE = scopeAnalyzer.KIND_PACKAGE;
+worker.GUID_PREFIX = "project:";
 
-handler.init = function(callback) {
+worker.init = function(callback) {
     var _self = this;
     
-    handler.sender.on("onlinechange", function(event) {
+    worker.sender.on("onlinechange", function(event) {
         _self.onOnlineChange(event);
     });
-    handler.sender.on("filechange", function(event) {
+    worker.sender.on("filechange", function(event) {
         _self.onFileChange(event);
     });
-    handler.sender.on("dirchange", function(event) {
+    worker.sender.on("dirchange", function(event) {
         _self.onDirChange(event);
     });
-    handler.sender.on("jsonalyzerRegister", function(event) {
+    worker.sender.on("jsonalyzerRegister", function(event) {
         _self.loadPlugin(event.data.modulePath, event.data.contents, function(err, plugin) {
             if (err) return console.error(err);
             plugin.$source = event.data.modulePath;
-            _self.registerPlugin(plugin);
-            handler.sender.emit("jsonalyzerRegistered", { modulePath: event.data.modulePath, err: err });
+            handlers.registerPlugin(plugin, _self);
+            worker.sender.emit("jsonalyzerRegistered", { modulePath: event.data.modulePath, err: err });
         });
     });
     
@@ -70,7 +69,7 @@ handler.init = function(callback) {
     callback();
 };
 
-handler.loadPlugin = function(modulePath, contents, callback) {
+worker.loadPlugin = function(modulePath, contents, callback) {
     // This follows the same approach as c9.ide.language/worker.register();
     // see the comments there for more background.
     if (contents) {
@@ -99,34 +98,11 @@ handler.loadPlugin = function(modulePath, contents, callback) {
     callback(null, handler);
 };
 
-handler.registerPlugin = function(plugin) {
-    if (plugins.indexOf(plugin) > -1)
-        return;
-    
-    plugin.init && plugin.init(this);
-
-    var languages = plugin.languages;
-    var extensions = plugin.extensions;
-    assert(languages && extensions, "Plugins must have a languages and extensions property");
-    
-    plugin.supportedLanguages = "";
-    plugin.supportedExtensions = "";
-    plugins.push(plugin);
-    languages.forEach(function(e) {
-        supportedLanguages += (supportedLanguages ? "|^" : "^") + e;
-        plugin.supportedLanguages += (plugin.supportedLanguages ? "|^" : "^") + e + "$";
-    });
-    extensions.forEach(function(e) {
-        supportedExtensions += (supportedExtensions ? "|^" : "^") + e + "$";
-        plugin.supportedExtensions += (plugin.supportedExtensions ? "|^" : "^") + e + "$";
-    });
-};
-
-handler.handlesLanguage = function(language) {
+worker.handlesLanguage = function(language) {
     return this.getPluginFor(this.path, language);
 };
 
-handler.onDocumentOpen = function(path, doc, oldPath, callback) {
+worker.onDocumentOpen = function(path, doc, oldPath, callback) {
     // Check path validity if inited; otherwise do check later
     if (this.$isInited && !this.getPluginFor(path, null))
         return;
@@ -135,18 +111,18 @@ handler.onDocumentOpen = function(path, doc, oldPath, callback) {
     fileIndexer.analyzeOthers([path]);
 };
 
-handler.analyze = function(doc, ast, callback, minimalAnalysis) {
-    if (minimalAnalysis && index.get(handler.path))
+worker.analyze = function(doc, ast, callback, minimalAnalysis) {
+    if (minimalAnalysis && index.get(worker.path))
         return callback();
     
     // Ignore embedded languages and just use the full document,
     // since we can't handle multiple segments in the index atm
     var fullDoc = this.doc.getValue();
         
-    assert(handler.path);
-    fileIndexer.analyzeCurrent(handler.path, fullDoc, ast, {}, function(err, result, imports) {
+    assert(worker.path);
+    fileIndexer.analyzeCurrent(worker.path, fullDoc, ast, {}, function(err, result, imports) {
         if (err)
-            console.error("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
+            console.error("[jsonalyzer] Warning: could not analyze " + worker.path + ": " + err);
             
         // Analyze imports without blocking other analyses
         if (imports && imports.length)
@@ -156,26 +132,26 @@ handler.analyze = function(doc, ast, callback, minimalAnalysis) {
     });
 };
 
-handler.complete = complete.complete.bind(complete);
+worker.complete = complete.complete.bind(complete);
 
-handler.outline = outline.outline.bind(outline);
+worker.outline = outline.outline.bind(outline);
 
-handler.jumpToDefinition = jumptodef.jumpToDefinition.bind(jumptodef);
+worker.jumpToDefinition = jumptodef.jumpToDefinition.bind(jumptodef);
 
-handler.getRefactorings = refactor.getRefactorings.bind(refactor);
+worker.getRefactorings = refactor.getRefactorings.bind(refactor);
 
-handler.getRenamePositions = refactor.getRenamePositions.bind(refactor);
+worker.getRenamePositions = refactor.getRenamePositions.bind(refactor);
 
-handler.commitRename = refactor.commitRename.bind(refactor);
+worker.commitRename = refactor.commitRename.bind(refactor);
 
-handler.highlightOccurrences = highlight.highlightOccurrences.bind(highlight);
+worker.highlightOccurrences = highlight.highlightOccurrences.bind(highlight);
 
-handler.onOnlineChange = function(event) {
+worker.onOnlineChange = function(event) {
     isOnline = event.data.isOnline;
 },
 
-handler.onFileChange = function(event) {
-    if (handler.disabled)
+worker.onFileChange = function(event) {
+    if (worker.disabled)
         return;
     var path = event.data.path.replace(/^\/((?!workspace)[^\/]+\/[^\/]+\/)?workspace\//, "");
     
@@ -192,35 +168,18 @@ handler.onFileChange = function(event) {
     fileIndexer.analyzeOthers([path]);
 };
 
-handler.onDirChange = function(event) {
+worker.onDirChange = function(event) {
     directoryIndexer.enqueue(event.data.path);
 };
 
-handler.getPluginFor = function(path, language) {
-    language = language || (handler.path === path && handler.language);
+worker.getPluginFor = function(path, language) {
+    language = language || (worker.path === path && worker.language);
     
-    var match = path && path.match(/\.([^/.]*)$/);
-    var extension = match && match[1] || "";
-    if (!extension.match(supportedExtensions) && !(language || "").match(supportedLanguages))
-        return null;
-    
-    var results = plugins.filter(function(p) {
-        return language && language.match(p.supportedLanguages);
-    }).concat(
-    plugins.filter(function(p) {
-        return extension.match(p.supportedExtensions)
-            && (!p.supportedPaths || (path && path.match(p.supportedPaths)));
-    }));
-    
-    // Defer ctags plugin
-    if (results.length > 1)
-        results = results.filter(function(r) { return !r.isGeneric; });
-    
-    return results[0];
+    return handlers.getPluginFor(path, language);
 };
 
-handler.getAllPlugins = function() {
-    return plugins;
+worker.getAllPlugins = function() {
+    return handlers.getAllPlugins();
 };
 
 });
