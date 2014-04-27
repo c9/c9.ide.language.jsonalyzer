@@ -46,13 +46,18 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
         return callback(null, entry, index.getImports(path));
     
     var plugin = handler.getPluginFor(path);
-    return plugin.analyzeCurrent(path, docValue, ast, options, function(err, result) {
+    return plugin.analyzeCurrent(path, docValue, ast, options, function(err, indexEntry, markers) {
         if (err) {
             index.setBroken(path, err);
             return callback(err);
         }
-        assert(result, "jsonalyzer handler must return a summary");
-        index.set(path, plugin.guidName + ":", result);
+        assert(indexEntry || markers, "jsonalyzer handler must return a summary and/or markers");
+        
+        indexEntry = indexEntry || index.get(path) || {};
+        indexEntry.markers = markers;
+        
+        index.set(path, plugin.guidName + ":", indexEntry);
+        
         plugin.findImports(path, docValue, ast, function(err, imports) {
             if (err) {
                 console.error("[jsonalyzer] error finding imports for " + path + ": " + err);
@@ -62,8 +67,8 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
                 // Don't return self or unanalyzeable imports
                 return i !== path;
             });
-            index.set(path, plugin.guidName + ":", result, imports);
-            callback(null, result, imports);
+            index.set(path, plugin.guidName + ":", indexEntry, imports);
+            callback(null, indexEntry, imports);
         });
     });
 };

@@ -1,5 +1,5 @@
 /**
- * jsonalyzer Makefile analysis
+ * jsonalyzer shell analysis
  *
  * @copyright 2013, Ajax.org B.V.
  * @author Lennart Kats <lennart add c9.io>

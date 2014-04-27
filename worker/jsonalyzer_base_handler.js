@@ -55,7 +55,8 @@ module.exports = {
      * @param {Boolean} options.isJumpToDefinition Triggered by jump to definition
      * @param {Function} callback
      * @param {String} callback.err
-     * @param {Object} callback.result
+     * @param {Object} callback.indexEntry
+     * @param {Object} callback.markers
      */
     analyzeCurrent: function(path, value, ast, options, callback) {
         callback();

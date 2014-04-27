@@ -152,7 +152,7 @@ handler.analyze = function(doc, ast, callback, minimalAnalysis) {
         if (imports && imports.length)
             fileIndexer.analyzeOthers(imports, true);
         
-        callback();
+        callback(result && result.markers);
     });
 };
 
