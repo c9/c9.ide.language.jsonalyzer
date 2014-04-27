@@ -11,8 +11,11 @@ var plugins = {
     "c9/assert": assert
 };
 var handlers = [];
+var vfs;
 
-module.exports = function(vfs, options, register) {
+module.exports = function(_vfs, options, register) {
+    vfs = _vfs;
+    
     register(null, {
         init: init,
         
@@ -22,15 +25,21 @@ module.exports = function(vfs, options, register) {
     });
 };
 
-function init(useCollab, callback) {
-    if (!useCollab)
+function init(collab, callback) {
+    if (!collab)
         return callback();
-    
-    require(["collab-server"], function(plugin) {
-        collabServer = plugin;
-        // TODO: use collabServer
-        return callback();
+
+    vfs.use("collab", {}, function(err, collab) {
+        if (err)
+            return callback(err);
+        collabServer = collab.api;
+        collabServer.emitter.on("afterEditUpdate", onAfterEditUpdate);
+        callback();
     });
+}
+
+function onAfterEditUpdate(e) {
+    console.log("EDIT UPDATE", e); // TODO
 }
 
 function registerHelper(path, content, callback) {
@@ -51,8 +60,10 @@ function loadPlugin(path, content, callback) {
     var sandbox = {};
     var exports = {};
     
-    if (path.match(/^\.|\.js$/))
+    if (!path || path.match(/^\.|\.js$/))
         return callback(new Error("Illegal module name: " + path));
+    if (!content)
+        return callback(new Error("No content provided: " + path));
 
     sandbox.exports = exports;
     sandbox.module = {

@@ -22,6 +22,7 @@ define(function(require, exports, module) {
         "plugins/c9.ide.language/worker_util",
         "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler",
         "plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util",
+        "plugins/c9.ide.language.javascript.infer/path",
     ];
     
     var HELPERS_WORKER = [];
@@ -49,7 +50,7 @@ define(function(require, exports, module) {
         var ext = imports.ext;
         var async = require("async");
         
-        var useCollab = options.useCollab;
+        var collab = options.collab;
         
         var worker;
         var server;
@@ -81,24 +82,29 @@ define(function(require, exports, module) {
                 }
             );
             setTimeout(function() {
-                setTimeout(function() { // wait a bit longer in case we were debugging
+                setTimeout(function() { // wait a bit longer in case we were in the debugger
                     if (!loadedWorker)
                         warning = showError("Language worker could not be loaded; some language features have been disabled");
-                    if (!server)
-                        showError("Language server could not be loaded; some language features have been disabled");
                 }, 50);
             }, 30000);
             
             // Load server
+            // TODO: use c9.on("connect")/c9.on("disconnect")
+            // TODO: work w/o collab for desktop
             loadServer(function(err, result) {
                 if (err) {
                     showError("Language server could not be loaded; some language features have been disabled");
-                    return console.error(err);
+                    return console.error(err.stack || err);
                 }
                 
-                if (!useCollab)
+                if (!collab)
                     console.warning("Collab is disabled: certain language server features won't work");
-                result.init(useCollab, function() {
+                
+                result.init(collab, function(err) {
+                    if (err) {
+                        showError("Language server could not be loaded; some language features have been disabled");
+                        return console.error(err);
+                    }
                     server = result;
                     emit.sticky("initServer");
                 });
@@ -106,38 +112,62 @@ define(function(require, exports, module) {
 
             // Load plugins
             PLUGINS_SERVER.forEach(function(plugin) {
-                registerServerHandler(plugin, null);
+                registerServerHandler(plugin);
             });
             PLUGINS_WORKER.forEach(function(plugin) {
-                registerWorkerHandler(plugin, null);
+                registerWorkerHandler(plugin);
             });
         }
         
         function loadServer(callback) {
+            // function checkProgress() {
+            //     clearTimeout(checkProgress.timer);
+            //     checkProgress.timer = setTimeout(function() {
+            //         setTimeout(function() { // wait a bit longer in case we were in the debugger
+            //             if (!server)
+            //                 showError("Language server could not be loaded; some language features have been disabled");
+            //         }, 50);
+            //     }, 45000);
+            // }
+            
             ext.loadRemotePlugin("jsonalyzer_server", {
                 code: require("text!./server/jsonalyzer_server.js"),
                 redefine: true
             }, function(err, server) {
                 if (err) return callback(err);
                 
-                server.registerHelper(
-                    "plugins/c9.ide.language/worker",
-                    "['$lastWorker', 'sender'].forEach(function(p) { \
-                        Object.defineProperty(module.exports, p, { \
-                            get: function() { throw new Error('Unavailable in server context: worker.' + p); } \
-                        }); \
-                     }); \
-                     module.exports.asyncForEach = require('async').forEach;",
-                    function(err) {
-                        if (err) return callback(err);
-                        
-                        async.forEach(HELPERS_SERVER, function(path, next) {
+                async.series([
+                    function(next) {
+                        server.registerHelper(
+                            "plugins/c9.ide.language/worker",
+                            require("text!./server/mock_language_worker.js"),
+                            next
+                        );
+                    },
+                    function(next) {
+                        server.registerHelper(
+                            "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker",
+                            require("text!./server/mock_jsonalyzer_worker.js"),
+                            next
+                        );
+                    },
+                    function(next) {
+                        server.registerHelper(
+                            "plugins/c9.ide.language.jsonalyzer/worker/architect_resolver_worker",
+                            require("text!./server/mock_architect_resolver_worker.js"),
+                            next
+                        );
+                    },
+                    function(next) {
+                        async.forEach(HELPERS_SERVER, function(path, forNext) {
                             require(["text!" + path + ".js"], function(content) {
-                                server.registerHelper(path, content, next);
+                                server.registerHelper(path, content, forNext);
                             });
-                        }, function() {
-                            callback(null, server);
-                        });
+                        }, next);
+                    },
+                ],
+                    function(err) {
+                        callback(err, server);
                     }
                 );
             });
@@ -161,14 +191,32 @@ define(function(require, exports, module) {
         }
                
         function registerServerHandler(path, contents, callback) {
+            if (!contents)
+                return require(["text!" + path + ".js"], function(contents) {
+                    registerServerHandler(path, contents, callback);
+                });
+            
             plugin.on("initServer", function() {
-                server.registerHandler(path, contents, callback);
+                server.registerHandler(path, contents, function(err) {
+                    if (err)
+                        console.error("Failed to load " + path, err);
+                    callback && callback(err);
+                });
             });
         }
                
         function registerServerHelper(path, contents, callback) {
+            if (!contents)
+                return require(["text!" + path + ".js"], function(contents) {
+                    registerServerHelper(path, contents, callback);
+                });
+            
             plugin.on("initServer", function() {
-                server.registerHandler(path, contents, callback);
+                server.registerHandler(path, contents, function(err) {
+                    if (err)
+                        console.error("Failed to load " + path, err);
+                    callback && callback(err);
+                });
             });
         }
         
