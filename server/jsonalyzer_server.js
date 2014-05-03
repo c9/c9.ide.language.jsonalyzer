@@ -10,7 +10,7 @@ var collabServer;
 var plugins = {
     "c9/assert": assert
 };
-var handlers = [];
+var handlers = {};
 var vfs;
 
 module.exports = function(_vfs, options, register) {
@@ -21,7 +21,9 @@ module.exports = function(_vfs, options, register) {
         
         registerHelper: registerHelper,
         
-        registerHandler: registerHandler
+        registerHandler: registerHandler,
+        
+        callHandler: callHandler
     });
 };
 
@@ -34,8 +36,26 @@ function init(collab, callback) {
             return callback(err);
         collabServer = collab.api;
         collabServer.emitter.on("afterEditUpdate", onAfterEditUpdate);
+        
+        console.log("testing Store");
+        
         callback();
     });
+}
+
+function getCollabDoc(path, oldRevNum, callback) {
+    collabServer.Store.getDocument(
+        path,
+        ["contents", "revNum"],
+        function (err, doc) {
+            if (err) return callback(err);
+            
+            callback(null, {
+                contents: doc.contents,
+                isUpToDate: oldRevNum <= doc.revNum
+            });
+        }
+    );
 }
 
 function onAfterEditUpdate(e) {
@@ -50,10 +70,39 @@ function registerHelper(path, content, callback) {
 
 function registerHandler(path, content, callback) {
     loadPlugin(path, content, function(err, result) {
-        if (!err)
-            handlers.push(result);
-        callback(err);
+        if (err)
+            return callback(err);
+        handlers[path] = result;
+        callback(null, {
+            languages: result.languages,
+            extensions: result.extensions,
+            path: path
+        });
     });
+}
+
+function callHandler(handlerPath, method, args, options, callback) {
+    var handler = handlers[handlerPath];
+    if (!handler)
+        return callback("No such handler: " + handlerPath);
+    if (!handler[method])
+        return callback("No such method on " + handlerPath + ": " + method);
+    
+    switch (method) {
+        case "analyzeCurrent":
+        case "findImports":
+            getCollabDoc(args[0], options.revNum, function(err, doc) {
+                args[1] = doc.contents;
+                done();
+            });
+            break;
+        default:
+            done();
+    }
+    
+    function done() {
+        handler[method].apply(handler, args.concat(callback));
+    }
 }
 
 function loadPlugin(path, content, callback) {

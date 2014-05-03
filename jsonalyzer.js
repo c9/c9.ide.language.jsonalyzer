@@ -30,7 +30,8 @@ define(function(require, exports, module) {
     
     main.consumes = [
         "Plugin", "commands", "language", "c9", "watcher",
-        "save", "language.complete", "dialog.error", "ext"
+        "save", "language.complete", "dialog.error", "ext",
+        "collab"
     ];
     main.provides = [
         "jsonalyzer"
@@ -50,8 +51,9 @@ define(function(require, exports, module) {
         var hideError = imports["dialog.error"].hide;
         var ext = imports.ext;
         var async = require("async");
+        var collab = imports.collab;
         
-        var collab = options.collab;
+        var useCollab = options.useCollab;
         
         var worker;
         var server;
@@ -98,10 +100,10 @@ define(function(require, exports, module) {
                     return console.error(err.stack || err);
                 }
                 
-                if (!collab)
+                if (!useCollab)
                     console.warning("Collab is disabled: certain language server features won't work");
                 
-                result.init(collab, function(err) {
+                result.init(useCollab, function(err) {
                     if (err) {
                         showError("Language server could not be loaded; some language features have been disabled");
                         return console.error(err);
