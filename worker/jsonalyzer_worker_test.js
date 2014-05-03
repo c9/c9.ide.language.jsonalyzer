@@ -684,34 +684,34 @@ describe("jsonalyzer handler", function(){
     });
     it("doesn't handle json files", function(done) {
         handler.path = "/testfile.json";
-        assert(!handler.getPluginFor(handler.path));
+        assert(!handler.getHandlerFor(handler.path));
         done();
     });
     it("doesn't handle json-language files", function(done) {
         handler.path = "/testfile.json";
         handler.language = "json";
-        assert(!handler.getPluginFor(handler.path));
+        assert(!handler.getHandlerFor(handler.path));
         
         handler.path = "/testfile";
         handler.language = "json";
-        assert(!handler.getPluginFor(handler.path));
+        assert(!handler.getHandlerFor(handler.path));
         done();
     });
     it("does handle sh files", function(done) {
         handler.path = "/testfile.sh";
-        assert(handler.getPluginFor(handler.path));
+        assert(handler.getHandlerFor(handler.path));
         done();
     });
     it("does, apparently, handle sh files in json language", function(done) {
         handler.path = "/testfile.sh";
         handler.language = "json";
-        assert(handler.getPluginFor(handler.path));
+        assert(handler.getHandlerFor(handler.path));
         done();
     });
     it("does handle json files in sh language", function(done) {
         handler.path = "/testfile.json";
         handler.language = "sh";
-        assert(handler.getPluginFor(handler.path));
+        assert(handler.getHandlerFor(handler.path));
         done();
     });
 });

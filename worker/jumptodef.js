@@ -30,7 +30,7 @@ module.exports.jumpToDefinition = function(doc, fullAst, pos, currentNode, callb
             results = findInOutline(outline.items, identifier);
         
         // Next, get results based on the summaries of our imports
-        fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, {}, function(err, result, imports) {
+        fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { service: "jumptodef" }, function(err, result, imports) {
             if (err) {
                 console.error(err);
                 return callback(results);

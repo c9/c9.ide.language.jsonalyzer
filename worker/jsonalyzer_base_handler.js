@@ -48,11 +48,10 @@ module.exports = {
      * 
      * @param {String} path
      * @param {String} value
-     * @param {Object} ast                         The AST, if available
+     * @param {Object} ast                  The AST, if available
      * @param {Object} options
-     * @param {Boolean} options.isSave             Triggered by a save
-     * @param {Boolean} options.isComplete         Triggered by completion
-     * @param {Boolean} options.isJumpToDefinition Triggered by jump to definition
+     * @param {String} options.service      The service this is triggered for, e.g. "complete" or "outline"
+     * @param {String} options.isSave       Whether this has been triggered by a save
      * @param {Function} callback
      * @param {String} callback.err
      * @param {Object} callback.indexEntry

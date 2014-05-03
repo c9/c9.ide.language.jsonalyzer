@@ -38,7 +38,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     // Let's not slow down completion, since other handlers
     // likely give better results anyway. We'll just use the last analysis.
     // And also, we don't care about saves, just about changes
-    if ((options.isComplete || options.isSave) && index.get(path))
+    if ((options.service === "complete" || options.isSave) && index.get(path))
         return callback(null, index.get(path));
     
     ctags.analyze(path, doc, callback);

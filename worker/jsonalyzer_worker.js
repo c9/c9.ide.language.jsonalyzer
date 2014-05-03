@@ -26,6 +26,7 @@ var worker = module.exports = Object.create(baseLanguageHandler);
 var isOnline = false;
 var isInWebWorker = typeof window == "undefined" || !window.location || !window.document;
 var handlers = new HandlerRegistry();
+var handlersServer = new HandlerRegistry();
 
 worker.$isInited = false;
 worker.DEBUG = true;
@@ -52,6 +53,9 @@ worker.init = function(callback) {
             handlers.registerPlugin(plugin, _self);
             worker.sender.emit("jsonalyzerRegistered", { modulePath: event.data.modulePath, err: err });
         });
+    });
+    worker.sender.on("jsonalyzerRegisterServer", function(event) {
+        handlers.registerPlugin(event.data, _self);
     });
     
     directoryIndexer.init(this);
@@ -99,12 +103,12 @@ worker.loadPlugin = function(modulePath, contents, callback) {
 };
 
 worker.handlesLanguage = function(language) {
-    return this.getPluginFor(this.path, language);
+    return this.getHandlerFor(this.path, language);
 };
 
 worker.onDocumentOpen = function(path, doc, oldPath, callback) {
     // Check path validity if inited; otherwise do check later
-    if (this.$isInited && !this.getPluginFor(path, null))
+    if (this.$isInited && !this.getHandlerFor(path, null))
         return;
     
     // Analyze any opened document to make completions more rapid
@@ -155,7 +159,7 @@ worker.onFileChange = function(event) {
         return;
     var path = event.data.path.replace(/^\/((?!workspace)[^\/]+\/[^\/]+\/)?workspace\//, "");
     
-    if (!this.getPluginFor(path, null))
+    if (!this.getHandlerFor(path, null))
         return;
     
     if (event.data.isSave && path === this.path)
@@ -172,14 +176,43 @@ worker.onDirChange = function(event) {
     directoryIndexer.enqueue(event.data.path);
 };
 
-worker.getPluginFor = function(path, language) {
+worker.getHandlerFor = function(path, language) {
     language = language || (worker.path === path && worker.language);
     
-    return handlers.getPluginFor(path, language);
+    return handlers.getHandlerFor(path, language)
+        || this.getServerHandlerFor(path, language);
 };
 
-worker.getAllPlugins = function() {
-    return handlers.getAllPlugins();
+worker.getServerHandlerFor = function(path, language) {
+    language = language || (worker.path === path && worker.language);
+    
+    var handler = handlersServer.getHandlerFor(path, language);
+    if (!handler)
+        return;
+        
+    return {
+        $source: handler.path,
+        languages: handler.languages,
+        extensions: handler.extensions,
+        analyzeCurrent: function(path, value, ast, options, callback) {
+            worker.sender.on("jsonalyzerCallServerResult", function onResult(e) {
+                if (e.data.handler !== handler.path)
+                    return;
+                worker.sender.off(onResult);
+                callback.apply(null, e.data);
+            });
+            worker.sender.emit("jsonalyzerCallServer", {
+                handlerPath: handler.path,
+                filePath: path,
+                method: "analyzeCurrent",
+                args: [path, null, null, options]
+            });
+        }
+    };
+};
+
+worker.getAllHandlers = function() {
+    return handlers.getAllHandlers();
 };
 
 });

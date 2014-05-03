@@ -7,8 +7,8 @@ module.exports.getMaxFileSizeSupported = function() {
 // Unsupported
 
 [
-    "getPluginFor",
-    "getAllPlugins",
+    "getHandlerFor",
+    "getAllHandlers",
     "handlesLanguage",
     "registerPlugin"
 ].forEach(function(p) {

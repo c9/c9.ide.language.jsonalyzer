@@ -31,7 +31,7 @@ module.exports.HandlerRegistry = function() {
             });
         },
         
-        getPluginFor: function(path, language) {
+        getHandlerFor: function(path, language) {
             var match = path && path.match(/\.([^/.]*)$/);
             var extension = match && match[1] || "";
             if (!extension.match(supportedExtensions) && !(language || "").match(supportedLanguages))
@@ -52,7 +52,7 @@ module.exports.HandlerRegistry = function() {
             return results[0];
         },
         
-        getAllPlugins: function() {
+        getAllHandlers: function() {
             return plugins;
         }
     

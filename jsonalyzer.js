@@ -5,18 +5,17 @@
  * @author Lennart Kats <lennart add c9.io>
  */
 define(function(require, exports, module) {
-    var PLUGINS = [
+    var HANDLERS_WORKER = [
         "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_js",
         "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_md",
         "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_php",
         "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_sh",
+        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
     ];
     
-    var PLUGINS_WORKER = PLUGINS.concat([
-        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
-    ]);
-    
-    var PLUGINS_SERVER = PLUGINS;
+    var HANDLERS_SERVER = [
+        "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_sh_server",
+    ];
     
     var HELPERS_SERVER = [
         "plugins/c9.ide.language/complete_util",
@@ -36,7 +35,7 @@ define(function(require, exports, module) {
     main.provides = [
         "jsonalyzer"
     ];
-    main.workerPlugins = PLUGINS_WORKER.concat(HELPERS_WORKER);
+    main.workerPlugins = HANDLERS_WORKER.concat(HELPERS_WORKER);
     return main;
 
     function main(options, imports, register) {
@@ -57,6 +56,7 @@ define(function(require, exports, module) {
         
         var worker;
         var server;
+        var extraHandlersServer = [];
         
         var loaded = false;
         function load() {
@@ -78,6 +78,7 @@ define(function(require, exports, module) {
                     watcher.on("directory", onDirChange);
                     save.on("afterSave", onFileSave);
                     c9.on("stateChange", onOnlineChange);
+                    worker.on("jsonalyzerCallServer", onCallServer);
                     onOnlineChange();
                     emit.sticky("initWorker");
                     if (warning)
@@ -92,7 +93,7 @@ define(function(require, exports, module) {
             }, 30000);
             
             // Load server
-            // TODO: use c9.on("connect")/c9.on("disconnect")
+            // TODO: use c9.on("connect")/c9.on("disconnect") / see onOnlineChange
             // TODO: work w/o collab for desktop
             loadServer(function(err, result) {
                 if (err) {
@@ -114,10 +115,10 @@ define(function(require, exports, module) {
             });
 
             // Load plugins
-            PLUGINS_SERVER.forEach(function(plugin) {
+            HANDLERS_SERVER.forEach(function(plugin) {
                 registerServerHandler(plugin);
             });
-            PLUGINS_WORKER.forEach(function(plugin) {
+            HANDLERS_WORKER.forEach(function(plugin) {
                 registerWorkerHandler(plugin);
             });
         }
@@ -192,6 +193,24 @@ define(function(require, exports, module) {
         function onOnlineChange(event) {
             worker.emit("onlinechange", {data: { isOnline: c9.connected }});
         }
+        
+        function onCallServer(event) {
+            var collabDoc = useCollab && collab.getDocument(event.filePath);
+            if (collabDoc)
+                collabDoc.delaysDisabled = true;
+            server.callHandler(
+                event.handlerPath,
+                event.method,
+                event.args,
+                {
+                    filePath: event.filePath,
+                    revNum: collabDoc && collabDoc.revNum
+                },
+                function() {
+                    worker.emit("jsonalyzerCallServerResult", {data: arguments.slice()});
+                }
+            );
+        }
                
         function registerServerHandler(path, contents, callback) {
             if (!contents)
@@ -200,10 +219,16 @@ define(function(require, exports, module) {
                 });
             
             plugin.on("initServer", function() {
-                server.registerHandler(path, contents, function(err) {
-                    if (err)
+                server.registerHandler(path, contents, function(err, meta) {
+                    if (err) {
                         console.error("Failed to load " + path, err);
-                    callback && callback(err);
+                        return callback && callback(err);
+                    }
+                    
+                    plugin.on("initWorker", function() {
+                        worker.emit("jsonalyzerRegisterServer", { data: meta });
+                        callback && callback();
+                    });
                 });
             });
         }

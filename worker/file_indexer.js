@@ -34,8 +34,7 @@ indexer.init = function(_handler) {
  * @param {String} docValue
  * @param {Object} ast                  The AST, if available
  * @param {Object} options
- * @param {Boolean} options.isSave
- * @param {Boolean} options.isComplete
+ * @param {String} options.service      The service this is triggered for, e.g. "complete" or "outline"
  * @param {Function} callback
  * @param {String} callback.err
  * @param {Object} callback.result
@@ -45,7 +44,7 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
     if (entry && !worker.$lastWorker.scheduledUpdate)
         return callback(null, entry, index.getImports(path));
     
-    var plugin = handler.getPluginFor(path);
+    var plugin = handler.getHandlerFor(path);
     return plugin.analyzeCurrent(path, docValue, ast, options, function(err, indexEntry, markers) {
         if (err) {
             index.setBroken(path, err);
@@ -113,7 +112,7 @@ function consumeQueue() {
     
     var pathsPerPlugin = {};
     for (var i = 0; i < paths.length; i++) {
-        var plugin = handler.getPluginFor(paths[i]);
+        var plugin = handler.getHandlerFor(paths[i]);
         if (!plugin) // path added when not fully initialized yet
             continue;
         if (!pathsPerPlugin[plugin.guidName]) {
