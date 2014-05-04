@@ -1,6 +1,6 @@
 // Supported
 
-module.exports.asyncForEach = require('async').forEach;
+module.exports.asyncForEach = require("async").forEachSeries;
 
 // Unsupported
 

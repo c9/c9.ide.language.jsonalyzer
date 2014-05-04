@@ -18,6 +18,7 @@ var GUESS_FARGS = false;
 var EXTRACT_DOCS = true;
 
 var handler = module.exports = Object.create(PluginBase);
+var lastMarkers;
 
 handler.languages = ["sh"];
 
@@ -37,12 +38,29 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         ctagsUtil.findMatchingTags(
             path, doc, tag, GUESS_FARGS, EXTRACT_DOCS, results);
     });
-    callback(null, { properties: results });
+    
+    if (options.service)
+        return done();
+    
+    var serverHandler = jsonalyzer.getServerHandlerFor(path, "sh");
+    if (!serverHandler)
+        return done();
+    
+    serverHandler.analyzeCurrent(path, doc, ast, options, function(err, summary, markers) {
+        if (err)
+            console.error(err.stack || err);
+        lastMarkers = markers;
+        done();
+    });
+    
+    function done() {
+        callback(null, { properties: results }, lastMarkers);
+    }
 };
 
 handler.analyzeOthers = handler.analyzeCurrentAll;
 
-handler.findImports = function(path, doc, ast, callback) {
+handler.findImports = function(path, doc, ast, options, callback) {
     callback(null, ctagsUtil.findMatchingOpenFiles(path));
 };
 

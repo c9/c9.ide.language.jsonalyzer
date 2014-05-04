@@ -1,14 +1,17 @@
 define(function(require, exports, module) {
 
+var jsonalyzer = require("./jsonalyzer_worker");
+
 var architectPlugins;
 
-module.exports.init = function(jsonalyzer) {
+module.exports.init = function(options, callback) {
     jsonalyzer.sender.on("architectPlugins", function(e) {
         architectPlugins = e.data;
     });
+    callback();
 };
 
-module.exports.findImports = function(path, doc, ast) {
+module.exports.findImports = function(path, doc, ast, options, callback) {
     var baseDirMatch = path.match(/(.*\/)plugins\//);
     if (!baseDirMatch || !architectPlugins)
         return [];
@@ -32,7 +35,7 @@ module.exports.findImports = function(path, doc, ast) {
             );
         }
     });
-    return results;
+    return callback(null, results);
 };
 
 

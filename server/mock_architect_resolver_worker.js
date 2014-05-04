@@ -1,13 +1,11 @@
 // Supported
 
-module.exports.init = function() {};
+module.exports.init = function(options, callback) {
+    callback();
+};
 
 // Unsupported
 
-["findImports"].forEach(function(p) {
-    Object.defineProperty(module.exports, p, {
-        get: function() {
-            throw new Error('Unavailable in server context: architect_resolver_worker.' + p);
-        }
-    });
-});
+module.exports.findImports = function(path, value, ast, options, callback) {
+    return callback("Unavailable in server context: architect_resolver_worker.findImports");
+};

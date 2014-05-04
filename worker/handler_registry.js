@@ -3,31 +3,35 @@ define(function(require, exports, module) {
 var assert = require("c9/assert");
 
 module.exports.HandlerRegistry = function() {
-    var plugins = [];
+    var handlers = [];
     var supportedLanguages = "";
     var supportedExtensions = "";
     
     return {
-        registerPlugin: function(plugin, owner) {
-            if (plugins.indexOf(plugin) > -1)
+        registerHandler: function(handler, options) {
+            if (handlers.indexOf(handler) > -1)
                 return;
             
-            plugin.init && plugin.init(owner);
+            if (handler.init)
+                handler.init(options, function(err) {
+                    if (err)
+                        console.error("Error initializing " + handler.$source, err.stack || err);
+                });
         
-            var languages = plugin.languages;
-            var extensions = plugin.extensions;
-            assert(languages && extensions, "Plugins must have a languages and extensions property");
+            var languages = handler.languages;
+            var extensions = handler.extensions;
+            assert(languages && extensions, "Handlers must have a languages and extensions property");
             
-            plugin.supportedLanguages = "";
-            plugin.supportedExtensions = "";
-            plugins.push(plugin);
+            handler.supportedLanguages = "";
+            handler.supportedExtensions = "";
+            handlers.push(handler);
             languages.forEach(function(e) {
                 supportedLanguages += (supportedLanguages ? "|^" : "^") + e;
-                plugin.supportedLanguages += (plugin.supportedLanguages ? "|^" : "^") + e + "$";
+                handler.supportedLanguages += (handler.supportedLanguages ? "|^" : "^") + e + "$";
             });
             extensions.forEach(function(e) {
                 supportedExtensions += (supportedExtensions ? "|^" : "^") + e + "$";
-                plugin.supportedExtensions += (plugin.supportedExtensions ? "|^" : "^") + e + "$";
+                handler.supportedExtensions += (handler.supportedExtensions ? "|^" : "^") + e + "$";
             });
         },
         
@@ -37,15 +41,15 @@ module.exports.HandlerRegistry = function() {
             if (!extension.match(supportedExtensions) && !(language || "").match(supportedLanguages))
                 return null;
             
-            var results = plugins.filter(function(p) {
+            var results = handlers.filter(function(p) {
                 return language && language.match(p.supportedLanguages);
             }).concat(
-            plugins.filter(function(p) {
+            handlers.filter(function(p) {
                 return extension.match(p.supportedExtensions)
                     && (!p.supportedPaths || (path && path.match(p.supportedPaths)));
             }));
             
-            // Defer ctags plugin
+            // Defer ctags handler
             if (results.length > 1)
                 results = results.filter(function(r) { return !r.isGeneric; });
             
@@ -53,7 +57,7 @@ module.exports.HandlerRegistry = function() {
         },
         
         getAllHandlers: function() {
-            return plugins;
+            return handlers;
         }
     
     };

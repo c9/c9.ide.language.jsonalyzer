@@ -21,9 +21,9 @@ var EXTENSIONS = [""];
 
 var handler = module.exports = Object.create(PluginBase);
 
-handler.init = function(jsonalyzer_worker) {
-    jsonalyzer = jsonalyzer_worker;
+handler.init = function(options, callback) {
     jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
+    callback();
 };
 
 handler.supportedPaths = "(^|\/)Makefile.*";
@@ -47,7 +47,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
 
 handler.analyzeOthers = handler.analyzeCurrentAll;
 
-handler.findImports = function(path, doc, ast, callback) {
+handler.findImports = function(path, doc, ast, options, callback) {
     callback(null, ctagsUtil.findMatchingOpenFiles(path));
 };
 

@@ -27,8 +27,8 @@ module.exports = function(_vfs, options, register) {
     });
 };
 
-function init(collab, callback) {
-    if (!collab)
+function init(options, callback) {
+    if (!options.useCollab)
         return callback();
 
     vfs.use("collab", {}, function(err, collab) {
@@ -37,24 +37,15 @@ function init(collab, callback) {
         collabServer = collab.api;
         collabServer.emitter.on("afterEditUpdate", onAfterEditUpdate);
         
-        console.log("testing Store");
-        
         callback();
     });
 }
 
-function getCollabDoc(path, oldRevNum, callback) {
+function getCollabDoc(path, revNum, callback) {
     collabServer.Store.getDocument(
-        path,
+        path.replace(/^\//, ""),
         ["contents", "revNum"],
-        function (err, doc) {
-            if (err) return callback(err);
-            
-            callback(null, {
-                contents: doc.contents,
-                isUpToDate: oldRevNum <= doc.revNum
-            });
-        }
+        callback
     );
 }
 
@@ -62,50 +53,105 @@ function onAfterEditUpdate(e) {
     console.log("EDIT UPDATE", e); // TODO
 }
 
-function registerHelper(path, content, callback) {
+function registerHelper(path, content, options, callback) {
     loadPlugin(path, content, function(err, result) {
-        callback(err);
+        if (!result.init)
+            return callback(err);
+        result.init(options, callback);
     });
 }
 
-function registerHandler(path, content, callback) {
-    loadPlugin(path, content, function(err, result) {
+function registerHandler(handlerPath, content, options, callback) {
+    loadPlugin(handlerPath, content, function(err, result) {
         if (err)
             return callback(err);
-        handlers[path] = result;
-        callback(null, {
-            languages: result.languages,
-            extensions: result.extensions,
-            path: path
-        });
+        handlers[handlerPath] = result;
+
+        if (!result.init)
+            return done();
+        result.init(options, done);
+        
+        function done(err) {
+            callback(err, {
+                languages: result.languages,
+                extensions: result.extensions,
+                handlerPath: handlerPath,
+                methods: arrayToObject(Object.keys(result))
+            });
+        }
     });
+}
+
+function arrayToObject(array) {
+    var obj = {};
+    for (var i = 0; i < array.length; i++) {
+        obj[array[i]] = true;
+    }
+    return obj;
 }
 
 function callHandler(handlerPath, method, args, options, callback) {
+    console.log("calling 0", handler, method)
+
     var handler = handlers[handlerPath];
     if (!handler)
-        return callback("No such handler: " + handlerPath);
+        return callback(new Error("No such handler: " + handlerPath));
     if (!handler[method])
-        return callback("No such method on " + handlerPath + ": " + method);
+        return callback(new Error("No such method on " + handlerPath + ": " + method));
+    
+    console.log("calling 1", handler, method)
+    
+    var revNum;
     
     switch (method) {
         case "analyzeCurrent":
         case "findImports":
-            getCollabDoc(args[0], options.revNum, function(err, doc) {
+            var clientPath = args[0];
+            var osPath = options.filePath;
+            getCollabDoc(clientPath, options.revNum, function(err, doc) {
+                if (err) return done(err);
+                if (!doc) {
+                    // Document doesn't appear to exist in collab;
+                    // we'll pass null instead and wait for the
+                    // plugin to decide what to do.
+                    console.log("no doc for", clientPath.replace(/^\//, ""))
+                    revNum = -1;
+                    return callMethod();
+                }
+                
+                args[0] = osPath;
                 args[1] = doc.contents;
-                done();
+                args[3] = args[3] || {}; // options
+                args[3].clientPath = clientPath;
+                revNum = doc.revNum;
+                callMethod();
             });
             break;
         default:
-            done();
+            callMethod();
     }
     
-    function done() {
-        handler[method].apply(handler, args.concat(callback));
+    function callMethod() {
+        console.log("calling 2", handler, method)
+        try {
+            handler[method].apply(handler, args.concat(done));
+        } catch (e) {
+            done(e);
+        }
+    }
+    
+    function done(err) {
+        if (err) return callback(err);
+        
+        return callback(null, {
+            revNum: revNum,
+            result: [].slice.apply(arguments)
+        });
     }
 }
 
 function loadPlugin(path, content, callback) {
+    console.log("[jsonalyzer] loading plugin", path)
     var sandbox = {};
     var exports = {};
     
@@ -120,15 +166,19 @@ function loadPlugin(path, content, callback) {
     };
     sandbox.global = sandbox;
     sandbox.require = createRequire(path, plugins);
+    sandbox.console = console;
+    sandbox.process = process;
     sandbox.define = function(def) {
         def(sandbox.require, sandbox.exports, sandbox.module);
     };
     
     var script = vm.createScript(content.replace(/^\#\!.*/, ''), path);
     try {
-        script.runInNewContext(sandbox, path);
+        var pathJS = path.replace(/(\.js|)$/, ".js");
+        script.runInNewContext(sandbox, pathJS);
     } catch (e) {
         console.error("Error loading " + path + ":", e.stack);
+        e.message = ("Error loading " + path + ": " + e.message);
         return callback(e);
     }
 

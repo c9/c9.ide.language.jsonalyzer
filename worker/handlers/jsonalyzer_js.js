@@ -37,8 +37,8 @@ handler.extensions = ["js"];
 
 handler.languages = ["javascript"];
 
-handler.init = function(jsonalyzer) {
-    architectResolver.init(jsonalyzer);
+handler.init = function(options, callback) {
+    architectResolver.init(jsonalyzer, callback);
 };
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
@@ -59,7 +59,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
 
 handler.analyzeOthers = handler.analyzeCurrentAll;
 
-handler.findImports = function(path, doc, ast, callback) {
+handler.findImports = function(path, doc, ast, options, callback) {
     var archImports = architectResolver.findImports(path, doc, ast);
     var openFiles = ctagsUtil.findMatchingOpenFiles(path);
     var astImports = findImportsInAST(path, ast);

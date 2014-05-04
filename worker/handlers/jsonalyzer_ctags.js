@@ -24,7 +24,7 @@ handler.extensions = Array.prototype.concat.apply([], ctags.EXTENSION_GROUPS);
 
 handler.isGeneric = true;
 
-handler.findImports = function(path, doc, ast, callback) {
+handler.findImports = function(path, doc, ast, options, callback) {
     callback(null, ctagsUtil.findMatchingOpenFiles(path));
 };
 
@@ -44,7 +44,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     ctags.analyze(path, doc, callback);
 };
 
-handler.analyzeOthers = function(paths, callback) {
+handler.analyzeOthers = function(paths, options, callback) {
     var errs = [];
     var results = [];
     var _self = this;

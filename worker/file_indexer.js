@@ -53,11 +53,11 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
         assert(indexEntry || markers, "jsonalyzer handler must return a summary and/or markers");
         
         indexEntry = indexEntry || index.get(path) || {};
-        indexEntry.markers = markers;
+        markers = indexEntry.markers = indexEntry.markers || markers;
         
         index.set(path, plugin.guidName + ":", indexEntry);
         
-        plugin.findImports(path, docValue, ast, function(err, imports) {
+        plugin.findImports(path, docValue, ast, options, function(err, imports) {
             if (err) {
                 console.error("[jsonalyzer] error finding imports for " + path + ": " + err);
                 imports = [];
@@ -67,7 +67,7 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
                 return i !== path;
             });
             index.set(path, plugin.guidName + ":", indexEntry, imports);
-            callback(null, indexEntry, imports);
+            callback(null, indexEntry, imports, markers);
         });
     });
 };
@@ -134,7 +134,7 @@ function consumeQueue() {
                 return !index.get(path);
             });
                  
-            task.plugin.analyzeOthers(task.paths, function(errs, results) {
+            task.plugin.analyzeOthers(task.paths, {}, function(errs, results) {
                 assert(!errs || Array.isArray(errs));
                 updateQueueWatcher();
                 

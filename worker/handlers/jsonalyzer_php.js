@@ -54,7 +54,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
 
 handler.analyzeOthers = handler.analyzeCurrentAll;
 
-handler.findImports = function(path, doc, ast, callback) {
+handler.findImports = function(path, doc, ast, options, callback) {
     // TODO: get open files + guess imports
     callback(null, ctagsUtil.findMatchingOpenFiles(path));
 };

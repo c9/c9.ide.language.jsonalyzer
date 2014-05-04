@@ -17,9 +17,10 @@ var highlight = require("./highlight_occurrences");
 var scopeAnalyzer = require('plugins/c9.ide.language.javascript/scope_analyzer');
 var directoryIndexer = require("./directory_indexer");
 var fileIndexer = require("./file_indexer");
-var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
-var ctagsEx =  require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_ex");
-var HandlerRegistry = require("plugins/c9.ide.language.jsonalyzer/worker/handler_registry").HandlerRegistry;
+var ctagsUtil = require("./ctags/ctags_util");
+var ctagsEx =  require("./ctags/ctags_ex");
+var HandlerRegistry = require("./handler_registry").HandlerRegistry;
+var ServerHandlerWrapper = require("./server_handler_wrapper").ServerHandlerWrapper;
 require("treehugger/traverse"); // add traversal methods
 
 var worker = module.exports = Object.create(baseLanguageHandler);
@@ -35,27 +36,27 @@ worker.KIND_PACKAGE = scopeAnalyzer.KIND_PACKAGE;
 worker.GUID_PREFIX = "project:";
 
 worker.init = function(callback) {
-    var _self = this;
-    
     worker.sender.on("onlinechange", function(event) {
-        _self.onOnlineChange(event);
+        worker.onOnlineChange(event);
     });
     worker.sender.on("filechange", function(event) {
-        _self.onFileChange(event);
+        worker.onFileChange(event);
     });
     worker.sender.on("dirchange", function(event) {
-        _self.onDirChange(event);
+        worker.onDirChange(event);
     });
     worker.sender.on("jsonalyzerRegister", function(event) {
-        _self.loadPlugin(event.data.modulePath, event.data.contents, function(err, plugin) {
+        worker.loadPlugin(event.data.modulePath, event.data.contents, function(err, plugin) {
             if (err) return console.error(err);
             plugin.$source = event.data.modulePath;
-            handlers.registerPlugin(plugin, _self);
-            worker.sender.emit("jsonalyzerRegistered", { modulePath: event.data.modulePath, err: err });
+            handlers.registerHandler(plugin, worker, event.data.options);
+            worker.sender.emit("jsonalyzerRegistered",
+                { modulePath: event.data.modulePath, err: err });
         });
     });
     worker.sender.on("jsonalyzerRegisterServer", function(event) {
-        handlers.registerPlugin(event.data, _self);
+        handlersServer.registerHandler(
+            new ServerHandlerWrapper(event.data, worker), worker);
     });
     
     directoryIndexer.init(this);
@@ -124,7 +125,7 @@ worker.analyze = function(doc, ast, callback, minimalAnalysis) {
     var fullDoc = this.doc.getValue();
         
     assert(worker.path);
-    fileIndexer.analyzeCurrent(worker.path, fullDoc, ast, {}, function(err, result, imports) {
+    fileIndexer.analyzeCurrent(worker.path, fullDoc, ast, {}, function(err, result, imports, markers) {
         if (err)
             console.error("[jsonalyzer] Warning: could not analyze " + worker.path + ": " + err);
             
@@ -132,7 +133,7 @@ worker.analyze = function(doc, ast, callback, minimalAnalysis) {
         if (imports && imports.length)
             fileIndexer.analyzeOthers(imports, true);
         
-        callback(result && result.markers);
+        callback(markers);
     });
 };
 
@@ -186,29 +187,7 @@ worker.getHandlerFor = function(path, language) {
 worker.getServerHandlerFor = function(path, language) {
     language = language || (worker.path === path && worker.language);
     
-    var handler = handlersServer.getHandlerFor(path, language);
-    if (!handler)
-        return;
-        
-    return {
-        $source: handler.path,
-        languages: handler.languages,
-        extensions: handler.extensions,
-        analyzeCurrent: function(path, value, ast, options, callback) {
-            worker.sender.on("jsonalyzerCallServerResult", function onResult(e) {
-                if (e.data.handler !== handler.path)
-                    return;
-                worker.sender.off(onResult);
-                callback.apply(null, e.data);
-            });
-            worker.sender.emit("jsonalyzerCallServer", {
-                handlerPath: handler.path,
-                filePath: path,
-                method: "analyzeCurrent",
-                args: [path, null, null, options]
-            });
-        }
-    };
+    return handlersServer.getHandlerFor(path, language);
 };
 
 worker.getAllHandlers = function() {
