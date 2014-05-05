@@ -42,7 +42,7 @@ indexer.init = function(_handler) {
 indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
     var entry = index.get(path);
     if (entry && !worker.$lastWorker.scheduledUpdate)
-        return callback(null, entry, index.getImports(path));
+        return callback(null, entry, index.getImports(path), entry.markers);
     
     var plugin = handler.getHandlerFor(path);
     return plugin.analyzeCurrent(path, docValue, ast, options, function(err, indexEntry, markers) {

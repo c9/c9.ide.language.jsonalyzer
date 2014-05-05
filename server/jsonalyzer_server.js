@@ -35,22 +35,30 @@ function init(options, callback) {
         if (err)
             return callback(err);
         collabServer = collab.api;
-        collabServer.emitter.on("afterEditUpdate", onAfterEditUpdate);
-        
         callback();
     });
 }
 
 function getCollabDoc(path, revNum, callback) {
+    var docId = path.replace(/^\//, "");
     collabServer.Store.getDocument(
-        path.replace(/^\//, ""),
-        ["contents", "revNum"],
-        callback
+        docId,
+        ["revNum"],
+        function(err, result) {
+            if (err) return callback(err);
+            
+            if (revNum <= result.revNum) {
+                return collabServer.Store.getDocument(docId, ["revNum", "contents"], callback);
+            }
+            
+            collabServer.emitter.on("afterEditUpdate", function wait(e) {
+                if (e.docId !== docId || e.doc.revNum < revNum)
+                    return;
+                collabServer.emitter.removeListener("afterEditUpdate", wait);
+                callback(null, e.doc);
+            });
+        }
     );
-}
-
-function onAfterEditUpdate(e) {
-    console.log("EDIT UPDATE", e); // TODO
 }
 
 function registerHelper(path, content, options, callback) {
@@ -91,18 +99,15 @@ function arrayToObject(array) {
 }
 
 function callHandler(handlerPath, method, args, options, callback) {
-    console.log("calling 0", handler, method)
-
     var handler = handlers[handlerPath];
     if (!handler)
         return callback(new Error("No such handler: " + handlerPath));
     if (!handler[method])
         return callback(new Error("No such method on " + handlerPath + ": " + method));
-    
-    console.log("calling 1", handler, method)
-    
+
     var revNum;
-    
+    var isDone;
+
     switch (method) {
         case "analyzeCurrent":
         case "findImports":
@@ -114,7 +119,6 @@ function callHandler(handlerPath, method, args, options, callback) {
                     // Document doesn't appear to exist in collab;
                     // we'll pass null instead and wait for the
                     // plugin to decide what to do.
-                    console.log("no doc for", clientPath.replace(/^\//, ""))
                     revNum = -1;
                     return callMethod();
                 }
@@ -132,26 +136,30 @@ function callHandler(handlerPath, method, args, options, callback) {
     }
     
     function callMethod() {
-        console.log("calling 2", handler, method)
         try {
             handler[method].apply(handler, args.concat(done));
         } catch (e) {
+            if (isDone)
+                throw e;
             done(e);
         }
     }
     
     function done(err) {
+        isDone = true;
         if (err) return callback(err);
         
-        return callback(null, {
-            revNum: revNum,
-            result: [].slice.apply(arguments)
-        });
+        return callback(
+            null,
+            {
+                result: [].slice.apply(arguments),
+                revNum: revNum
+            }
+        );
     }
 }
 
 function loadPlugin(path, content, callback) {
-    console.log("[jsonalyzer] loading plugin", path)
     var sandbox = {};
     var exports = {};
     

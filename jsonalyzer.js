@@ -214,24 +214,28 @@ define(function(require, exports, module) {
         function onCallServer(event) {
             var data = event.data;
             var collabDoc = useCollab && collab.getDocument(data.filePath);
-            if (collabDoc)
+            var revNum;
+            if (collabDoc) {
                 collabDoc.delaysDisabled = true;
+                var revNum = collabDoc.latestRevNum + (collabDoc.pendingUpdates ? 1 : 0);
+            }
             server.callHandler(
                 data.handlerPath,
                 data.method,
                 data.args,
                 {
                     filePath: toOSPath(data.filePath),
-                    revNum: data.revNum
+                    revNum: revNum
                 },
                 function(err, response) {
-                    response.result[0] = response.result[0] || err;
+                    var resultArgs = response && response.result || [err];
+                    resultArgs[0] = resultArgs[0] || err;
                     plugin.on("initWorker", function() {
                         worker.emit(
                             "jsonalyzerCallServerResult",
                             { data: {
                                 handlerPath: data.handlerPath,
-                                result: response.result,
+                                result: resultArgs,
                                 id: data.id
                             } }
                         );

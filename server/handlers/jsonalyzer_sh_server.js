@@ -22,9 +22,9 @@ handler.init = function(options, callback) {
 };
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
-    child_process.execFile(
+    var child = child_process.execFile(
         bashBin,
-        ["-n", path],
+        doc ? ["-n"] : ["-n", path],
         function(err, stdout, stderr) {
             if (err && err.code !== 2) return callback(err);
 
@@ -52,6 +52,8 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
             callback(null, null, markers);
         }
     );
+    if (doc)
+        child.stdin.end(doc);
 };
 
 });
