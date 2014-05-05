@@ -19,6 +19,7 @@ define(function(require, exports, module) {
     
     var HANDLERS_SERVER = [
         "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_sh_server",
+        "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_php_server",
     ];
     
     var HELPERS_SERVER = [

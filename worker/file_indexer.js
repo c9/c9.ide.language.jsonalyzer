@@ -55,7 +55,11 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
         indexEntry = indexEntry || index.get(path) || {};
         markers = indexEntry.markers = indexEntry.markers || markers;
         
-        index.set(path, plugin.guidName + ":", indexEntry);
+        if (!options.service) {
+            // Only cache summaries for non-editor-service analysis;
+            // e.g. don't do it when we only requested an outline
+            index.set(path, plugin.guidName + ":", indexEntry);
+        }
         
         plugin.findImports(path, docValue, ast, options, function(err, imports) {
             if (err) {

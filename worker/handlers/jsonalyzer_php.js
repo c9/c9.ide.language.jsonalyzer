@@ -34,7 +34,7 @@ var handler = module.exports = Object.create(PluginBase);
 
 handler.languages = ["php"];
 
-handler.extensions = ["php"];
+handler.extensions = ["php", "php3", "php4", "php5"];
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")
@@ -49,7 +49,16 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
             return;
         ctagsUtil.findMatchingTags(path, doc, tag, GUESS_FARGS, EXTRACT_DOCS, results);
     });
-    callback(null, { properties: results });
+
+    var serverHandler = jsonalyzer.getServerHandlerFor(path, "php");
+    if (options.service || !serverHandler)
+        return callback(null, { properties: results });
+    
+    serverHandler.analyzeCurrent(path, doc, ast, options, function(err, summary, markers) {
+        if (err)
+            console.error(err.stack || err);
+        return callback(null, { properties: results }, markers);
+    });
 };
 
 handler.analyzeOthers = handler.analyzeCurrentAll;
