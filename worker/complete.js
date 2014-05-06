@@ -84,15 +84,15 @@ function toCompletionResult(file, name, priority, entry) {
     var braces = fullName !== name ? "(^^)" : "";
     
     return {
-        id          : name,
-        name        : fullName,
-        replaceText : name + braces,
-        icon        : "unknown2",
-        meta        : file,
-        doc         : entry.doc,
-        docHead     : entry.docHead,
-        priority    : priority,
-        isGeneric   : true
+        id: name,
+        name: fullName,
+        replaceText: name + braces,
+        icon: "unknown2",
+        meta: file,
+        doc: entry.doc,
+        docHead: entry.docHead,
+        priority: priority,
+        isGeneric: true
     };
 }
 

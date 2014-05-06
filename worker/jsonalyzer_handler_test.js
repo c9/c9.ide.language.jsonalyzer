@@ -18,7 +18,7 @@ var handler = require("./jsonalyzer_handler");
 var index = require("./semantic_index");
 var fileIndexer = require("./file_indexer");
 var directoryIndexer = require("./directory_indexer");
-var Document  = require("ace/document").Document;
+var Document = require("ace/document").Document;
 
 // Auto-init handler.doc
 var analyzed = 0;
