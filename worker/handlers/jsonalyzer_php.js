@@ -11,15 +11,15 @@ var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_b
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 
 var TAGS = [
-    { regex: /abstract class ([^ ]*)/g, kind: "package" },
-    { regex: /interface ([^ ]*)/g, kind: "package" },
+    { regex: /(?:^|\n)\s*(?:abstract\s+)?class ([^ ]*)/g, kind: "package" },
+    { regex: /(?:^|\n)\s*interface ([^ ]*)/g, kind: "package" },
     {
-        regex: /(?:public |static |abstract |protected |private )*function ([^ (]*)/g,
+        regex: /(?:^|\n)\s*(?:public\s+|static\s+|abstract\s+|protected\s+|private\s+)*function ([^ (]*)/g,
         kind: "method"
     },
     {
         regex: new RegExp(
-            "include\\("
+            "(?:^|\n)\s*include\\("
             + "(?:\\$\\w+(?:\\[[\\w']+\\])?)?"
             + "(?:\\s*\\.\\s*)?",
             "g"
