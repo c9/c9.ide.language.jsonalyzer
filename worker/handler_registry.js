@@ -9,7 +9,8 @@ module.exports.HandlerRegistry = function() {
     
     return {
         registerHandler: function(handler, options) {
-            if (handlers.indexOf(handler) > -1)
+            var existing = handlers.filter(function(h) { return h.$source && handler.$source === h.$source; });
+            if (existing.length || handlers.indexOf(handler) > -1)
                 return;
             
             if (handler.init)

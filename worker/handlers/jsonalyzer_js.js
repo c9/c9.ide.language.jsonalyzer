@@ -60,11 +60,15 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
 handler.analyzeOthers = handler.analyzeCurrentAll;
 
 handler.findImports = function(path, doc, ast, options, callback) {
-    var archImports = architectResolver.findImports(path, doc, ast);
-    var openFiles = ctagsUtil.findMatchingOpenFiles(path);
-    var astImports = findImportsInAST(path, ast);
+    var archImports = architectResolver.findImports(path, doc, ast, {}, function(err, archImports) {
+        if (err)
+            console.log(err);
         
-    callback(null, archImports.concat(openFiles, astImports));
+        var openFiles = ctagsUtil.findMatchingOpenFiles(path);
+        var astImports = findImportsInAST(path, ast);
+
+        callback(null, (archImports || []).concat(openFiles, astImports));
+    });
 };
 
 function findImportsInAST(path, ast) {

@@ -11,6 +11,8 @@ var plugins = {
     "c9/assert": assert
 };
 var handlers = {};
+var helpers = {};
+var pluginCount = 0;
 var vfs;
 
 module.exports = function(_vfs, options, register) {
@@ -23,7 +25,13 @@ module.exports = function(_vfs, options, register) {
         
         registerHandler: registerHandler,
         
-        callHandler: callHandler
+        registerHelpers: registerHelpers,
+        
+        registerHandlers: registerHandlers,
+        
+        callHandler: callHandler,
+        
+        getPluginCount: getPluginCount
     });
 };
 
@@ -61,25 +69,78 @@ function getCollabDoc(path, revNum, callback) {
     );
 }
 
-function registerHelper(path, content, options, callback) {
-    loadPlugin(path, content, function(err, result) {
+function registerHandlers(list, options, callback) {
+    var results = [];
+    async.forEachSeries(
+        list,
+        function(plugin, next) {
+            registerHandler(
+                plugin.path,
+                plugin.contents,
+                plugin.options || options,
+                function(err, result) {
+                    results.push(result);
+                    next(err);
+                }
+            );
+        },
+        function(err) {
+            return callback(err, { metas: results });
+        }
+    );
+}
+
+function registerHelpers(list, options, callback) {
+    async.forEachSeries(
+        list,
+        function(plugin, next) {
+            registerHelper(plugin.path, plugin.contents, plugin.options || options, next);
+        },
+        callback
+    );
+}
+
+function registerHelper(path, contents, options, callback) {
+    if (helpers[path])
+        return callback();
+    
+    loadPlugin(path, contents, function(err, result) {
+        if (err) return callback(err);
+        
+        helpers[path] = result;
+
         if (!result.init)
-            return callback(err);
-        result.init(options, callback);
+            return done();
+        
+        result.init(options, function(err, result) {
+            if (err) return callback(err);
+            
+            done();
+        });
+        
+        function done(err, result) {
+            if (err) return callback(err);
+            
+            pluginCount++;
+            callback();
+        }
     });
 }
 
-function registerHandler(handlerPath, content, options, callback) {
-    loadPlugin(handlerPath, content, function(err, result) {
-        if (err)
-            return callback(err);
+function registerHandler(handlerPath, contents, options, callback) {
+    loadPlugin(handlerPath, contents, function(err, result) {
+        if (err) return callback(err);
+        
         handlers[handlerPath] = result;
 
         if (!result.init)
             return done();
+        
         result.init(options, done);
         
         function done(err) {
+            if (!err)
+                pluginCount++;
             callback(err, {
                 languages: result.languages,
                 extensions: result.extensions,
@@ -88,6 +149,10 @@ function registerHandler(handlerPath, content, options, callback) {
             });
         }
     });
+}
+
+function getPluginCount(callback) {
+    callback(null, pluginCount);
 }
 
 function arrayToObject(array) {
@@ -159,14 +224,14 @@ function callHandler(handlerPath, method, args, options, callback) {
     }
 }
 
-function loadPlugin(path, content, callback) {
+function loadPlugin(path, contents, callback) {
     var sandbox = {};
     var exports = {};
     
     if (!path || path.match(/^\.|\.js$/))
         return callback(new Error("Illegal module name: " + path));
-    if (!content)
-        return callback(new Error("No content provided: " + path));
+    if (!contents)
+        return callback(new Error("No contents provided: " + path));
 
     sandbox.exports = exports;
     sandbox.module = {
@@ -180,7 +245,7 @@ function loadPlugin(path, content, callback) {
         def(sandbox.require, sandbox.exports, sandbox.module);
     };
     
-    var script = vm.createScript(content.replace(/^\#\!.*/, ''), path);
+    var script = vm.createScript(contents.replace(/^\#\!.*/, ''), path);
     try {
         var pathJS = path.replace(/(\.js|)$/, ".js");
         script.runInNewContext(sandbox, pathJS);
@@ -204,8 +269,13 @@ function createRequire(path, localDefs) {
         if (normalized in localDefs)
             return localDefs[normalized];
         // TODO: fix relative path requires
-        var exports = Module._load(file, parentModule);
-        return exports;
+        try {
+            var exports = Module._load(file, parentModule);
+            return exports;
+        } catch (e) {
+            e.message = path + ": " + e.message;
+            throw e;
+        }
     }
 
     createRequire.resolve = function(request) {
@@ -239,3 +309,31 @@ function normalizeModule(parentId, moduleName) {
 
     return moduleName;
 }
+
+var async = {
+    forEachSeries: function(arr, iterator, callback) {
+        callback = callback || function () {};
+        if (!arr.length) {
+            return callback();
+        }
+        var completed = 0;
+        var iterate = function () {
+            iterator(arr[completed], function (err) {
+                if (err) {
+                    callback(err);
+                    callback = function () {};
+                }
+                else {
+                    completed += 1;
+                    if (completed === arr.length) {
+                        callback(null);
+                    }
+                    else {
+                        iterate();
+                    }
+                }
+            });
+        };
+        iterate();
+    }
+};

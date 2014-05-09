@@ -6,44 +6,6 @@
  */
 define(function(require, exports, module) {
     
-    // TODO: move these to default_plugins.js
-    // TODO: send packed server components
-    
-    var HANDLERS_WORKER = [
-        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_js",
-        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_md",
-        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_php",
-        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_sh",
-        "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
-    ];
-    
-    var HANDLERS_SERVER = [
-        "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_sh_server",
-        "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_php_server",
-    ];
-    
-    var HELPERS_SERVER = [
-        "plugins/c9.ide.language/worker",
-        "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker",
-        "plugins/c9.ide.language.jsonalyzer/worker/architect_resolver_worker",
-        "plugins/c9.ide.language/complete_util",
-        "plugins/c9.ide.language/worker_util",
-        "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler",
-        "plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util",
-        "plugins/c9.ide.language.javascript.infer/path",
-    ];
-    
-    var HELPERS_WORKER = [];
-    
-    var MOCK_HELPERS_SERVER = {
-        "plugins/c9.ide.language/worker":
-            require("text!./server/mock_language_worker.js"),
-        "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker":
-            require("text!./server/mock_jsonalyzer_worker.js"),
-        "plugins/c9.ide.language.jsonalyzer/worker/architect_resolver_worker":
-            require("text!./server/mock_architect_resolver_worker.js"),
-    };
-    
     main.consumes = [
         "Plugin", "commands", "language", "c9", "watcher",
         "save", "language.complete", "dialog.error", "ext",
@@ -52,7 +14,6 @@ define(function(require, exports, module) {
     main.provides = [
         "jsonalyzer"
     ];
-    main.workerPlugins = HANDLERS_WORKER.concat(HELPERS_WORKER);
     return main;
 
     function main(options, imports, register) {
@@ -66,16 +27,23 @@ define(function(require, exports, module) {
         var showError = imports["dialog.error"].show;
         var hideError = imports["dialog.error"].hide;
         var ext = imports.ext;
+        var plugins = require("./default_plugins");
         var async = require("async");
         var collab = imports.collab;
         
         var useCollab = options.useCollab;
         var homeDir = options.homeDir.replace(/\/$/, "");
         var workspaceDir = options.workspaceDir.replace(/\/$/, "");
+        var serverOptions = {};
+        for (var o in options) {
+            if (typeof options[o] !== "function" && options.hasOwnProperty(o))
+                serverOptions[o] = options[o];
+        };
         
         var worker;
         var server;
-        var extraHandlersServer = [];
+        var serverLoading = false;
+        var serverPluginCount = 0;
         
         var loaded = false;
         function load() {
@@ -98,9 +66,10 @@ define(function(require, exports, module) {
                     watcher.on("change", onFileChange);
                     watcher.on("directory", onDirChange);
                     save.on("afterSave", onFileSave);
-                    c9.on("stateChange", onOnlineChange);
+                    c9.on("connect", onOnlineChange);
+                    c9.on("disconnect", onOnlineChange);
                     worker.on("jsonalyzerCallServer", onCallServer);
-                    onOnlineChange();
+                    worker.emit("onlinechange", {data: { isOnline: c9.connected }});
                     emit.sticky("initWorker");
                     if (warning)
                         hideError(warning);
@@ -114,78 +83,89 @@ define(function(require, exports, module) {
             }, 30000);
             
             // Load server
-            // TODO: use c9.on("connect")/c9.on("disconnect") / see onOnlineChange
-            loadServer(function(err, result) {
+            loadServer(function(err) {
                 if (err) {
                     showError("Language server could not be loaded; some language features have been disabled");
                     return console.error(err.stack || err);
                 }
-                
-                // TODO: work w/o collab for desktop
-                if (!useCollab)
-                    console.warning("Collab is disabled: certain language server features won't work");
-                
-                result.init(options, function(err) {
-                    if (err) {
-                        showError("Language server could not be loaded; some language features have been disabled");
-                        return console.error(err);
-                    }
-                    server = result;
-                    emit.sticky("initServer");
-                });
             });
-
-            // Load plugins
-            HANDLERS_SERVER.forEach(function(plugin) {
-                registerServerHandler(plugin, options);
-            });
-            HANDLERS_WORKER.forEach(function(plugin) {
+                                        
+            plugins.handlersWorker.forEach(function(plugin) {
                 registerWorkerHandler(plugin);
             });
         }
         
         function loadServer(callback) {
-            // function checkProgress() {
-            //     clearTimeout(checkProgress.timer);
-            //     checkProgress.timer = setTimeout(function() {
-            //         setTimeout(function() { // wait a bit longer in case we were in the debugger
-            //             if (!server)
-            //                 showError("Language server could not be loaded; some language features have been disabled");
-            //         }, 50);
-            //     }, 45000);
-            // }
-
-            // TODO: abort on offline state
-            ext.loadRemotePlugin("jsonalyzer_server", {
-                code: require("text!./server/jsonalyzer_server.js"),
-                redefine: true
-            }, function(err, server) {
-                if (err) return callback(err);
+            if (serverLoading)
+                plugin.once("initServer", callback);
                 
-                async.map(
-                    HELPERS_SERVER,
-                    function(path, mapNext) {
-                        if (MOCK_HELPERS_SERVER[path])
-                            return mapNext(null, { path: path, content: MOCK_HELPERS_SERVER[path] });
-                        require(["text!" + path + ".js"], function(content) {
-                            return mapNext(null, { path: path, content: content });
+            tryConnect();
+            
+            function tryConnect() {
+                var handlers;
+                async.series([
+                    function checkLoaded(next) {
+                        if (!server)
+                            return next();
+                        
+                        server.getPluginCount(function(err, count) {
+                            if (!err && count === serverPluginCount)
+                                return done();
+                            next(err);
                         });
                     },
-                    function(err, helpers) {
-                        if (err) return callback(err);
+                    function loadExtension(next) {
+                        if (server) return next();
                         
-                        async.forEachSeries(
-                            helpers,
-                            function(helper, forNext) {
-                                server.registerHelper(helper.path, helper.content, options, forNext);
+                        ext.loadRemotePlugin(
+                            "jsonalyzer_server",
+                            {
+                                code: require("text!./server/jsonalyzer_server.js"),
+                                redefine: true
                             },
-                            function(err) {
-                                callback(err, server);
+                            function(err, _server) {
+                                server = _server;
+                                next(err);
                             }
                         );
-                    }
-                );
-            });
+                    },
+                    function callInit(next) {
+                        if (!useCollab)
+                            return next(new Error("Collab is disabled"));
+                        
+                        server.init(serverOptions, next);
+                    },
+                    function loadHelpers(next) {
+                        server.registerHelpers(plugins.helpersServer, serverOptions, next);
+                    },
+                    function loadHandlers(next) {
+                        server.registerHandlers(plugins.handlersServer, serverOptions, function(err, result) {
+                            handlers = result.metas;
+                            next(err);
+                        });
+                    },
+                    function notifyWorker(next) {
+                        plugin.once("initWorker", function() {
+                            handlers.forEach(function(meta) {
+                                worker.emit("jsonalyzerRegisterServer", { data: meta });
+                            });
+                            next();
+                        });
+                    },
+                ], done);
+            }
+            
+            function done(err) {
+                if (err && err.code === "EDISCONNECT" || !err && !c9.connected)
+                    return tryConnect();
+                if (err)
+                    return callback(err);
+                
+                serverLoading = false;
+                
+                emit.sticky("initServer");
+                callback();
+            }
         }
         
         function onFileChange(event) {
@@ -204,11 +184,30 @@ define(function(require, exports, module) {
         }
         
         function onOnlineChange(event) {
-            plugin.on("initWorker", function(err) {
+            plugin.once("initWorker", function(err) {
                 if (err)
                     console.error(err);
                     
                 worker.emit("onlinechange", {data: { isOnline: c9.connected }});
+            });
+            
+            if (!c9.connected) {
+                emit.unsticky("initServer");
+                return;
+            }
+            
+            // Reconnect to server
+            server.getPluginCount(function(err, count) {
+                if (c9.connected && err) {
+                    return loadServer(function(err) {
+                        if (err) {
+                            showError("Language server could not be loaded; some language features have been disabled");
+                            console.error(err);
+                        }
+                    });
+                }
+                
+                plugins.helpersServer.length + plugins.handlersServer.length;
             });
         }
         
@@ -218,7 +217,7 @@ define(function(require, exports, module) {
             var revNum;
             if (collabDoc) {
                 collabDoc.delaysDisabled = true;
-                var revNum = collabDoc.latestRevNum + (collabDoc.pendingUpdates ? 1 : 0);
+                revNum = collabDoc.latestRevNum + (collabDoc.pendingUpdates ? 1 : 0);
             }
             server.callHandler(
                 data.handlerPath,
@@ -231,7 +230,7 @@ define(function(require, exports, module) {
                 function(err, response) {
                     var resultArgs = response && response.result || [err];
                     resultArgs[0] = resultArgs[0] || err;
-                    plugin.on("initWorker", function() {
+                    plugin.once("initWorker", function() {
                         worker.emit(
                             "jsonalyzerCallServerResult",
                             { data: {
@@ -259,14 +258,21 @@ define(function(require, exports, module) {
             if (typeof options === "function")
                 return registerServerHandler(path, contents, {}, options);
             
-            plugin.on("initServer", function() {
+            plugin.once("initServer", function() {
                 server.registerHandler(path, contents, options, function(err, meta) {
                     if (err) {
                         console.error("Failed to load " + path, err);
                         return callback && callback(err);
                     }
                     
-                    plugin.on("initWorker", function() {
+                    // Persist in case of server restart
+                    plugins.handlersServer.push({
+                        path: path,
+                        contents: contents,
+                        options: options || {}
+                    });
+                    
+                    plugin.once("initWorker", function() {
                         worker.emit("jsonalyzerRegisterServer", { data: meta });
                         callback && callback();
                     });
@@ -282,11 +288,21 @@ define(function(require, exports, module) {
             if (typeof options === "function")
                 return registerServerHelper(path, contents, {}, options);
             
-            plugin.on("initServer", function() {
+            plugin.once("initServer", function() {
                 server.registerHelper(path, contents, options, function(err) {
-                    if (err)
+                    if (err) {
                         console.error("Failed to load " + path, err);
-                    callback && callback(err);
+                        callback && callback(err);
+                    }
+                    
+                    // Persist in case of server restart
+                    plugins.handlersServer.push({
+                        path: path,
+                        contents: contents,
+                        options: options || {}
+                    });
+                    
+                    callback && callback();
                 });
             });
         }
@@ -298,7 +314,7 @@ define(function(require, exports, module) {
                 return registerWorkerHandler(path, contents, {}, options);
             
             language.getWorker(function(err, worker) {
-                plugin.on("initWorker", function() {
+                plugin.once("initWorker", function() {
                     if (err) return console.error(err);
                     
                     worker.emit("jsonalyzerRegister", { data: {
