@@ -124,9 +124,7 @@ function getHandlerSummary(path, handler) {
 }
 
 function getHandlerList(callback) {
-    callback(null, Object.keys(handlers).map(function(h) {
-        return getHandlerSummary(h, handlers[h]);
-    }));
+    callback(null, { handlers: Object.keys(handlers) });
 }
 
 function arrayToObject(array) {

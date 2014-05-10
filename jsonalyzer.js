@@ -42,6 +42,7 @@ define(function(require, exports, module) {
         
         var worker;
         var server;
+        var pendingServerCall;
         var serverLoading = false;
         var serverPluginCount = 0;
         
@@ -68,7 +69,7 @@ define(function(require, exports, module) {
                     save.on("afterSave", onFileSave);
                     c9.on("connect", onOnlineChange);
                     c9.on("disconnect", onOnlineChange);
-                    worker.on("jsonalyzerCallServer", onCallServer);
+                    worker.on("jsonalyzerCallServer", callServer);
                     worker.emit("onlinechange", {data: { isOnline: c9.connected }});
                     emit.sticky("initWorker");
                     if (warning)
@@ -102,32 +103,30 @@ define(function(require, exports, module) {
             tryConnect();
             
             function tryConnect() {
-                var handlers;
+                var loadedHandlers = [];
+                var handlersForWorker = [];
+                
                 async.series([
-                    function checkLoaded(next) {
-                        if (!server)
-                            return next();
-                        
-                        server.getPluginCount(function(err, count) {
-                            if (!err && count === serverPluginCount)
-                                return done();
-                            next(err);
-                        });
-                    },
-                    function loadExtension(next) {
-                        if (server) return next();
-                        
+                    function extendVFS(next) {
                         ext.loadRemotePlugin(
                             "jsonalyzer_server",
                             {
                                 code: require("text!./server/jsonalyzer_server.js"),
-                                redefine: true
+                                redefine: !server
                             },
                             function(err, _server) {
+                                if (err && err.code === "EEXIST")
+                                    err = null;
                                 server = _server;
                                 next(err);
                             }
                         );
+                    },
+                    function getLoadedHandlers(next) {
+                        server.getHandlerList(function(err, result) {
+                            loadedHandlers = result && result.handlers;
+                            next(err);
+                        });
                     },
                     function callInit(next) {
                         if (!useCollab)
@@ -136,17 +135,29 @@ define(function(require, exports, module) {
                         server.init(serverOptions, next);
                     },
                     function loadHelpers(next) {
-                        server.registerHandlers(plugins.helpersServer, serverOptions, next);
+                        var helpers = plugins.helpersServer.filter(function(p) {
+                            return loadedHandlers.indexOf(p.path) === -1;
+                        });
+                        if (!helpers.length)
+                            return next();
+                        server.registerHandlers(helpers, serverOptions, next);
                     },
                     function loadHandlers(next) {
-                        server.registerHandlers(plugins.handlersServer, serverOptions, function(err, result) {
-                            handlers = result.summaries;
+                        var handlers = plugins.handlersServer.filter(function(p) {
+                            return loadedHandlers.indexOf(p.path) === -1;
+                        });
+                        if (!handlers.length)
+                            return next();
+                        server.registerHandlers(handlers, serverOptions, function(err, result) {
+                            handlersForWorker = result.summaries;
                             next(err);
                         });
                     },
                     function notifyWorker(next) {
                         plugin.once("initWorker", function() {
-                            handlers.forEach(function(meta) {
+                            handlersForWorker.forEach(function(meta) {
+                                if (loadedHandlers.indexOf(meta.path) > -1)
+                                    return;
                                 worker.emit("jsonalyzerRegisterServer", { data: meta });
                             });
                             next();
@@ -159,7 +170,7 @@ define(function(require, exports, module) {
                 if (err && err.code === "EDISCONNECT" || !err && !c9.connected)
                     return tryConnect();
                 if (err)
-                    return callback(err);
+                    return callback(err); // fatal; don't reset serverLoading
                 
                 serverLoading = false;
                 
@@ -197,21 +208,15 @@ define(function(require, exports, module) {
             }
             
             // Reconnect to server
-            server.getPluginCount(function(err, count) {
-                if (c9.connected && err) {
-                    return loadServer(function(err) {
-                        if (err) {
-                            showError("Language server could not be loaded; some language features have been disabled");
-                            console.error(err);
-                        }
-                    });
-                }
-                
-                plugins.helpersServer.length + plugins.handlersServer.length;
+            console.log("[jsonalyzer] connecting");
+            loadServer(function(err) {
+                if (err)
+                    return console.error("Could not reload language server", err);
+                console.log("[jsonalyzer] connected");
             });
         }
         
-        function onCallServer(event) {
+        function callServer(event) {
             var data = event.data;
             var collabDoc = useCollab && collab.getDocument(data.filePath);
             var revNum;
@@ -219,29 +224,40 @@ define(function(require, exports, module) {
                 collabDoc.delaysDisabled = true;
                 revNum = collabDoc.latestRevNum + (collabDoc.pendingUpdates ? 1 : 0);
             }
-            server.callHandler(
-                data.handlerPath,
-                data.method,
-                data.args,
-                {
-                    filePath: toOSPath(data.filePath),
-                    revNum: revNum
-                },
-                function(err, response) {
-                    var resultArgs = response && response.result || [err];
-                    resultArgs[0] = resultArgs[0] || err;
-                    plugin.once("initWorker", function() {
-                        worker.emit(
-                            "jsonalyzerCallServerResult",
-                            { data: {
-                                handlerPath: data.handlerPath,
-                                result: resultArgs,
-                                id: data.id
-                            } }
-                        );
-                    });
-                }
-            );
+            
+            if (pendingServerCall)
+                plugin.off("initServer", pendingServerCall);
+            pendingServerCall = doCallServer;
+            plugin.once("initServer", pendingServerCall);
+            
+            function doCallServer() {
+                server.callHandler(
+                    data.handlerPath,
+                    data.method,
+                    data.args,
+                    {
+                        filePath: toOSPath(data.filePath),
+                        revNum: revNum
+                    },
+                    function(err, response) {
+                        if (err && err.code == "EDISCONNECT")
+                            return setTimeout(callServer.bind(null, event), 50); // try again
+                        
+                        var resultArgs = response && response.result || [err];
+                        resultArgs[0] = resultArgs[0] || err;
+                        plugin.once("initWorker", function() {
+                            worker.emit(
+                                "jsonalyzerCallServerResult",
+                                { data: {
+                                    handlerPath: data.handlerPath,
+                                    result: resultArgs,
+                                    id: data.id
+                                } }
+                            );
+                        });
+                    }
+                );
+            }
         }
         
         function toOSPath(path) {
@@ -260,6 +276,12 @@ define(function(require, exports, module) {
             
             plugin.once("initServer", function() {
                 server.registerHandler(path, contents, options, function(err, meta) {
+                    if (err && err.code === "EDISCONNECT") { // try again
+                        return setTimeout(
+                            registerServerHandler.bind(null, path, contents, options, callback),
+                            500
+                        );
+                    }
                     if (err) {
                         console.error("Failed to load " + path, err);
                         return callback && callback(err);
