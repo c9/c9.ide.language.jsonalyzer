@@ -10,10 +10,8 @@ var collabServer;
 var plugins = {
     "c9/assert": assert
 };
-var handlers = {};
-var helpers = {};
-var pluginCount = 0;
 var vfs;
+var handlers = {};
 
 module.exports = function(_vfs, options, register) {
     vfs = _vfs;
@@ -21,17 +19,13 @@ module.exports = function(_vfs, options, register) {
     register(null, {
         init: init,
         
-        registerHelper: registerHelper,
-        
         registerHandler: registerHandler,
-        
-        registerHelpers: registerHelpers,
         
         registerHandlers: registerHandlers,
         
         callHandler: callHandler,
         
-        getPluginCount: getPluginCount
+        getHandlerList: getHandlerList
     });
 };
 
@@ -85,46 +79,9 @@ function registerHandlers(list, options, callback) {
             );
         },
         function(err) {
-            return callback(err, { metas: results });
+            return callback(err, { summaries: results });
         }
     );
-}
-
-function registerHelpers(list, options, callback) {
-    async.forEachSeries(
-        list,
-        function(plugin, next) {
-            registerHelper(plugin.path, plugin.contents, plugin.options || options, next);
-        },
-        callback
-    );
-}
-
-function registerHelper(path, contents, options, callback) {
-    if (helpers[path])
-        return callback();
-    
-    loadPlugin(path, contents, function(err, result) {
-        if (err) return callback(err);
-        
-        helpers[path] = result;
-
-        if (!result.init)
-            return done();
-        
-        result.init(options, function(err, result) {
-            if (err) return callback(err);
-            
-            done();
-        });
-        
-        function done(err, result) {
-            if (err) return callback(err);
-            
-            pluginCount++;
-            callback();
-        }
-    });
 }
 
 function registerHandler(handlerPath, contents, options, callback) {
@@ -139,20 +96,37 @@ function registerHandler(handlerPath, contents, options, callback) {
         result.init(options, done);
         
         function done(err) {
-            if (!err)
-                pluginCount++;
-            callback(err, {
-                languages: result.languages,
-                extensions: result.extensions,
-                handlerPath: handlerPath,
-                methods: arrayToObject(Object.keys(result))
-            });
+            if (err) return callback(err);
+            
+            callback(null, getHandlerSummary(handlerPath, result));
         }
     });
 }
 
-function getPluginCount(callback) {
-    callback(null, pluginCount);
+function getHandlerSummary(path, handler) {
+    var properties = {};
+    var functions = {};
+    for (var p in handler) {
+        if (!handler.hasOwnProperty(p))
+            continue;
+        // We don't send functions over vfs, but use callHandler() instead
+        if (typeof handler[p] === "function")
+            functions[p] = true;
+        else
+            properties[p] = handler[p];
+    }
+    
+    return {
+        path: path,
+        properties: properties,
+        functions: functions
+    };
+}
+
+function getHandlerList(callback) {
+    callback(null, Object.keys(handlers).map(function(h) {
+        return getHandlerSummary(h, handlers[h]);
+    }));
 }
 
 function arrayToObject(array) {

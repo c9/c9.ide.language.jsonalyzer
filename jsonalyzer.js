@@ -38,7 +38,7 @@ define(function(require, exports, module) {
         for (var o in options) {
             if (typeof options[o] !== "function" && options.hasOwnProperty(o))
                 serverOptions[o] = options[o];
-        };
+        }
         
         var worker;
         var server;
@@ -136,11 +136,11 @@ define(function(require, exports, module) {
                         server.init(serverOptions, next);
                     },
                     function loadHelpers(next) {
-                        server.registerHelpers(plugins.helpersServer, serverOptions, next);
+                        server.registerHandlers(plugins.helpersServer, serverOptions, next);
                     },
                     function loadHandlers(next) {
                         server.registerHandlers(plugins.handlersServer, serverOptions, function(err, result) {
-                            handlers = result.metas;
+                            handlers = result.summaries;
                             next(err);
                         });
                     },
@@ -289,7 +289,7 @@ define(function(require, exports, module) {
                 return registerServerHelper(path, contents, {}, options);
             
             plugin.once("initServer", function() {
-                server.registerHelper(path, contents, options, function(err) {
+                server.registerHandler(path, contents, options, function(err) {
                     if (err) {
                         console.error("Failed to load " + path, err);
                         callback && callback(err);

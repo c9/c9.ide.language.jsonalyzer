@@ -8,32 +8,32 @@ define(function(require, exports, module) {
     module.exports.ServerHandlerWrapper = function(descriptor, worker) {
         var PluginBase = require("./jsonalyzer_base_handler");
         var result = Object.create(PluginBase);
-        result.$source = descriptor.handlerPath;
-        result.languages = descriptor.languages;
-        result.extensions = descriptor.extensions;
+        result.$source = descriptor.path;
+        result.languages = descriptor.properties.languages;
+        result.extensions = descriptor.properties.extensions;
         
-        if (descriptor.methods.analyzeCurrent)
+        if (descriptor.functions.analyzeCurrent)
             result.analyzeCurrent = function(path, value, ast, options, callback) {
                 callServer({
-                    handlerPath: descriptor.handlerPath,
+                    handlerPath: descriptor.path,
                     filePath: path,
                     method: "analyzeCurrent",
                     args: [path, null, null, options]
                 }, callback);
             };
-        if (descriptor.methods.findImports)
+        if (descriptor.functions.findImports)
             result.findImports = function(path, value, ast, options, callback) {
                 callServer({
-                    handlerPath: descriptor.handlerPath,
+                    handlerPath: descriptor.path,
                     filePath: path,
                     method: "findImports",
                     args: [path, null, null, options]
                 }, callback);
             };
-        if (descriptor.methods.analyzeOthers)
+        if (descriptor.functions.analyzeOthers)
             result.analyzeOthers = function(paths, options, callback) {
                 callServer({
-                    handlerPath: descriptor.handlerPath,
+                    handlerPath: descriptor.path,
                     filePath: null, // we're not using collab for these so we don't care
                     method: "analyzeOthers",
                     args: [paths, options]
