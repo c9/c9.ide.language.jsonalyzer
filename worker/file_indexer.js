@@ -21,6 +21,8 @@ var queueTimer;
 var queueWatcher;
 var isJobActive = false;
 var queueCallbacks = [];
+var lastPath;
+var lastDocValue;
 
 indexer.init = function(_handler) {
     handler = _handler;
@@ -41,8 +43,17 @@ indexer.init = function(_handler) {
  */
 indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
     var entry = index.get(path);
+    
+    // Allow using cached entry when no new job scheduled
     if (entry && !worker.$lastWorker.scheduledUpdate)
         return callback(null, entry, index.getImports(path), entry.markers);
+    
+    // Allow using cached entry when we just did this one
+    if (entry && path === lastPath && docValue === lastDocValue)
+        return callback(null, entry, index.getImports(path), entry.markers);
+    
+    lastPath = path;
+    lastDocValue = docValue;
     
     var plugin = handler.getHandlerFor(path);
     return plugin.analyzeCurrent(path, docValue, ast, options, function(err, indexEntry, markers) {
