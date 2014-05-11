@@ -49,7 +49,10 @@ function getClientDoc(path, options, callback) {
         return done(new Error("No collab server found and cannot use local value"));
 
     var timeout = setTimeout(function() {
-        done(new Error("Collab server failed to provide document contents"));
+        done(new Error(
+            "Collab server failed to provide document contents"
+            + (collabServer.store.Document ? " (and was not inited yet)" : " (but was inited)")
+        ));
     }, 20000);
 
     var docId = path.replace(/^\//, "");

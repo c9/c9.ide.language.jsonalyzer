@@ -44,8 +44,8 @@ indexer.init = function(_handler) {
 indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
     var entry = index.get(path);
     
-    // Allow using cached entry when no new job scheduled
-    if (entry && !entry.stale && !worker.$lastWorker.scheduledUpdate)
+    // Allow using cached entry when a new job is scheduled anyway
+    if (entry && worker.$lastWorker.scheduledUpdate)
         return callback(null, entry, index.getImports(path), entry.markers);
     
     // Allow using cached entry when we just did this one
