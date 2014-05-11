@@ -24,7 +24,7 @@ var OPTIONS = [
     "-e", "W0612", // Unused variable
     "-e", "W0602", // Used global without assignment
     "-r", "n", 
-    "--msg-template={line}: [{msg_id}] {msg}"
+    "--msg-template={line}:{column}: [{msg_id}] {msg}"
 ];
 
 var TEMPDIR = process.env.TMP || process.env.TMPDIR || process.env.TEMP || '/tmp';
@@ -84,14 +84,19 @@ function exec(path, callback) {
             var markers = [];
             
             stdout.split("\n").forEach(function(line) {
-                var match = line.match(/(\d+): \[([^\]]+)\] (.*)/);
+                var match = line.match(/(\d+):(\d+): \[([^\]]+)\] (.*)/);
                 if (!match)
                     return;
                 var row = match[1];
-                var code = match[2];
-                var message = match[3];
+                var column = match[2];
+                var code = match[3];
+                var message = match[4];
+                console.log("LINE", line, match);
                 markers.push({
-                    pos: { sl: parseInt(row, 10) - 1 },
+                    pos: {
+                        sl: parseInt(row, 10) - 1,
+                        sc: parseInt(column, 10)
+                    },
                     message: message,
                     code: code,
                     level: getLevel(code)
