@@ -45,11 +45,11 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
     var entry = index.get(path);
     
     // Allow using cached entry when no new job scheduled
-    if (entry && !worker.$lastWorker.scheduledUpdate)
+    if (entry && !entry.stale && !worker.$lastWorker.scheduledUpdate)
         return callback(null, entry, index.getImports(path), entry.markers);
     
     // Allow using cached entry when we just did this one
-    if (entry && path === lastPath && docValue === lastDocValue)
+    if (entry && !entry.stale && path === lastPath && docValue === lastDocValue)
         return callback(null, entry, index.getImports(path), entry.markers);
     
     lastPath = path;
@@ -71,6 +71,11 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
             // e.g. don't do it when we only requested an outline
             index.set(path, plugin.guidName + ":", indexEntry);
         }
+        else {
+            var oldEntry = index.get(path);
+            if (oldEntry)
+                oldEntry.stale = true;
+        }
         
         plugin.findImports(path, docValue, ast, options, function(err, imports) {
             if (err) {
@@ -81,7 +86,7 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
                 // Don't return self or unanalyzeable imports
                 return i !== path;
             });
-            index.set(path, plugin.guidName + ":", indexEntry, imports);
+            index.set(path, plugin.guidName + ":", null, imports);
             callback(null, indexEntry, imports, markers);
         });
     });

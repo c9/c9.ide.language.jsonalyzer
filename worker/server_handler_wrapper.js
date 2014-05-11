@@ -49,7 +49,7 @@ define(function(require, exports, module) {
                 worker.sender.off(onResult);
                 
                 var err = e.data.result[0];
-                if (err && err.code === "EDISABLE") {
+                if (err && err.code === "EFATAL") {
                     console.error("Fatal error in " + descriptor.path, err);
                     delete result[options.method];
                 }

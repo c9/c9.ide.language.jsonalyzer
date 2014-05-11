@@ -43,6 +43,8 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         return callback(null, { properties: results });
     
     serverHandler.analyzeCurrent(path, doc, ast, options, function(err, summary, markers) {
+        if (err && err.code === "ESUPERSEDED")
+            return callback(err);
         if (err)
             console.error(err.stack || err);
         return callback(null, { properties: results }, markers);

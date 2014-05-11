@@ -24,7 +24,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         "php",
         doc ? ["-l"]: ["-l", path],
         function(err, stdout, stderr) {
-            if (err && err.code === 127) {
+            if (err && err.code === "EFATAL") {
                 err = new Error("No php installation found");
                 err.code = "EDISABLE";
                 return callback(err);

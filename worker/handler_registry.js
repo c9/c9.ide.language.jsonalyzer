@@ -21,6 +21,7 @@ module.exports.HandlerRegistry = function() {
         
             var languages = handler.languages;
             var extensions = handler.extensions;
+            handler.guidName = languages.join("");
             assert(languages && extensions, "Handlers must have a languages and extensions property");
             
             handler.supportedLanguages = "";

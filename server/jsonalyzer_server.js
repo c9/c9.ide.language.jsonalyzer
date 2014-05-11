@@ -240,7 +240,7 @@ function loadPlugin(path, contents, callback) {
     
     var script = vm.createScript(contents.replace(/^\#\!.*/, ''), path);
     try {
-        var pathJS = path.replace(/(\.js|)$/, ".js");
+        var pathJS = path.replace(/(\.js)?$/, ".js");
         script.runInNewContext(sandbox, pathJS);
     } catch (e) {
         console.error("Error loading " + path + ":", e.stack);

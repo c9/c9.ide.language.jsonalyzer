@@ -255,8 +255,11 @@ define(function(require, exports, module) {
             }
                 
             function doCall() {
-                if (pendingServerCall !== doCall)
-                    return done(new Error("Superseded by later call, aborted"));
+                if (pendingServerCall !== doCall) {
+                    var err = new Error("Superseded by later call, aborted");
+                    err.code = "ESUPERSEDED";
+                    return done();
+                }
                 
                 server.callHandler(
                     handlerPath, method, args,
