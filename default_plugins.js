@@ -6,6 +6,7 @@ define(function(require, exports, module) {
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_md",
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_php",
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_sh",
+            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_py",
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
         ],
         

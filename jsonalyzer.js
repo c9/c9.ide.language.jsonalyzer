@@ -46,7 +46,6 @@ define(function(require, exports, module) {
         var server;
         var pendingServerCall;
         var serverLoading = false;
-        var serverPluginCount = 0;
         
         var loaded = false;
         function load() {
