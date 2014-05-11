@@ -34,6 +34,7 @@ define(function(require, exports, module) {
         
         var useCollab = options.useCollab;
         var useSend = !options.useCollab && options.useSend;
+        var maxServerCallInterval = options.maxServerCallInterval || 1000;
         var homeDir = options.homeDir.replace(/\/$/, "");
         var workspaceDir = options.workspaceDir.replace(/\/$/, "");
         var serverOptions = {};
@@ -45,6 +46,7 @@ define(function(require, exports, module) {
         var worker;
         var server;
         var pendingServerCall;
+        var lastServerCall = Date.now();
         var serverLoading = false;
         
         var loaded = false;
@@ -242,6 +244,12 @@ define(function(require, exports, module) {
             );
             
             function setupCall(value) {
+                // Throttle server calls
+                var waitTime = lastServerCall + maxServerCallInterval - Date.now();
+                if (waitTime > 0)
+                    return setTimeout(setupCall.bind(value), waitTime);
+                lastServerCall = Date.now();
+                
                 if (useCollab) {
                     // This is cheap; we do this every setupCall() attempt
                     var collabDoc = collab.getDocument(filePath);
