@@ -1,5 +1,5 @@
 /**
- * jsonalyzer shell analysis
+ * jsonalyzer php analysis
  *
  * @copyright 2014, Ajax.org B.V.
  * @author Lennart Kats <lennart add c9.io>
@@ -24,9 +24,11 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         "php",
         doc ? ["-l"]: ["-l", path],
         function(err, stdout, stderr) {
-            if (err && err.code !== 255) return callback(err);
-            
-            // TODO: make a special case for error 127 that disables this plugin
+            if (err && err.code === 127) {
+                err = new Error("No php installation found");
+                err.code = "EDISABLE";
+                return callback(err);
+            }
 
             var markers = [];
             
