@@ -44,7 +44,7 @@ module.exports.HandlerRegistry = function() {
                 return null;
             
             var results = handlers.filter(function(p) {
-                return language && language.match(p.supportedLanguages);
+                return !p.isGeneric && language && language.match(p.supportedLanguages);
             }).concat(
             handlers.filter(function(p) {
                 return extension.match(p.supportedExtensions)
