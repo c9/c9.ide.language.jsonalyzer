@@ -41,7 +41,13 @@ function init(options, callback) {
     });
 }
 
-function getCollabDoc(path, revNum, callback) {
+function getClientDoc(path, options, callback) {
+    if (options.value)
+        return callback(null, { contents: options.value });
+    
+    if (!collabServer)
+        return callback(new Error("No collab server or value"));
+
     var docId = path.replace(/^\//, "");
     collabServer.Store.getDocument(
         docId,
@@ -49,12 +55,12 @@ function getCollabDoc(path, revNum, callback) {
         function(err, result) {
             if (err) return callback(err);
             
-            if (revNum <= result.revNum) {
+            if (options.revNum <= result.revNum) {
                 return collabServer.Store.getDocument(docId, ["revNum", "contents"], callback);
             }
             
             collabServer.emitter.on("afterEditUpdate", function wait(e) {
-                if (e.docId !== docId || e.doc.revNum < revNum)
+                if (e.docId !== docId || e.doc.revNum < options.revNum)
                     return;
                 collabServer.emitter.removeListener("afterEditUpdate", wait);
                 callback(null, e.doc);
@@ -145,41 +151,48 @@ function callHandler(handlerPath, method, args, options, callback) {
     var revNum;
     var isDone;
 
-    switch (method) {
-        case "analyzeCurrent":
-        case "findImports":
-            var clientPath = args[0];
-            var osPath = options.filePath;
-            getCollabDoc(clientPath, options.revNum, function(err, doc) {
-                if (err) return done(err);
-                if (!doc) {
-                    // Document doesn't appear to exist in collab;
-                    // we'll pass null instead and wait for the
-                    // plugin to decide what to do.
-                    revNum = -1;
-                    return callMethod();
-                }
-                
-                args[0] = osPath;
-                args[1] = doc.contents;
-                args[3] = args[3] || {}; // options
-                args[3].clientPath = clientPath;
-                revNum = doc.revNum;
-                callMethod();
-            });
-            break;
-        default:
-            callMethod();
+    // We need to catch any errors thrown by  the handler or collab to make
+    // sure we never crash.
+    try {
+        setupCall();
+    } catch (e) {
+        if (isDone)
+            throw e;
+        done(e);
     }
     
-    function callMethod() {
-        try {
-            handler[method].apply(handler, args.concat(done));
-        } catch (e) {
-            if (isDone)
-                throw e;
-            done(e);
+    function setupCall() {
+        switch (method) {
+            case "analyzeCurrent":
+            case "findImports":
+                var clientPath = args[0];
+                var osPath = options.filePath;
+                
+                getClientDoc(clientPath, options, function(err, doc) {
+                    if (err) return done(err);
+                    if (!doc) {
+                        // Document doesn't appear to exist in collab;
+                        // we'll pass null instead and wait for the
+                        // plugin to decide what to do.
+                        revNum = -1;
+                        return doCall();
+                    }
+                    
+                    args[0] = osPath;
+                    args[1] = doc.contents;
+                    args[3] = args[3] || {}; // options
+                    args[3].clientPath = clientPath;
+                    revNum = doc.revNum;
+                    doCall();
+                });
+                break;
+            default:
+                doCall();
         }
+    }
+    
+    function doCall() {
+        handler[method].apply(handler, args.concat(done));
     }
     
     function done(err) {

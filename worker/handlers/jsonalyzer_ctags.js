@@ -51,7 +51,7 @@ handler.analyzeOthers = function(paths, options, callback) {
     asyncForEach(
         paths,
         function(path, next) {
-            workerUtil.readFile(path, function(err, doc) {
+            workerUtil.readFile(path, { unsaved: true }, function(err, doc) {
                 if (err) {
                     errs.push(err);
                     results.push(null);

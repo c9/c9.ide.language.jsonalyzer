@@ -9,7 +9,7 @@ define(function(require, exports, module) {
     main.consumes = [
         "Plugin", "commands", "language", "c9", "watcher",
         "save", "language.complete", "dialog.error", "ext",
-        "collab"
+        "collab", "language.worker_util_helper"
     ];
     main.provides = [
         "jsonalyzer"
@@ -30,8 +30,10 @@ define(function(require, exports, module) {
         var plugins = require("./default_plugins");
         var async = require("async");
         var collab = imports.collab;
+        var readTabOrFile = imports["language.worker_util_helper"].readTabOrFile;
         
         var useCollab = options.useCollab;
+        var useSend = !options.useCollab && options.useSend;
         var homeDir = options.homeDir.replace(/\/$/, "");
         var workspaceDir = options.workspaceDir.replace(/\/$/, "");
         var serverOptions = {};
@@ -82,24 +84,29 @@ define(function(require, exports, module) {
                         warning = showError("Language worker could not be loaded; some language features have been disabled");
                 }, 50);
             }, 30000);
+                                        
+            plugins.handlersWorker.forEach(function(plugin) {
+                registerWorkerHandler(plugin);
+            });
             
             // Load server
+            if (!useSend && !useCollab) {
+                console.warning("Collab required for jsonalyzer server on non-local c9");
+                serverLoading = true; // disable loading
+                return;
+            }
             loadServer(function(err) {
                 if (err) {
                     showError("Language server could not be loaded; some language features have been disabled");
                     return console.error(err.stack || err);
                 }
             });
-                                        
-            plugins.handlersWorker.forEach(function(plugin) {
-                registerWorkerHandler(plugin);
-            });
         }
         
         function loadServer(callback) {
             if (serverLoading)
                 plugin.once("initServer", callback);
-                
+            
             tryConnect();
             
             function tryConnect() {
@@ -129,9 +136,6 @@ define(function(require, exports, module) {
                         });
                     },
                     function callInit(next) {
-                        if (!useCollab)
-                            return next(new Error("Collab is disabled"));
-                        
                         server.init(serverOptions, next);
                     },
                     function loadHelpers(next) {
@@ -217,46 +221,70 @@ define(function(require, exports, module) {
         }
         
         function callServer(event) {
-            var data = event.data;
-            var collabDoc = useCollab && collab.getDocument(data.filePath);
+            var filePath = event.data.filePath;
+            var handlerPath = event.data.handlerPath;
+            var method = event.data.method;
+            var args = event.data.args;
+            var value;
             var revNum;
-            if (collabDoc) {
-                collabDoc.delaysDisabled = true;
-                revNum = collabDoc.latestRevNum + (collabDoc.pendingUpdates ? 1 : 0);
+            
+            if (!useSend)
+                return setupCall();
+            
+            readTabOrFile(
+                filePath,
+                { allowUnsaved: true, encoding: "utf-8" },
+                function(err, _value) {
+                    if (err) return done(err);
+                    
+                    value = _value;
+                    setupCall();
+                }
+            );
+            
+            function setupCall(value) {
+                if (useCollab) {
+                    // This is cheap; we do this every setupCall() attempt
+                    var collabDoc = collab.getDocument(filePath);
+                    if (collabDoc) {
+                        collabDoc.delaysDisabled = true;
+                        revNum = collabDoc.latestRevNum + (collabDoc.pendingUpdates ? 1 : 0);
+                    }
+                }
+                if (pendingServerCall)
+                    plugin.off("initServer", pendingServerCall);
+                pendingServerCall = doCall;
+                plugin.once("initServer", pendingServerCall);
             }
-            
-            if (pendingServerCall)
-                plugin.off("initServer", pendingServerCall);
-            pendingServerCall = doCallServer;
-            plugin.once("initServer", pendingServerCall);
-            
-            function doCallServer() {
+                
+            function doCall() {
                 server.callHandler(
-                    data.handlerPath,
-                    data.method,
-                    data.args,
+                    handlerPath, method, args,
                     {
-                        filePath: toOSPath(data.filePath),
+                        filePath: toOSPath(filePath),
+                        value: value,
                         revNum: revNum
                     },
-                    function(err, response) {
-                        if (err && err.code == "EDISCONNECT")
-                            return setTimeout(callServer.bind(null, event), 50); // try again
-                        
-                        var resultArgs = response && response.result || [err];
-                        resultArgs[0] = resultArgs[0] || err;
-                        plugin.once("initWorker", function() {
-                            worker.emit(
-                                "jsonalyzerCallServerResult",
-                                { data: {
-                                    handlerPath: data.handlerPath,
-                                    result: resultArgs,
-                                    id: data.id
-                                } }
-                            );
-                        });
-                    }
+                    done
                 );
+            }
+            
+            function done(err, response) {
+                if (err && err.code == "EDISCONNECT")
+                    return setTimeout(callServer.bind(null, event), 50); // try again
+                
+                var resultArgs = response && response.result || [err];
+                resultArgs[0] = resultArgs[0] || err;
+                plugin.once("initWorker", function() {
+                    worker.emit(
+                        "jsonalyzerCallServerResult",
+                        { data: {
+                            handlerPath: handlerPath,
+                            result: resultArgs,
+                            id: event.data.id
+                        } }
+                    );
+                });
             }
         }
         
