@@ -1,6 +1,25 @@
 // Supported
 
-module.exports.asyncForEach = require("async").forEachSeries;
+module.exports.asyncForEach = function(array, fn, callback) {
+    array = array.slice(); // copy before use
+    function processOne() {
+        var item = array.shift();
+        fn(item, function processNext(result, err) {
+            if (array.length > 0) {
+                processOne();
+            }
+            else if (callback) {
+                callback(err, result);
+            }
+        });
+    }
+    if (array.length > 0) {
+        processOne();
+    }
+    else if (callback) {
+        callback();
+    }
+};
 
 // Unsupported
 

@@ -17,7 +17,7 @@ handler.extensions = ["sh"];
 handler.languages = ["sh"];
 
 handler.init = function(options, callback) {
-    bashBin = options.bashBin;
+    bashBin = options.bashBin || "bash";
     callback();
 };
 
