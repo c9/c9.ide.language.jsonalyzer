@@ -44,7 +44,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         ctagsUtil.findMatchingTags(path, doc, tag, GUESS_FARGS, EXTRACT_DOCS, results);
     });
 
-    var serverHandler = jsonalyzer.getServerHandlerFor(path, "rb");
+    var serverHandler = jsonalyzer.getServerHandlerFor(path, "ruby");
     if (options.service || !serverHandler)
         return callback(null, { properties: results });
     
