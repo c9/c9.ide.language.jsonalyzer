@@ -21,6 +21,10 @@ define(function(require, exports, module) {
                 path: "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_php_server",
                 contents: require("text!./server/handlers/jsonalyzer_php_server.js")
             },
+            {
+                path: "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_py_server",
+                contents: require("text!./server/handlers/jsonalyzer_py_server.js")
+            },
         ],
         
         helpersServer: [
