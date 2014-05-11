@@ -250,13 +250,14 @@ define(function(require, exports, module) {
                         revNum = collabDoc.latestRevNum + (collabDoc.pendingUpdates ? 1 : 0);
                     }
                 }
-                if (pendingServerCall)
-                    plugin.off("initServer", pendingServerCall);
                 pendingServerCall = doCall;
                 plugin.once("initServer", pendingServerCall);
             }
                 
             function doCall() {
+                if (pendingServerCall !== doCall)
+                    return done(new Error("Superseded by later call, aborted"));
+                
                 server.callHandler(
                     handlerPath, method, args,
                     {
