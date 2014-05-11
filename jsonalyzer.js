@@ -91,7 +91,7 @@ define(function(require, exports, module) {
             
             // Load server
             if (!useSend && !useCollab) {
-                console.warning("Collab required for jsonalyzer server on non-local c9");
+                console.warn("Collab required for jsonalyzer server on non-local c9");
                 serverLoading = true; // disable loading
                 return;
             }
@@ -402,7 +402,7 @@ define(function(require, exports, module) {
              * @param {Object} [options]
              * @param {Function} [callback]
              */
-            registerWorkerHandler : registerWorkerHandler,
+            registerWorkerHandler: registerWorkerHandler,
             
             /**
              * Register a new server-based handler.
@@ -412,7 +412,7 @@ define(function(require, exports, module) {
              * @param {Object} [options]
              * @param {Function} [callback]
              */
-            registerServerHandler : registerServerHandler,
+            registerServerHandler: registerServerHandler,
             
             /**
              * Register a new server-based handler helper.
@@ -422,7 +422,7 @@ define(function(require, exports, module) {
              * @param {Object} [options]
              * @param {Function} [callback]
              */
-            registerServerHelper : registerServerHelper
+            registerServerHelper: registerServerHelper
         });
         
         register(null, { jsonalyzer: plugin });

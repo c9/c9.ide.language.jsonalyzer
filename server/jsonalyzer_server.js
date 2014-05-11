@@ -286,7 +286,7 @@ function normalizeModule(parentId, moduleName) {
         var base = parentId.split("/").slice(0, -1).join("/");
         moduleName = (base || parentId) + "/" + moduleName;
 
-        while(moduleName.indexOf(".") !== -1 && previous != moduleName) {
+        while (moduleName.indexOf(".") !== -1 && previous != moduleName) {
             var previous = moduleName;
             moduleName = moduleName.replace(/\/\.\//, "/").replace(/[^\/]+\/\.\.\//, "");
         }
