@@ -14,7 +14,7 @@ module.exports.init = function(options, callback) {
 module.exports.findImports = function(path, doc, ast, options, callback) {
     var baseDirMatch = path.match(/(.*\/)plugins\//);
     if (!baseDirMatch || !architectPlugins)
-        return [];
+        return callback(null, []);
     var results = [];
     ast && ast[0] && ast[0].rewrite('Call(_, [Function(_, _, body)]', function(b) {
         for (var j = 0; j < b.body.length; j++) {
