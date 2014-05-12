@@ -28,8 +28,8 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         function(err, stdout, stderr) {
             if (err && err.code !== 2) return callback(err);
 
-            var ignoreRows = {};
             var markers = [];
+            var lastMarker;
             
             stderr.split("\n").forEach(function(line) {
                 var match = line.match(/^([^:]+):\s*(?:line\s*)?([^:]+):\s*(.*)/);
@@ -37,12 +37,13 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
                     return;
                 var row = match[2];
                 var message = match[3];
-                if (ignoreRows[row]) {
-                    ignoreRows[row] = null; // ignore second message of each row
-                    return;
+                if (message.match(/^`(.*)'$/)) {
+                    // This message only shows the line of the last message,
+                    // and is not a message by itself
+                    return tryAddColumn(lastMarker, RegExp.$1);
                 }
-                ignoreRows[row] = true;
-                markers.push({
+                
+                markers.push(lastMarker = {
                     pos: { sl: parseInt(row, 10) - 1 },
                     message: message,
                     level: message.match(/error/) ? "error" : "warning"
@@ -55,5 +56,16 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc)
         child.stdin.end(doc);
 };
+
+function tryAddColumn(marker, line) {
+    if (!marker || !marker.message.match(/token `(.)'/))
+        return;
+    var token = RegExp.$1;
+    var tokenIndex = line.indexOf(token);
+    if (tokenIndex === -1 || tokenIndex !== line.lastIndexOf(token))
+        return;
+    marker.pos.sc = tokenIndex;
+    marker.pos.ec = tokenIndex + 1;
+}
 
 });
