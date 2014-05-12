@@ -52,6 +52,8 @@ function getCurrentLazy(path, doc, fullAst, callback) {
 }
 
 function getCompletionResults(path, priority, identifier, summary, skipPos, skipLine) {
+    if (!summary)
+        return [];
     var entries = index.findEntries(summary, identifier, true);
     var file = path && path.match(/[^\/]*$/)[0];
     

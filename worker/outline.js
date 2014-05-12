@@ -10,6 +10,11 @@ module.exports.init = function(_handler) {
 
 module.exports.outline = function(doc, ast, callback) {
     return fileIndexer.analyzeCurrent(handler.path, doc.getValue(), ast, { service: "outline" }, function(err, entry) {
+        if (err) {
+            console.error(err)
+            return callback();
+        }
+        
         var result = createOutline(null, entry);
         var rootInfo = {
             displayPos: { el: doc.getLength() - 1 }
