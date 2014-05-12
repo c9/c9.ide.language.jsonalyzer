@@ -5,7 +5,7 @@ define(function(require, exports, module) {
     "use strict";
 
     main.consumes = ["Plugin"];
-    main.provides = ["collab"];
+    main.provides = ["collab", "collab.connect"];
     return main;
 
     function main(options, imports, register) {

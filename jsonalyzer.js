@@ -9,7 +9,7 @@ define(function(require, exports, module) {
     main.consumes = [
         "Plugin", "commands", "language", "c9", "watcher",
         "save", "language.complete", "dialog.error", "ext",
-        "collab", "language.worker_util_helper"
+        "collab", "collab.connect", "language.worker_util_helper"
     ];
     main.provides = [
         "jsonalyzer"
@@ -30,6 +30,7 @@ define(function(require, exports, module) {
         var plugins = require("./default_plugins");
         var async = require("async");
         var collab = imports.collab;
+        var collabConnect = imports["collab.connect"];
         var readTabOrFile = imports["language.worker_util_helper"].readTabOrFile;
         
         var useCollab = options.useCollab;
@@ -138,9 +139,6 @@ define(function(require, exports, module) {
                             next(err);
                         });
                     },
-                    function callInit(next) {
-                        server.init(serverOptions, next);
-                    },
                     function loadHelpers(next) {
                         var helpers = plugins.helpersServer.filter(function(p) {
                             return loadedHandlers.indexOf(p.path) === -1;
@@ -159,6 +157,19 @@ define(function(require, exports, module) {
                             handlersForWorker = result.summaries;
                             next(err);
                         });
+                    },
+                    function waitForCollab(next) {
+                        if (!useCollab) return next();
+                        var wait = setTimeout(function() {
+                            done(new Error("Collab never gets to available state"));
+                        }, 20000);
+                        collabConnect.once("available", function() {
+                            clearTimeout(wait);
+                            next();
+                        });
+                    },
+                    function callInit(next) {
+                        server.init(serverOptions, next);
                     },
                     function notifyWorker(next) {
                         plugin.once("initWorker", function() {
