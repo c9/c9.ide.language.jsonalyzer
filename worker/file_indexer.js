@@ -55,8 +55,13 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
     lastPath = path;
     lastDocValue = docValue;
     
+    var watcher = setTimeout(function() {
+        console.log("Warning: did not receive a response for 20 seconds from " + plugin.$source);
+    }, 20000);
+    
     var plugin = handler.getHandlerFor(path);
     return plugin.analyzeCurrent(path, docValue, ast, options, function(err, indexEntry, markers) {
+        clearTimeout(watcher);
         if (err) {
             index.setBroken(path, err);
             return callback(err);
