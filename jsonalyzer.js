@@ -35,6 +35,8 @@ define(function(require, exports, module) {
         var useCollab = options.useCollab;
         var useSend = !options.useCollab && options.useSend;
         var maxServerCallInterval = options.maxServerCallInterval || 1000;
+        var maxTrySeriesLength = options.maxTrySeriesLength || 3;
+        var maxTrySeriesTime = options.maxTrySeriesTime || 10000;
         var homeDir = options.homeDir.replace(/\/$/, "");
         var workspaceDir = options.workspaceDir.replace(/\/$/, "");
         var serverOptions = {};
@@ -228,6 +230,7 @@ define(function(require, exports, module) {
             var args = event.data.args;
             var value;
             var revNum;
+            var tries = [];
             
             if (!useSend)
                 return setupCall();
@@ -282,7 +285,7 @@ define(function(require, exports, module) {
             
             function done(err, response) {
                 if (err && err.code == "EDISCONNECT")
-                    return setTimeout(callServer.bind(null, event), 50); // try again
+                    return setTimeout(retryConnect, 50); // try again
                 
                 var resultArgs = response && response.result || [err];
                 resultArgs[0] = resultArgs[0] || err;
@@ -296,6 +299,19 @@ define(function(require, exports, module) {
                         } }
                     );
                 });
+            }
+            
+            function retryConnect() {
+                // If our server plugin has an exception, it might crash the server;
+                // we keep track of disconnects to make sure we don't make it unusable
+                tries.push(Date.now());
+                var trySeriesStart = tries[tries.length - 1 - maxTrySeriesLength];
+                if (!trySeriesStart || trySeriesStart < Date.now() - maxTrySeriesTime)
+                    return setupCall(value);
+                
+                var err = new Error("Too many disconnects. Server crashing?");
+                err.code = "EFATAL";
+                done(err);
             }
         }
         
