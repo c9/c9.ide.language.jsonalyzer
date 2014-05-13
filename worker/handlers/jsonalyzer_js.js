@@ -98,10 +98,10 @@ function findImportsInAST(path, ast) {
 };
 
 function guessFilePath(basePath, importPath) {
-    var baseDir = importPath.match(/[^\/]+/)[0];
+    var baseDir = importPath.match(/[^\/]+/);
     if (!baseDir)
         return;
-    var i = basePath.indexOf(baseDir);
+    var i = basePath.indexOf(baseDir[0]);
     if (i === -1)
         return;
     return basePath.substr(0, i) + importPath;
