@@ -7,6 +7,7 @@
 define(function(require, exports, module) {
 
 var baseLanguageHandler = require("plugins/c9.ide.language/base_handler");
+var languageWorker = require("plugins/c9.ide.language/worker");
 var index = require("./semantic_index");
 var assert = require("c9/assert");
 var jumptodef = require("./jumptodef");
@@ -49,14 +50,31 @@ worker.init = function(callback) {
         worker.loadPlugin(event.data.modulePath, event.data.contents, function(err, plugin) {
             if (err) return console.error(err);
             plugin.$source = event.data.modulePath;
+            
+            var oldHandler = worker.getHandlerFor(worker.path, worker.language);
             handlers.registerHandler(plugin, worker, event.data.options);
+            if (oldHandler !== worker.getHandlerFor(worker.path, worker.language)) {
+                // Invalidate cache; reanalyze
+                index.markStale(oldHandler);
+                languageWorker.$lastWorker.onUpdate();
+            }
+                
             worker.sender.emit("jsonalyzerRegistered",
                 { modulePath: event.data.modulePath, err: err });
         });
     });
     worker.sender.on("jsonalyzerRegisterServer", function(event) {
+        var oldHandler = worker.getServerHandlerFor(worker.path, worker.language);
         handlersServer.registerHandler(
             new ServerHandlerWrapper(event.data, worker), worker);
+        if (oldHandler !== worker.getServerHandlerFor(worker.path, worker.language)) {
+            // Invalidate cache; reanalyze
+            index.markStale(oldHandler);
+            var clientHandler = worker.getHandlerFor(worker.path, worker.language);
+            if (oldHandler !== clientHandler)
+                index.markStale(clientHandler);
+            languageWorker.$lastWorker.onUpdate();
+        }
     });
     
     directoryIndexer.init(this);

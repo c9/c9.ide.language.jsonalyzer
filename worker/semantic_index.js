@@ -230,6 +230,15 @@ index.clear = function() {
     accessedSinceGC = {};
 };
 
+index.markStale = function(handler) {
+    if (!handler)
+        return;
+    for (s in summaries) {
+        if (summaries[s].handler === handler)
+            summaries[s].stale = true;
+    }
+}
+
 index.$clearAccessedSinceGC = function() {
     accessedSinceGC = {};
 };

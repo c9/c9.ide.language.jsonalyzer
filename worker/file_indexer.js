@@ -70,6 +70,7 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
         
         indexEntry = indexEntry || index.get(path) || {};
         markers = indexEntry.markers = indexEntry.markers || markers;
+        indexEntry.handler = plugin;
         
         if (!options.service) {
             // Only cache summaries for non-editor-service analysis;
@@ -178,6 +179,7 @@ function consumeQueue() {
                         continue;
                     }
                     assert(result);
+                    result.handler = task.plugin;
                     index.set(path, guidName + ":", result);
                 }
                 
