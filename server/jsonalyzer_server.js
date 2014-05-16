@@ -49,21 +49,18 @@ function getClientDoc(path, options, callback) {
         return done(new Error("No collab server found and cannot use local value"));
 
     var timeout = setTimeout(function() {
-        done(new Error(
-            "Collab server failed to provide document contents"
-            + (collabServer.store.Document ? " (and was not inited yet)" : " (but was inited)")
-        ));
+        done(new Error("Collab server failed to provide document contents"));
     }, 20000);
 
     var docId = path.replace(/^\//, "");
-    collabServer.Store.getDocument(
+    collabServer.getDocument(
         docId,
         ["revNum"],
         function(err, result) {
             if (err) return done(err);
             
             if (options.revNum <= result.revNum)
-                return collabServer.Store.getDocument(docId, ["revNum", "contents"], done);
+                return collabServer.getDocument(docId, ["revNum", "contents"], done);
             
             collabServer.emitter.on("afterEditUpdate", function wait(e) {
                 if (e.docId !== docId || e.doc.revNum < options.revNum)
