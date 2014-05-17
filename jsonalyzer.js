@@ -246,11 +246,11 @@ define(function(require, exports, module) {
             
             setupCall();
             
-            function setupCall(value) {
+            function setupCall() {
                 // Throttle server calls
                 var waitTime = lastServerCall + maxCallInterval - Date.now();
                 if (waitTime > 0)
-                    return setTimeout(setupCall.bind(value), waitTime);
+                    return setTimeout(setupCall, waitTime);
                 lastServerCall = Date.now();
                 
                 if (useCollab) {
@@ -266,10 +266,10 @@ define(function(require, exports, module) {
                 return readTabOrFile(
                     filePath,
                     { allowUnsaved: true, encoding: "utf-8" },
-                    function(err, _value) {
+                    function(err, result) {
                         if (err) return done(err);
                         
-                        value = _value;
+                        value = result;
                         start();
                     }
                 );
