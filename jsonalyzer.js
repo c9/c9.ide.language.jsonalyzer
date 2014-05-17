@@ -284,7 +284,7 @@ define(function(require, exports, module) {
                 if (pendingServerCall !== doCall) {
                     var err = new Error("Superseded by later call, aborted");
                     err.code = "ESUPERSEDED";
-                    return done();
+                    return done(err);
                 }
                 
                 var watcher = setTimeout(function watch() {

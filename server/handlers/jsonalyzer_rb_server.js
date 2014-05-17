@@ -26,9 +26,9 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         "ruby",
         doc ? ["-wc"]: ["-wc", path],
         function(err, stdout, stderr) {
-            if (err && err.code === "EFATAL") {
+            if (err && err.code === "ENOENT") {
                 err = new Error("No ruby installation found");
-                err.code = "EDISABLE";
+                err.code = "EFATAL";
                 return callback(err);
             }
 

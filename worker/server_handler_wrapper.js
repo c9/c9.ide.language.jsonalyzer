@@ -7,14 +7,14 @@ define(function(require, exports, module) {
      */
     module.exports.ServerHandlerWrapper = function(descriptor, worker) {
         var PluginBase = require("./jsonalyzer_base_handler");
-        var result = Object.create(PluginBase);
-        result.$source = descriptor.path;
-        result.languages = descriptor.properties.languages;
-        result.extensions = descriptor.properties.extensions;
-        result.maxCallInterval = descriptor.properties.maxCallInterval;
+        var handler = Object.create(PluginBase);
+        handler.$source = descriptor.path;
+        handler.languages = descriptor.properties.languages;
+        handler.extensions = descriptor.properties.extensions;
+        handler.maxCallInterval = descriptor.properties.maxCallInterval;
         
         if (descriptor.functions.analyzeCurrent)
-            result.analyzeCurrent = function(path, value, ast, options, callback) {
+            handler.analyzeCurrent = function(path, value, ast, options, callback) {
                 callServer({
                     handlerPath: descriptor.path,
                     maxCallInterval: descriptor.properties.maxCallInterval,
@@ -24,7 +24,7 @@ define(function(require, exports, module) {
                 }, callback);
             };
         if (descriptor.functions.findImports)
-            result.findImports = function(path, value, ast, options, callback) {
+            handler.findImports = function(path, value, ast, options, callback) {
                 callServer({
                     handlerPath: descriptor.path,
                     maxCallInterval: descriptor.properties.maxCallInterval,
@@ -34,7 +34,7 @@ define(function(require, exports, module) {
                 }, callback);
             };
         if (descriptor.functions.analyzeOthers)
-            result.analyzeOthers = function(paths, options, callback) {
+            handler.analyzeOthers = function(paths, options, callback) {
                 callServer({
                     handlerPath: descriptor.path,
                     maxCallInterval: descriptor.properties.maxCallInterval,
@@ -43,7 +43,7 @@ define(function(require, exports, module) {
                     args: [paths, options]
                 }, callback);
             };
-        return result;
+        return handler;
     
         function callServer(options, callback) {
             options.id = ++lastId;
@@ -55,7 +55,7 @@ define(function(require, exports, module) {
                 var err = e.data.result[0];
                 if (err && err.code === "EFATAL") {
                     console.error("Fatal error in " + descriptor.path, err);
-                    delete result[options.method];
+                    handler.disabled = err;
                 }
 
                 callback.apply(null, e.data.result);
