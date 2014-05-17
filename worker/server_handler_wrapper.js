@@ -11,11 +11,13 @@ define(function(require, exports, module) {
         result.$source = descriptor.path;
         result.languages = descriptor.properties.languages;
         result.extensions = descriptor.properties.extensions;
+        result.maxCallInterval = descriptor.properties.maxCallInterval;
         
         if (descriptor.functions.analyzeCurrent)
             result.analyzeCurrent = function(path, value, ast, options, callback) {
                 callServer({
                     handlerPath: descriptor.path,
+                    maxCallInterval: descriptor.properties.maxCallInterval,
                     filePath: path,
                     method: "analyzeCurrent",
                     args: [path, null, null, options]
@@ -25,6 +27,7 @@ define(function(require, exports, module) {
             result.findImports = function(path, value, ast, options, callback) {
                 callServer({
                     handlerPath: descriptor.path,
+                    maxCallInterval: descriptor.properties.maxCallInterval,
                     filePath: path,
                     method: "findImports",
                     args: [path, null, null, options]
@@ -34,6 +37,7 @@ define(function(require, exports, module) {
             result.analyzeOthers = function(paths, options, callback) {
                 callServer({
                     handlerPath: descriptor.path,
+                    maxCallInterval: descriptor.properties.maxCallInterval,
                     filePath: null, // we're not using collab for these so we don't care
                     method: "analyzeOthers",
                     args: [paths, options]

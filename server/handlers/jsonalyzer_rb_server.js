@@ -15,6 +15,8 @@ handler.extensions = ["rb"];
 
 handler.languages = ["ruby"];
 
+handler.maxCallInterval = handler.CALL_INTERVAL_BASIC;
+
 handler.init = function(options, callback) {
     callback();
 };

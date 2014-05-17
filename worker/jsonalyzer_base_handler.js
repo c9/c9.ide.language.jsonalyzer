@@ -20,9 +20,37 @@ module.exports = {
 
     // ABSTRACT MEMBERS
 
-    languages: [],
+    /**
+     * The languages this handler applies to,
+     * e.g. ["php"].
+     * 
+     * Must be overridden by inheritors.
+     */
+    elanguages: [],
     
+    /**
+     * The extensions this handler applies to,
+     * e.g. ["php"]. Used when the language
+     * of a file cannot be determined.
+     * 
+     * Must be overridden by inheritors.
+     */
     extensions: [],
+    
+    /**
+     * The maximum interval between calls for server-side handlers.
+     * 
+     * Should be overridden by server-side inheritors.
+     */
+    maxCallInterval: 2000,
+    
+    // CONSTANTS
+    
+    CALL_INTERVAL_MIN: 500,
+    
+    CALL_INTERVAL_BASIC: 1200,
+    
+    // ABSTRACT MEMBERS
     
     /**
      * Initializes this handler.

@@ -16,6 +16,8 @@ handler.extensions = ["sh"];
 
 handler.languages = ["sh"];
 
+handler.maxCallInterval = handler.CALL_INTERVAL_BASIC;
+
 handler.init = function(options, callback) {
     bashBin = options.bashBin || "bash";
     callback();

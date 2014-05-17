@@ -15,6 +15,8 @@ handler.extensions = ["php", "php3", "php4", "php5"];
 
 handler.languages = ["php"];
 
+handler.maxCallInterval = handler.CALL_INTERVAL_BASIC;
+
 handler.init = function(options, callback) {
     callback();
 };

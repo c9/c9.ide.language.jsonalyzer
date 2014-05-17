@@ -16,6 +16,9 @@ define(function(require, exports, module) {
             
         });
         
-        register(null, { "collab" : plugin });
+        register(null, {
+            collab: plugin,
+            "collab.connect": plugin
+        });
     }
 });

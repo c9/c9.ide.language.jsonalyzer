@@ -29,13 +29,13 @@ define(function(require, exports, module) {
         var ext = imports.ext;
         var plugins = require("./default_plugins");
         var async = require("async");
+        var assert = require("assert");
         var collab = imports.collab;
         var collabConnect = imports["collab.connect"];
         var readTabOrFile = imports["language.worker_util_helper"].readTabOrFile;
         
         var useCollab = options.useCollab;
         var useSend = !options.useCollab && options.useSend;
-        var maxServerCallInterval = options.maxServerCallInterval || 1000;
         var maxTrySeriesLength = options.maxTrySeriesLength || 3;
         var maxTrySeriesTime = options.maxTrySeriesTime || 10000;
         var homeDir = options.homeDir.replace(/\/$/, "");
@@ -239,41 +239,45 @@ define(function(require, exports, module) {
             var handlerPath = event.data.handlerPath;
             var method = event.data.method;
             var args = event.data.args;
+            var maxCallInterval = event.data.maxCallInterval || 2000;
             var value;
             var revNum;
             var tries = [];
             
-            if (!useSend)
-                return setupCall();
-            
-            readTabOrFile(
-                filePath,
-                { allowUnsaved: true, encoding: "utf-8" },
-                function(err, _value) {
-                    if (err) return done(err);
-                    
-                    value = _value;
-                    setupCall();
-                }
-            );
+            setupCall();
             
             function setupCall(value) {
                 // Throttle server calls
-                var waitTime = lastServerCall + maxServerCallInterval - Date.now();
+                var waitTime = lastServerCall + maxCallInterval - Date.now();
                 if (waitTime > 0)
                     return setTimeout(setupCall.bind(value), waitTime);
                 lastServerCall = Date.now();
                 
                 if (useCollab) {
-                    // This is cheap; we do this every setupCall() attempt
                     var collabDoc = collab.getDocument(filePath);
                     if (collabDoc) {
-                        collabDoc.delaysDisabled = true;
                         revNum = collabDoc.latestRevNum + (collabDoc.pendingUpdates ? 1 : 0);
+                        collabDoc.sendNow();
                     }
+                    return start();
                 }
-                pendingServerCall = doCall;
-                plugin.once("initServer", pendingServerCall);
+                
+                assert(useSend);
+                return readTabOrFile(
+                    filePath,
+                    { allowUnsaved: true, encoding: "utf-8" },
+                    function(err, _value) {
+                        if (err) return done(err);
+                        
+                        value = _value;
+                        start();
+                    }
+                );
+                
+                function start() {
+                    pendingServerCall = doCall;
+                    plugin.once("initServer", pendingServerCall);
+                }
             }
                 
             function doCall() {
@@ -288,6 +292,7 @@ define(function(require, exports, module) {
                         return plugin.once("initServer", function() { setTimeout(watch, 2000) });
                     console.warn("Did not receive a response from handler call to " + handlerPath + ":" + method);
                 }, 15000);
+                
                 server.callHandler(
                     handlerPath, method, args,
                     {

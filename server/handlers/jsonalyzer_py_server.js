@@ -33,6 +33,8 @@ handler.extensions = ["py"];
 
 handler.languages = ["py"];
 
+handler.maxCallInterval = handler.CALL_INTERVAL_BASIC;
+
 handler.init = function(options, callback) {
     callback();
 };
