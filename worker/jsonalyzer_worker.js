@@ -135,14 +135,13 @@ worker.onDocumentOpen = function(path, doc, oldPath, callback) {
 };
 
 worker.analyze = function(doc, ast, callback, minimalAnalysis) {
-    if (minimalAnalysis && index.get(worker.path))
+    if (minimalAnalysis && index.get(worker.path) || !worker.path)
         return callback();
     
     // Ignore embedded languages and just use the full document,
     // since we can't handle multiple segments in the index atm
     var fullDoc = this.doc.getValue();
         
-    assert(worker.path);
     fileIndexer.analyzeCurrent(worker.path, fullDoc, ast, {}, function(err, result, imports, markers) {
         if (err)
             console.error("[jsonalyzer] Warning: could not analyze " + worker.path + ": " + err);

@@ -47,13 +47,13 @@ define(function(require, exports, module) {
                 if (e.data.id !== options.id)
                     return;
                 worker.sender.off(onResult);
-                
+
                 var err = e.data.result[0];
                 if (err && err.code === "EFATAL") {
                     console.error("Fatal error in " + descriptor.path, err);
                     delete result[options.method];
                 }
-                
+
                 callback.apply(null, e.data.result);
             });
             worker.sender.emit("jsonalyzerCallServer", options);

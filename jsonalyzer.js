@@ -287,7 +287,7 @@ define(function(require, exports, module) {
                     if (!c9.connected)
                         return plugin.once("initServer", function() { setTimeout(watch, 2000) });
                     console.warn("Did not receive a response from handler call to " + handlerPath + ":" + method);
-                }, 15000)
+                }, 15000);
                 server.callHandler(
                     handlerPath, method, args,
                     {
