@@ -217,37 +217,31 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                     }, 500);
                 });
                 
-                it("shows syntax error markers for shell scripts", function(done) {
-                    worker.once("jsonalyzerCallServer", function() {
-                        calledServer = true;
-                    });
-                    session.on("changeAnnotation", function onAnnos() {
-                        if (!session.getAnnotations().length)
-                            return;
-                        session.off("changeAnnotation", onAnnos);
-                        expect(session.getAnnotations()).to.have.length(1);
-                        expect(calledServer).eq(true);
-                        done();
-                    });
+                it("shows syntax error markers for shell scripts", function beginTest(done) {
+                    // Wait for analysis to complete
+                    if (!session.getAnnotations().length)
+                        return session.once("changeAnnotation", beginTest.bind(null, done));
+
+                    expect(session.getAnnotations()).to.have.length(1);
+                    done();
                 });
                 
-                it('does completion without going to the server', function(done) {
-                    // Will go to server for initial document
-                    worker.once("jsonalyzerCallServer", function() {
-                        // But won't go there to fetch completion
-                        // (actually, editing will trigger it after 1200 ms or so)
-                        var callServer;
-                        worker.on("jsonalyzerCallServer", callServer = function() {
-                            assert(false, "Server should not be called");
-                        });
-                        tab.editor.ace.selection.setSelectionRange({ start: { row: 0, column: 1 }, end: { row: 1, column: 1 } });
-                        tab.editor.ace.onTextInput("fo");
-                        afterCompleteOpen(function(el) {
-                            expect.html(el).text(/foo/);
-                            worker.off("jsonalyzerCallServer", callServer);
-                            done();
-                        });
+                it('does completion without going to the server', function beginTest(done) {
+                    // Wait for analysis to complete
+                    if (!session.getAnnotations().length)
+                        return session.once("changeAnnotation", beginTest.bind(null, done));
+                        
+                    var callServer;
+                    worker.on("jsonalyzerCallServer", callServer = function() {
+                        assert(false, "Server should not be called");
                     });
+                    afterCompleteOpen(function(el) {
+                        expect.html(el).text(/foo/);
+                        worker.off("jsonalyzerCallServer", callServer);
+                        done();
+                    });
+                    tab.editor.ace.selection.setSelectionRange({ start: { row: 0, column: 1 }, end: { row: 1, column: 1 } });
+                    complete.deferredInvoke(true, tab.editor.ace);
                 });
             });
         });
