@@ -2,9 +2,10 @@
 
 "use client";
 
-require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/complete_util"], function (architect, chai, util, complete) {
+require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/complete_util", "ace/test/assertions"], function (architect, chai, util, complete) {
     var expect = chai.expect;
-    
+    var assert = require("ace/test/assertions");
+
     util.setStaticPrefix("/static");
     
     expect.setupArchitectTest([
@@ -185,8 +186,16 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
             
             describe("analysis", function(){
                 this.timeout(10000);
-                var jsTab;
-                var jsSession;
+                var tab;
+                var session;
+                var worker;
+                
+                before(function(done) {
+                    language.getWorker(function(err, result) {
+                        worker = result;
+                        done();
+                    });
+                })
                 
                 // Setup
                 beforeEach(function(done) {
@@ -196,10 +205,10 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                     // tab.close() isn't quite synchronous, wait for it :(
                     complete.closeCompletionBox();
                     setTimeout(function() {
-                        tabs.openFile("test_broken.sh", function(err, tab) {
-                            jsTab = tab;
-                            jsSession = jsTab.document.getSession().session;
-                            expect(jsSession).to.not.equal(null);
+                        tabs.openFile("test_broken.sh", function(err, _tab) {
+                            tab = _tab;
+                            session = tab.document.getSession().session;
+                            expect(session).to.not.equal(null);
                             setTimeout(function() {
                                 complete.closeCompletionBox();
                                 done();
@@ -209,12 +218,35 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                 });
                 
                 it("shows syntax error markers for shell scripts", function(done) {
-                    jsSession.on("changeAnnotation", function onAnnos() {
-                        if (!jsSession.getAnnotations().length)
+                    worker.once("jsonalyzerCallServer", function() {
+                        calledServer = true;
+                    });
+                    session.on("changeAnnotation", function onAnnos() {
+                        if (!session.getAnnotations().length)
                             return;
-                        jsSession.off("changeAnnotation", onAnnos);
-                        expect(jsSession.getAnnotations()).to.have.length(1);
+                        session.off("changeAnnotation", onAnnos);
+                        expect(session.getAnnotations()).to.have.length(1);
+                        expect(calledServer).eq(true);
                         done();
+                    });
+                });
+                
+                it('does completion without going to the server', function(done) {
+                    // Will go to server for initial document
+                    worker.once("jsonalyzerCallServer", function() {
+                        // But won't go there to fetch completion
+                        // (actually, editing will trigger it after 1200 ms or so)
+                        var callServer;
+                        worker.on("jsonalyzerCallServer", callServer = function() {
+                            assert(false, "Server should not be called");
+                        });
+                        tab.editor.ace.selection.setSelectionRange({ start: { row: 0, column: 1 }, end: { row: 1, column: 1 } });
+                        tab.editor.ace.onTextInput("fo");
+                        afterCompleteOpen(function(el) {
+                            expect.html(el).text(/foo/);
+                            worker.off("jsonalyzerCallServer", callServer);
+                            done();
+                        });
                     });
                 });
             });
