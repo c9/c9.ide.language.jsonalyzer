@@ -211,5 +211,9 @@ worker.getAllHandlers = function() {
     return handlers.getAllHandlers();
 };
 
+worker.getHandlerRegistry = function() {
+    return handlers;
+};
+
 });
 

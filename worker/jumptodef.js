@@ -21,24 +21,28 @@ module.exports.jumpToDefinition = function(doc, fullAst, pos, currentNode, callb
     var docValue = doc.getValue();
     var identifier = workerUtil.getIdentifier(line, pos.column);
 
-    // We're first getting the very latest outline, which might come
-    // from us or from another outliner, and we'll use it as a local
-    // list of definitions to jump to.
-    worker.$lastWorker.getOutline(function(outline) {
-        var results = [];
-        if (outline && outline.items)
-            results = findInOutline(outline.items, identifier);
-        
-        // Next, get results based on the summaries of our imports
-        fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { service: "jumptodef" }, function(err, result, imports) {
-            if (err) {
-                console.error(err);
-                return callback(results);
-            }
-            
+    // We don't specify an editor service here, so we bypass caching mechanisms
+    var options = {};
+    var that = this;
+    fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, options, function(err, summary, imports) {
+        if (err) {
+            if (err.code === "ESUPERSEDED")
+                return that.jumpToDefinition(doc, fullAst, pos, currentNode, callback);
+            console.error(err);
+            return callback(err);
+        }
+
+        // Before we use summaries, we'll actually first try to get an outline;
+        // that may come from us (after caching above), or it may come from
+        // some other outliner.
+        worker.$lastWorker.getOutline(function(outline) {
+            var results = [];
+            if (outline && outline.items)
+                results = findInOutline(outline.items, identifier);
+
             // Maybe we can get it from the summary instead of the outline
             if (!results.length)
-                results = findInSummaries([result], identifier, results);
+                results = findInSummaries([summary], identifier, results);
 
             // We only actually download & analyze new files if really needed
             var needAllImports = !results.length;

@@ -20,7 +20,7 @@ var IDLE_TIME = 50;
 
 handler.languages = [".*"];
 
-handler.extensions = Array.prototype.concat.apply([], ctags.EXTENSION_GROUPS);
+handler.extensions = [].concat.apply([], ctags.LANGUAGES.map(function(l) { return l.extensions; }));
 
 handler.isGeneric = true;
 

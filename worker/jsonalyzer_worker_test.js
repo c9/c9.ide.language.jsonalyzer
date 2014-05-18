@@ -12,10 +12,12 @@ if (typeof define === "undefined") {
 define(function(require, exports, module) {
 
 var assert = require("ace/test/assertions");
+var async = require("async");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 var worker = require("plugins/c9.ide.language/worker");
 var handler = require("./jsonalyzer_worker");
 var index = require("./semantic_index");
+var plugins = require("../default_plugins");
 var fileIndexer = require("./file_indexer");
 var directoryIndexer = require("./directory_indexer");
 var Document = require("ace/document").Document;
@@ -30,6 +32,24 @@ handler.analyze = function(doc, ast, callback) {
 };
 
 describe("jsonalyzer handler", function(){
+    
+    before(function(callback) {
+        handler.sender = {
+            on: function() {}
+        };
+        async.forEachSeries(
+            plugins.handlersWorker,
+            function(plugin, next) {
+                handler.loadPlugin(plugin, null, function(err, p) {
+                    if (err)
+                        return next(err);
+                    handler.getHandlerRegistry().registerHandler(p);
+                    next();
+                });
+            },
+            callback
+        );
+    });
     
     beforeEach(function(done) {
         index.clear();
@@ -158,7 +178,7 @@ describe("jsonalyzer handler", function(){
         
         handler.path = file1.path;
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
-        workerUtil.readFile = function(file, callback) {
+        workerUtil.readFile = function(file, options, callback) {
             callback(null, file2.contents);
         };
         
@@ -200,7 +220,7 @@ describe("jsonalyzer handler", function(){
         
         handler.path = file1.path;
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
-        workerUtil.readFile = function(file, callback) {
+        workerUtil.readFile = function(file, options, callback) {
             callback(null, file2.contents);
         };
         
@@ -250,7 +270,7 @@ describe("jsonalyzer handler", function(){
         handler.path = file1.path;
         handler.$testDoc = new Document(file1.contents);
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
-        workerUtil.readFile = function(file, callback) {
+        workerUtil.readFile = function(file, options, callback) {
             callback(null, file2.contents);
         };
         
@@ -279,7 +299,8 @@ describe("jsonalyzer handler", function(){
         handler.path = file1.path;
         handler.$testDoc = new Document(file1.contents);
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
-        workerUtil.readFile = function(file, callback) {
+        workerUtil.readFile = function(file, options, callback) {
+            assert.equal(file, file2.path);
             callback(null, file2.contents);
         };
         
@@ -290,7 +311,7 @@ describe("jsonalyzer handler", function(){
                 assert(results, "Results expected");
                 assert.equal(results[0].path, file2.path);
                 
-                workerUtil.readFile = function(file, callback) {
+                workerUtil.readFile = function(file, options, callback) {
                     assert(false, "readFile called a second time");
                 };
 
@@ -317,7 +338,7 @@ describe("jsonalyzer handler", function(){
             cursor: { row: 0, column: 15 }
         };
         var timesAnalyzed = 0;
-        workerUtil.readFile = function(name, callback) {
+        workerUtil.readFile = function(name, options, callback) {
             timesAnalyzed++;
             callback(null, file.contents);
         };
@@ -359,7 +380,7 @@ describe("jsonalyzer handler", function(){
         handler.path = file1.path;
         handler.$testDoc = new Document(file1.contents);
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
-        workerUtil.readFile = function(file, callback) {
+        workerUtil.readFile = function(file, options, callback) {
             callback(null, file2.contents);
         };
         
@@ -389,7 +410,7 @@ describe("jsonalyzer handler", function(){
         handler.path = file1.path;
         handler.$testDoc = new Document(file1.contents);
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
-        workerUtil.readFile = function(file, callback) {
+        workerUtil.readFile = function(file, options, callback) {
             callback(null, file === file1.path ? file1.contents : file2.contents);
         };
         
@@ -448,7 +469,7 @@ describe("jsonalyzer handler", function(){
         handler.path = file1.path;
         handler.$testDoc = new Document(file1.contents);
         worker.$lastWorker.$openDocuments = [file1.path, file2.path];
-        workerUtil.readFile = function(file, callback) {
+        workerUtil.readFile = function(file, options, callback) {
             callback(null, file === file1.path ? file1.contents : file2.contents);
         };
         
