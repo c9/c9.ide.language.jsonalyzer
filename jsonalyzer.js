@@ -36,6 +36,7 @@ define(function(require, exports, module) {
         
         var useCollab = options.useCollab;
         var useSend = !options.useCollab && options.useSend;
+        var readonly = options.readonly;
         var maxTrySeriesLength = options.maxTrySeriesLength || 3;
         var maxTrySeriesTime = options.maxTrySeriesTime || 10000;
         var homeDir = options.homeDir.replace(/\/$/, "");
@@ -94,8 +95,8 @@ define(function(require, exports, module) {
             });
             
             // Load server
-            if (!useSend && !useCollab) {
-                console.warn("Collab required for jsonalyzer server on non-local c9");
+            if ((!useSend && !useCollab) || readonly) {
+                console.warn("jsonalyzer disabled");
                 serverLoading = true; // disable loading
                 return;
             }
