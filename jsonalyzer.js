@@ -126,7 +126,7 @@ define(function(require, exports, module) {
                                 code: require("text!./server/jsonalyzer_server.js"),
                                 redefine: !server
                             },
-                            function(err, _server) {
+                            function onExtendVFS(err, _server) {
                                 if (err && err.code === "EEXIST")
                                     err = null;
                                 server = _server;
