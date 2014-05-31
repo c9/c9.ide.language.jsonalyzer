@@ -52,7 +52,7 @@ function getClientDoc(path, options, callback) {
         done(new Error("Collab server failed to provide document contents"));
     }, 20000);
 
-    var docId = path.replace("^/", "");
+    var docId = path.replace(/^\//, "");
     collabServer.getDocument(
         docId,
         ["revNum"],
