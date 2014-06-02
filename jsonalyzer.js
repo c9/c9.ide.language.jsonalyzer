@@ -53,11 +53,11 @@ define(function(require, exports, module) {
                 }
             );
             setTimeout(function() {
-                setTimeout(function() { // wait a bit longer in case we were debugging
+                setTimeout(function() { // wait a bit longer in case we were in the debugger
                     if (!loadedWorker)
                         warning = showAlert("Language worker could not be loaded; some language features have been disabled");
                 }, 50);
-            }, 30000);
+            }, 60000);
         }
         
         function onFileChange(event) {
