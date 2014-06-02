@@ -121,8 +121,8 @@ worker.loadPlugin = function(modulePath, contents, callback) {
     callback(null, handler);
 };
 
-worker.handlesLanguage = function(language) {
-    return this.getHandlerFor(this.path, language);
+worker.handlesLanguage = function(language, part) {
+    return (!part || !part.index) && this.getHandlerFor(this.path, language);
 };
 
 worker.onDocumentOpen = function(path, doc, oldPath, callback) {
