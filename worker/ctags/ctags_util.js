@@ -17,6 +17,11 @@ module.exports.MAX_DOCHEAD_LENGTH = MAX_DOCHEAD_LENGTH;
 module.exports.EXTENSION_GROUPS = EXTENSION_GROUPS;
 
 module.exports.init = function(ctags, _jsonalyzer) {
+    if (typeof _jsonalyzer === "function") {
+        // called by server; return callback()
+        return _jsonalyzer();
+    }
+    
     jsonalyzer = _jsonalyzer || jsonalyzer;
     EXTENSION_GROUPS = ctags.LANGUAGES.map(function(l) { return l.extensions; });
 };

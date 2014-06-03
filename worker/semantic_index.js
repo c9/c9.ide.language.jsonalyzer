@@ -79,10 +79,12 @@ index.getImports = function(guidOrPath, excludeAnalyzed) {
  * @param {String[]} [pathImports]
  */
 index.set = function(path, guidPrefix, summary, pathImports) {
-    var guid = summary.guid || guidPrefix + path;
-    summary.path = path;
+    var guid = summary && summary.guid || guidPrefix + path;
     pathGuids["_" + path] = guid;
-    summaries["_" + guid] = summary;
+    if (summary) {
+        summary.path = path;
+        summaries["_" + guid] = summary;
+    }
     if (pathImports)
         imports["_" + guid] = pathImports;
 };
@@ -227,6 +229,15 @@ index.clear = function() {
     imports = {};
     accessedSinceGC = {};
 };
+
+index.markStale = function(handler) {
+    if (!handler)
+        return;
+    for (s in summaries) {
+        if (summaries[s].handler === handler)
+            summaries[s].stale = true;
+    }
+}
 
 index.$clearAccessedSinceGC = function() {
     accessedSinceGC = {};

@@ -6,7 +6,7 @@
  */
 define(function(require, exports, module) {
 
-var jsonalyzer;
+var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker");
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 
@@ -18,15 +18,12 @@ var TAGS = [
 ];
 var GUESS_FARGS = false;
 var EXTRACT_DOCS = false;
-var LANGUAGES = ["markdown"];
-var EXTENSIONS = ["md", "markdown"];
 
 var handler = module.exports = Object.create(PluginBase);
 
-handler.init = function(jsonalyzer_worker) {
-    jsonalyzer = jsonalyzer_worker;
-    jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
-};
+handler.languages = ["markdown"];
+
+handler.extensions = ["md", "markdown"];
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")
@@ -47,7 +44,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
 
 handler.analyzeOthers = handler.analyzeCurrentAll;
 
-handler.findImports = function(path, doc, ast, callback) {
+handler.findImports = function(path, doc, ast, options, callback) {
     callback(null, ctagsUtil.findMatchingOpenFiles(path));
 };
 

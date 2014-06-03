@@ -52,7 +52,7 @@ function findEntries(doc, fullAst, pos, callback) {
     var prefix = workerUtil.getPrecedingIdentifier(line, pos.column);
     var realPos = { row: pos.row, column: pos.column - prefix.length };
     
-    fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { isComplete: true }, function(err, result) {
+    fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, { service: "refactor" }, function(err, result) {
         if (err)
             console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
         lastSummary = result;

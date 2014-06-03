@@ -74,7 +74,7 @@ var consumeQueue = indexer.$consumeQueue = function() {
     index.removeByPathPrefix(myQueue);
     
     workerUtil.asyncForEach(
-        handler.getAllPlugins(),
+        handler.getAllHandlers(),
         function(plugin, next) {
             plugin.analyzeWorkspaceRoot(next);
         },

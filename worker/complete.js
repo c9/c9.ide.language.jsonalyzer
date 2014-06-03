@@ -48,7 +48,7 @@ function getCurrentLazy(path, doc, fullAst, callback) {
     var result = index.get(path);
     if (result)
         return callback(null, result, index.getImports(path));
-    fileIndexer.analyzeCurrent(handler.path, doc.getValue(), fullAst, { isComplete: true }, callback);
+    fileIndexer.analyzeCurrent(handler.path, doc.getValue(), fullAst, { service: "complete" }, callback);
 }
 
 function getCompletionResults(path, priority, identifier, summary, skipPos, skipLine) {

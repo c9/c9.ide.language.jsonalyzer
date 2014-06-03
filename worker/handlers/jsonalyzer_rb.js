@@ -1,7 +1,7 @@
 /**
- * jsonalyzer PHP analysis
+ * jsonalyzer ruby analysis
  *
- * @copyright 2013, Ajax.org B.V.
+ * @copyright 2014, Ajax.org B.V.
  * @author Lennart Kats <lennart add c9.io>
  */
 define(function(require, exports, module) {
@@ -11,18 +11,12 @@ var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_b
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 
 var TAGS = [
-    { regex: /(?:^|\n)\s*(?:abstract\s+)?class ([^ ]*)/g, kind: "package" },
-    { regex: /(?:^|\n)\s*interface ([^ ]*)/g, kind: "package" },
-    {
-        regex: /(?:^|\n)\s*(?:public\s+|static\s+|abstract\s+|protected\s+|private\s+)*function ([^ (]*)/g,
-        kind: "method"
-    },
+    { regex: /(?:^|\n)\s*module\s+([^ \(]+)/g, kind: "package" },
+    { regex: /(?:^|\n)\s*class\s+([^ \(]+)/g, kind: "package" },
+    { regex: /(?:^|\n)\s*def\s+([^ \(]+)/g, kind: "method" },
     {
         regex: new RegExp(
-            "(?:^|\n)\s*include\\("
-            + "(?:\\$\\w+(?:\\[[\\w']+\\])?)?"
-            + "(?:\\s*\\.\\s*)?",
-            "g"
+            "(?:^|\\n)\\s*include\\s+([^ \\(]+)"
         ),
         kind: "import"
     }
@@ -32,9 +26,9 @@ var EXTRACT_DOCS = true;
 
 var handler = module.exports = Object.create(PluginBase);
 
-handler.languages = ["php"];
+handler.languages = ["ruby"];
 
-handler.extensions = ["php", "php3", "php4", "php5"];
+handler.extensions = ["rb"];
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")
@@ -50,7 +44,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         ctagsUtil.findMatchingTags(path, doc, tag, GUESS_FARGS, EXTRACT_DOCS, results);
     });
 
-    var serverHandler = jsonalyzer.getServerHandlerFor(path, "php");
+    var serverHandler = jsonalyzer.getServerHandlerFor(path, "ruby");
     if (options.service || !serverHandler)
         return callback(null, { properties: results });
     

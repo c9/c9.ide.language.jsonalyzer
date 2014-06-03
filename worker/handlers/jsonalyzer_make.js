@@ -6,7 +6,7 @@
  */
 define(function(require, exports, module) {
 
-var jsonalyzer;
+var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker");
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 
@@ -21,9 +21,9 @@ var EXTENSIONS = [""];
 
 var handler = module.exports = Object.create(PluginBase);
 
-handler.init = function(jsonalyzer_worker) {
-    jsonalyzer = jsonalyzer_worker;
+handler.init = function(options, callback) {
     jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
+    callback();
 };
 
 handler.supportedPaths = "(^|\/)Makefile.*";
@@ -47,7 +47,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
 
 handler.analyzeOthers = handler.analyzeCurrentAll;
 
-handler.findImports = function(path, doc, ast, callback) {
+handler.findImports = function(path, doc, ast, options, callback) {
     callback(null, ctagsUtil.findMatchingOpenFiles(path));
 };
 

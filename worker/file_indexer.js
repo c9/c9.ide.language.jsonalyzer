@@ -8,10 +8,10 @@ define(function(require, exports, module) {
 
 var indexer = module.exports;
 var index = require("./semantic_index");
-var worker = require("plugins/c9.ide.language/worker");
+var languageWorker = require("plugins/c9.ide.language/worker");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 var assert = require("c9/assert");
-var handler;
+var worker;
 
 var QUEUE_DELAY = 5 * 1000;
 var QUEUE_MAX_TIME = 120 * 1000;
@@ -21,9 +21,11 @@ var queueTimer;
 var queueWatcher;
 var isJobActive = false;
 var queueCallbacks = [];
+var lastPath;
+var lastDocValue;
 
-indexer.init = function(_handler) {
-    handler = _handler;
+indexer.init = function(_worker) {
+    worker = _worker;
 };
 
 /**
@@ -34,26 +36,57 @@ indexer.init = function(_handler) {
  * @param {String} docValue
  * @param {Object} ast                  The AST, if available
  * @param {Object} options
- * @param {Boolean} options.isSave
- * @param {Boolean} options.isComplete
+ * @param {String} options.service      The service this is triggered for, e.g. "complete" or "outline"
  * @param {Function} callback
  * @param {String} callback.err
  * @param {Object} callback.result
  */
 indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
     var entry = index.get(path);
-    if (entry && !worker.$lastWorker.scheduledUpdate)
-        return callback(null, entry, index.getImports(path));
     
-    var plugin = handler.getPluginFor(path);
-    return plugin.analyzeCurrent(path, docValue, ast, options, function(err, result) {
+    // Allow using cached entry when a new job is scheduled anyway
+    if (entry && !entry.stale &&
+        (languageWorker.$lastWorker.updateScheduled || languageWorker.$lastWorker.updateAgain)) {
+        entry.stale = true; // only do this once
+        return callback(null, entry, index.getImports(path), entry.markers);
+    }
+    
+    // Allow using cached entry when we just did this one
+    if (entry && !entry.stale && path === lastPath && docValue === lastDocValue)
+        return callback(null, entry, index.getImports(path), entry.markers);
+    
+    lastPath = path;
+    lastDocValue = docValue;
+    
+    var watcher = setTimeout(function() {
+        console.log("Warning: did not receive a response for 20 seconds from " + plugin.$source);
+    }, 20000);
+    
+    var plugin = worker.getHandlerFor(path);
+    return plugin.analyzeCurrent(path, docValue, ast, options, function(err, indexEntry, markers) {
+        clearTimeout(watcher);
         if (err) {
             index.setBroken(path, err);
             return callback(err);
         }
-        assert(result, "jsonalyzer handler must return a summary");
-        index.set(path, plugin.guidName + ":", result);
-        plugin.findImports(path, docValue, ast, function(err, imports) {
+        assert(indexEntry || markers, "jsonalyzer handler must return a summary and/or markers");
+        
+        indexEntry = indexEntry || index.get(path) || {};
+        markers = indexEntry.markers = indexEntry.markers || markers;
+        indexEntry.handler = plugin;
+        
+        if (!options.service) {
+            // Only cache summaries for non-editor-service analysis;
+            // e.g. don't do it when we only requested an outline
+            index.set(path, plugin.guidName + ":", indexEntry);
+        }
+        else {
+            var oldEntry = index.get(path);
+            if (oldEntry)
+                oldEntry.stale = true;
+        }
+        
+        plugin.findImports(path, docValue, ast, options, function(err, imports) {
             if (err) {
                 console.error("[jsonalyzer] error finding imports for " + path + ": " + err);
                 imports = [];
@@ -62,8 +95,8 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
                 // Don't return self or unanalyzeable imports
                 return i !== path;
             });
-            index.set(path, plugin.guidName + ":", result, imports);
-            callback(null, result, imports);
+            index.set(path, plugin.guidName + ":", null, imports);
+            callback(null, indexEntry, imports, markers);
         });
     });
 };
@@ -108,7 +141,7 @@ function consumeQueue() {
     
     var pathsPerPlugin = {};
     for (var i = 0; i < paths.length; i++) {
-        var plugin = handler.getPluginFor(paths[i]);
+        var plugin = worker.getHandlerFor(paths[i]);
         if (!plugin) // path added when not fully initialized yet
             continue;
         if (!pathsPerPlugin[plugin.guidName]) {
@@ -127,10 +160,11 @@ function consumeQueue() {
             
             // Make sure we haven't analyzed these yet
             task.paths = task.paths.filter(function(path) {
-                return !index.get(path);
+                var entry = index.get(path);
+                return !entry || entry.stale;
             });
                  
-            task.plugin.analyzeOthers(task.paths, function(errs, results) {
+            task.plugin.analyzeOthers(task.paths, {}, function(errs, results) {
                 assert(!errs || Array.isArray(errs));
                 updateQueueWatcher();
                 
@@ -149,6 +183,7 @@ function consumeQueue() {
                         continue;
                     }
                     assert(result);
+                    result.handler = task.plugin;
                     index.set(path, guidName + ":", result);
                 }
                 
