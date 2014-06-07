@@ -155,6 +155,8 @@ define(function(require, exports, module) {
                         if (!handlers.length)
                             return next();
                         server.registerHandlers(handlers, serverOptions, function(err, result) {
+                            if (err) return next(err);
+                            
                             handlersForWorker = result.summaries;
                             next(err);
                         });
