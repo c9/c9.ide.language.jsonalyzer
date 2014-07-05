@@ -234,6 +234,10 @@ function loadPlugin(path, contents, callback) {
     sandbox.require = createRequire(path, plugins);
     sandbox.console = console;
     sandbox.process = process;
+    sandbox.setTimeout = setTimeout;
+    sandbox.setInterval = setInterval;
+    sandbox.clearTimeout = clearTimeout;
+    sandbox.clearInterval = clearInterval;
     sandbox.define = function(def) {
         def(sandbox.require, sandbox.exports, sandbox.module);
     };

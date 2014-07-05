@@ -50,6 +50,11 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
             callback(null, null, markers);
         }
     );
+    
+    child.stdin.on("error", function(e) {
+        // Ignore; execFile will handle process result
+    });
+    
     if (doc)
         child.stdin.end(doc);
 };
