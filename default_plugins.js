@@ -9,6 +9,7 @@ define(function(require, exports, module) {
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_py",
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_rb",
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
+            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_go",
         ],
         
         helpersWorker: [],
@@ -29,6 +30,10 @@ define(function(require, exports, module) {
             {
                 path: "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_rb_server",
                 contents: require("text!./server/handlers/jsonalyzer_rb_server.js")
+            },
+            {
+                path: "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_go_server",
+                contents: require("text!./server/handlers/jsonalyzer_go_server.js")
             },
         ],
         
