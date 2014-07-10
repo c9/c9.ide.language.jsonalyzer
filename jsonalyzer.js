@@ -265,7 +265,7 @@ define(function(require, exports, module) {
                     return start();
                 }
                 
-                assert(useSend);
+                assert(useSend, "Can't enable server-side analysis without collab in this configuration");
                 return readTabOrFile(
                     filePath,
                     { allowUnsaved: true, encoding: "utf-8" },
