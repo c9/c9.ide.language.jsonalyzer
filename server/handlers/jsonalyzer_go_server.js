@@ -11,9 +11,9 @@ var child_process = require("child_process");
 
 var handler = module.exports = Object.create(PluginBase);
 
-handler.extensions = ["php", "php3", "php4", "php5"];
+handler.extensions = ["go"];
 
-handler.languages = ["php"];
+handler.languages = ["golang"];
 
 handler.maxCallInterval = handler.CALL_INTERVAL_BASIC;
 
@@ -23,27 +23,28 @@ handler.init = function(options, callback) {
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     var child = child_process.execFile(
-        "php",
-        doc ? ["-l"]: ["-l", path],
+        "gofmt",
+        doc ? ["-e"]: ["-e", path],
         function(err, stdout, stderr) {
             if (err && err.code === "ENOENT") {
-                err = new Error("No php installation found");
+                err = new Error("No go/gofmt installation found");
                 err.code = "EFATAL";
                 return callback(err);
             }
 
             var markers = [];
             
-            stdout.split("\n").forEach(function(line) {
-                var match = line.match(/^(?:Parse error: )?(.*?) in (?:.*?) on line (\d+)/);
+            stderr.split("\n").forEach(function(line) {
+                var match = line.match(/^[^:]*:([^:]*):([^:]*): (.*)/);
                 if (!match)
                     return;
-                var message = match[1];
-                var row = match[2];
+                var row = match[1];
+                var column = match[2]; // unused, might go stale too soon
+                var message = match[3];
                 markers.push({
-                    pos: { sl: parseInt(row, 10) - 1 },
+                    pos: { sl: row - 1 },
                     message: message,
-                    level: message.match(/error/) ? "error": "warning"
+                    level: "error"
                 });
             });
             

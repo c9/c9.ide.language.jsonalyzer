@@ -29,7 +29,7 @@ module.exports.jumpToDefinition = function(doc, fullAst, pos, currentNode, callb
             if (err.code === "ESUPERSEDED")
                 return that.jumpToDefinition(doc, fullAst, pos, currentNode, callback);
             console.error(err);
-            return callback(err);
+            return callback(); // can't pass error to this callback
         }
 
         // Before we use summaries, we'll actually first try to get an outline;

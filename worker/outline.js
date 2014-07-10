@@ -11,8 +11,8 @@ module.exports.init = function(_handler) {
 module.exports.outline = function(doc, ast, callback) {
     return fileIndexer.analyzeCurrent(handler.path, doc.getValue(), ast, { service: "outline" }, function(err, entry) {
         if (err) {
-            console.error(err)
-            return callback();
+            console.error(err);
+            return callback(); // can't pass error to this callback
         }
         
         var result = createOutline(null, entry);
