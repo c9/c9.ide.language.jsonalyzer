@@ -9,7 +9,8 @@ define(function(require, exports, module) {
     main.consumes = [
         "Plugin", "commands", "language", "c9", "watcher",
         "save", "language.complete", "dialog.error", "ext",
-        "collab", "collab.connect", "language.worker_util_helper"
+        "collab", "collab.connect", "language.worker_util_helper",
+        "error_handler"
     ];
     main.provides = [
         "jsonalyzer"
@@ -26,6 +27,7 @@ define(function(require, exports, module) {
         var save = imports.save;
         var showError = imports["dialog.error"].show;
         var hideError = imports["dialog.error"].hide;
+        var errorHandler = imports.error_handler;
         var ext = imports.ext;
         var plugins = require("./default_plugins");
         var async = require("async");
@@ -316,6 +318,8 @@ define(function(require, exports, module) {
                 
                 var resultArgs = response && response.result || [err];
                 resultArgs[0] = resultArgs[0] || err;
+                if (err && err.code === "EFATAL")
+                    errorHandler.reportError(err);
                 plugin.once("initWorker", function() {
                     worker.emit(
                         "jsonalyzerCallServerResult",
@@ -338,6 +342,7 @@ define(function(require, exports, module) {
                 
                 var err = new Error("Too many disconnects. Server crashing?");
                 err.code = "EFATAL";
+                errorHandler.reportError(err);
                 done(err);
             }
         }
