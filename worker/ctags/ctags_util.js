@@ -94,7 +94,7 @@ module.exports.findMatchingTags = function(path, docValue, tag, guessFargs, extr
         var line = lines[row];
         
         var doc, docHead;
-        if (extractDocumentation) {
+        if (extractDocumentation && line) {
             docHead = line.length > MAX_DOCHEAD_LENGTH
                 ? line.substr(MAX_DOCHEAD_LENGTH) + "..."
                 : line;
