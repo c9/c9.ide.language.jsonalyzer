@@ -55,7 +55,7 @@ function getClientDoc(path, options, callback) {
     var docId = path.replace(/^\//, "");
     collabServer.getDocument(
         docId,
-        ["revNum"],
+        /*["revNum"],*/
         function(err, result) {
             if (err) return done(err);
             
