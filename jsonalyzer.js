@@ -35,10 +35,10 @@ define(function(require, exports, module) {
         var collab = imports.collab;
         var collabConnect = imports["collab.connect"];
         var readTabOrFile = imports["language.worker_util_helper"].readTabOrFile;
-        
+
+        var extendToken = options.extendToken;
         var useCollab = options.useCollab;
         var useSend = !options.useCollab && options.useSend;
-        var readonly = options.readonly;
         var maxTrySeriesLength = options.maxTrySeriesLength || 3;
         var maxTrySeriesTime = options.maxTrySeriesTime || 10000;
         var homeDir = options.homeDir.replace(/\/$/, "");
@@ -97,7 +97,7 @@ define(function(require, exports, module) {
             });
             
             // Load server
-            if ((!useSend && !useCollab) || readonly) {
+            if (!useSend && !useCollab) {
                 console.warn("jsonalyzer disabled");
                 serverLoading = true; // disable loading
                 return;
@@ -126,6 +126,7 @@ define(function(require, exports, module) {
                             "jsonalyzer_server",
                             {
                                 code: require("text!./server/jsonalyzer_server.js"),
+                                extendToken: extendToken,
                                 redefine: !server
                             },
                             function onExtendVFS(err, _server) {
