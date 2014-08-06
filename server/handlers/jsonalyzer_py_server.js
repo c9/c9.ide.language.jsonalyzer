@@ -93,7 +93,6 @@ function exec(path, callback) {
                 var column = match[2];
                 var code = match[3];
                 var message = match[4];
-                console.log("LINE", line, match);
                 markers.push({
                     pos: {
                         sl: parseInt(row, 10) - 1,
