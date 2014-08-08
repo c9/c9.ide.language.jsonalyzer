@@ -31,7 +31,6 @@ define(function(require, exports, module) {
         var ext = imports.ext;
         var plugins = require("./default_plugins");
         var async = require("async");
-        var assert = require("assert");
         var collab = imports.collab;
         var collabConnect = imports["collab.connect"];
         var readTabOrFile = imports["language.worker_util_helper"].readTabOrFile;
@@ -268,7 +267,9 @@ define(function(require, exports, module) {
                     return start();
                 }
                 
-                assert(useSend, "Can't enable server-side analysis without collab in this configuration");
+                if (!useSend)
+                    return console.warn("Can't enable server-side analysis without collab in this configuration");
+                
                 return readTabOrFile(
                     filePath,
                     { allowUnsaved: true, encoding: "utf-8" },
