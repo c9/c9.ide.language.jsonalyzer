@@ -1,4 +1,4 @@
-define(["module"], function(module) {
+define(["require", "exports", "module"], function(require, exports, module) {
 var ctagsInput;
 var submitNewContents;
 var Module;
