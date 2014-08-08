@@ -1,3 +1,4 @@
+define(["module"], function(module) {
 var ctagsInput;
 var submitNewContents;
 var Module;
@@ -50,7 +51,7 @@ Module = this.Module;
 
 })();
 
-define(function(require, exports, module) {
+
 
 	module.exports = Module;
 	module.exports.CTags_parseTempFile = function(filename, contents) {
