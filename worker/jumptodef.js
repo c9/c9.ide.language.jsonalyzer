@@ -7,7 +7,7 @@
 define(function(require, exports, module) {
 
 var index = require("./semantic_index");
-var handler /*: require("plugins/c9.ide.language.jsonalyzer/jsonalyzer")*/;
+var handler;
 var worker = require("plugins/c9.ide.language/worker");
 var fileIndexer = require("./file_indexer");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
