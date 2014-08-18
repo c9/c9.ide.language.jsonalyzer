@@ -68,8 +68,10 @@ define(function(require, exports, module) {
             language.registerLanguageHandler(
                 "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker",
                 function(err, langWorker) {
-                    if (err)
-                        return showError(err);
+                    if (err) {
+                        errorHandler.reportError(err);
+                        return showError("Could not load language worker: " + (err.message | err));
+                    }
                     loadedWorker = true;
                     worker = langWorker;
                     watcher.on("change", onFileChange);
