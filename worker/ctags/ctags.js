@@ -1,4 +1,4 @@
-;(function() {
+"disable compress";(function() {
 var ctagsInput;
 var submitNewContents;
 var Module;
