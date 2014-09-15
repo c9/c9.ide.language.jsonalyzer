@@ -44,7 +44,7 @@ describe("ctags_ex", function(){
             done();
         });
     });
-    it("fails with an error with a .unknown extension", function(done) {
+    it(" fails with an error with a .unknown extension", function(done) {
         var contents = "# hello thar";
         ctags_ex.analyze("dir/ctags_test.unknown", contents, function(err, result) {
             assert(err);
