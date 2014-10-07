@@ -24,37 +24,45 @@ handler.init = function(options, callback) {
 };
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
-    var child = child_process.execFile(
-        bashBin,
-        doc ? ["-n"] : ["-n", path],
-        function(err, stdout, stderr) {
-            if (err && err.code !== 2) return callback(err);
-
-            var markers = [];
-            var lastMarker;
-            
-            stderr.split("\n").forEach(function(line) {
-                var match = line.match(/^([^:]+):\s*(?:line\s*)?([^:]+):\s*(.*)/);
-                if (!match)
-                    return;
-                var row = match[2];
-                var message = match[3];
-                if (message.match(/^`(.*)'$/)) {
-                    // This message only shows the line of the last message,
-                    // and is not a message by itself
-                    return tryAddColumn(lastMarker, RegExp.$1);
-                }
+    var child;
+    try {
+        child = child_process.execFile(
+            bashBin,
+            doc ? ["-n"] : ["-n", path],
+            function(err, stdout, stderr) {
+                if (err && err.code !== 2) return callback(err);
+    
+                var markers = [];
+                var lastMarker;
                 
-                markers.push(lastMarker = {
-                    pos: { sl: parseInt(row, 10) - 1 },
-                    message: message,
-                    level: message.match(/error/) ? "error" : "warning"
+                stderr.split("\n").forEach(function(line) {
+                    var match = line.match(/^([^:]+):\s*(?:line\s*)?([^:]+):\s*(.*)/);
+                    if (!match)
+                        return;
+                    var row = match[2];
+                    var message = match[3];
+                    if (message.match(/^`(.*)'$/)) {
+                        // This message only shows the line of the last message,
+                        // and is not a message by itself
+                        return tryAddColumn(lastMarker, RegExp.$1);
+                    }
+                    
+                    markers.push(lastMarker = {
+                        pos: { sl: parseInt(row, 10) - 1 },
+                        message: message,
+                        level: message.match(/error/) ? "error" : "warning"
+                    });
                 });
-            });
-            
-            callback(null, null, markers);
-        }
-    );
+                
+                callback(null, null, markers);
+            }
+        );
+    }
+    catch (err) {
+        // Out of memory or other fatal error?
+        err.code = "EFATAL";
+        return callback(err);
+    }
     
     child.stdin.on("error", function(e) {
         // Ignore; execFile will handle process result

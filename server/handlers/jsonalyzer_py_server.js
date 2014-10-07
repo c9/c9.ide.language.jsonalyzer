@@ -67,46 +67,57 @@ function getTempFile() {
 }
 
 function exec(path, callback) {
-    child_process.execFile(
-        "pylint",
-        OPTIONS.concat(path),
-        { 
-            env: {
-                LC_ALL: "en_US.UTF-8",
-                LANG: "en_US.UTF-8"
-            }
-        },
-        function(err, stdout, stderr) {
-            if (err && err.code === "ENOENT") {
-                err = new Error("No pylint installation found");
-                err.code = "EFATAL";
-                return callback(err);
-            }
-
-            var markers = [];
-            
-            stdout.split("\n").forEach(function(line) {
-                var match = line.match(/(\d+):(\d+): \[([^\]]+)\] (.*)/);
-                if (!match)
-                    return;
-                var row = match[1];
-                var column = match[2];
-                var code = match[3];
-                var message = match[4];
-                markers.push({
-                    pos: {
-                        sl: parseInt(row, 10) - 1,
-                        sc: parseInt(column, 10)
-                    },
-                    message: message,
-                    code: code,
-                    level: getLevel(code)
+    try {
+        var child = child_process.execFile(
+            "pylint",
+            OPTIONS.concat(path),
+            { 
+                env: {
+                    LC_ALL: "en_US.UTF-8",
+                    LANG: "en_US.UTF-8"
+                }
+            },
+            function(err, stdout, stderr) {
+                if (err && err.code === "ENOENT") {
+                    err = new Error("No pylint installation found");
+                    err.code = "EFATAL";
+                    return callback(err);
+                }
+    
+                var markers = [];
+                
+                stdout.split("\n").forEach(function(line) {
+                    var match = line.match(/(\d+):(\d+): \[([^\]]+)\] (.*)/);
+                    if (!match)
+                        return;
+                    var row = match[1];
+                    var column = match[2];
+                    var code = match[3];
+                    var message = match[4];
+                    markers.push({
+                        pos: {
+                            sl: parseInt(row, 10) - 1,
+                            sc: parseInt(column, 10)
+                        },
+                        message: message,
+                        code: code,
+                        level: getLevel(code)
+                    });
                 });
-            });
-            
-            callback(null, null, markers);
-        }
-    );
+                
+                callback(null, null, markers);
+            }
+        );
+    
+        child.stdin.on("error", function(e) {
+            // Ignore; execFile will handle process result
+        });
+    }
+    catch (err) {
+        // Out of memory or other fatal error?
+        err.code = "EFATAL";
+        return callback(err);
+    }
 }
 
 function getLevel(code) {
