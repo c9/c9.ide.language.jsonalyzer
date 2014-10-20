@@ -74,6 +74,7 @@ var LANGUAGES = module.exports.LANGUAGES = [
     { guessFargs: true,  extensions: ["cs"] },
     { guessFargs: false, extensions: ["e", "ge"], extractDocs: false}, // Eiffel
     { guessFargs: true,  extensions: ["erl", "hrl"] },
+    { guessFargs: false, extensions: ["f", "for", "ftn", "f77", "f90", "f95"] }, // Fortran
     { guessFargs: true,  extensions: ["lisp", "cl", "lsp"] },
     { guessFargs: true, extensions: ["lua"] },
     { guessFargs: false, extensions: ["cob"] },
