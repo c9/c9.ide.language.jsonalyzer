@@ -27,12 +27,14 @@ module.exports.init = function(ctags, _jsonalyzer) {
 };
 
 module.exports.extractDocumentationAtRow = function(lines, row) {
+    var prevRow = row > 0 ? row - 1 : 0;
+    
     // # hash comments
-    var line = lines[row];
+    var line = lines[prevRow];
     if (line && line.match(/^\s*#/)) {
         line = line.match(/^\s*#\s*(.*)/)[1];
         var results = [line];
-        for (var start = row - 1; start >= 0; start--) {
+        for (var start = prevRow - 1; start >= 0; start--) {
             line = lines[start];
             if (!line.match(/^\s*#/))
                 break;
@@ -40,25 +42,36 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
         }
         return filterDocumentation(results.join("\n"));
     }
+
+    // """ python docstrings """
+    if (lines[row + 1] && lines[row + 1].match(/^\s*"""/)) {
+        var result = "";
+        for (var cur = row + 1; lines[cur]; cur++) {
+            result += lines[cur].replace(/^\s*|\s*"""\s*/g, "") + "\n";
+            if (lines[cur].match(/[^\s"]+\s*"""/))
+                break;
+        }
+        return result;
+    }
     
     // /* c style comments */
     var end = null;
-    for (; row >= 0; row--) {
-        line = lines[row];
+    for (var cur = prevRow; cur >= 0; cur--) {
+        line = lines[cur];
         for (var col = line.length - 2; col >= 0; col--) {
             if (!end) {
                 if (line.substr(col, 2) === "*/") {
-                    end = { sl: row, sc: col };
+                    end = { sl: cur, sc: col };
                     col--;
                 } else if (!line[col].match(/[\s\/]/)) {
                     return;
                 }
             } else if (line.substr(col, 2) === "/*") {
                 var rows = ["", line.substr(col + 3)];
-                for (var r = row + 1; r < end.sl; r++)
+                for (var r = cur + 1; r < end.sl; r++)
                     rows.push(lines[r]);
                 rows.push(lines[end.sl].substr(0, end.sc));
-                if (end.sl === row)
+                if (end.sl === cur)
                     rows = ["", line.substring(col + 3, end.sc)];
                 return filterDocumentation(rows.join("\n"));
             }
@@ -98,7 +111,7 @@ module.exports.findMatchingTags = function(path, docValue, tag, guessFargs, extr
             docHead = line.length > MAX_DOCHEAD_LENGTH
                 ? line.substr(MAX_DOCHEAD_LENGTH) + "..."
                 : line;
-            doc = _self.extractDocumentationAtRow(lines, row - 1);
+            doc = _self.extractDocumentationAtRow(lines, row);
         }
         
         results["_" + name] = results["_" + name] || [];

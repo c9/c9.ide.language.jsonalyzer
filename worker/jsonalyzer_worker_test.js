@@ -455,6 +455,41 @@ describe("jsonalyzer handler", function(){
             }
         );
     });
+    it("has documentation in code completion ... for python!", function(done) {
+        handler.path = "/testfile.py";
+        handler.complete(
+            new Document("def bar:\n\
+                            \"\"\" bar something \"\"\" \n\
+                            return true"),
+            null,
+            { row: 1, column: 0 },
+            null, // above breakpoint
+            function(results) {
+                assert(results && results.length > 0);
+                assert.equal(results[0].name, "bar");
+                assert(results[0].doc.match(/bar something/));
+                done();
+            }
+        );
+    });
+    it("has multi-line documentation in code completion ... for python!", function(done) {
+        handler.path = "/testfile.py";
+        handler.complete(
+            new Document("def bar:\n\
+                            \"\"\" bar ... \n\
+                            something \"\"\" \n\
+                            return true"),
+            null,
+            { row: 1, column: 0 },
+            null, // above breakpoint
+            function(results) {
+                assert(results && results.length > 0);
+                assert.equal(results[0].name, "bar");
+                assert(results[0].doc.match(/bar.*\n.*something/));
+                done();
+            }
+        );
+    });
     it("has proper garbage collection", function(done) {
         var file1 = {
             path: "/testfile.cs",

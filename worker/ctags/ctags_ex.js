@@ -160,7 +160,7 @@ function getLanguage(path) {
     
 function analyzeTag(lines, name, kind, row, sourceFile, guessFargs, results) {
     var line = lines[row - 1] || "";
-    var doc = util.extractDocumentationAtRow(lines, row - 2);
+    var doc = util.extractDocumentationAtRow(lines, row - 1);
 
     var docHead = line.length > MAX_DOCHEAD_LENGTH
         ? line.substr(MAX_DOCHEAD_LENGTH) + "..."
