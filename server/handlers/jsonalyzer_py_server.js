@@ -70,11 +70,14 @@ function exec(path, callback) {
     try {
         var child = child_process.execFile(
             "pylint",
-            OPTIONS.concat(path),
-            { 
+            {
+                args: OPTIONS.concat(path),
                 env: {
                     LC_ALL: "en_US.UTF-8",
-                    LANG: "en_US.UTF-8"
+                    LANG: "en_US.UTF-8",
+                    PATH: process.platform === "linux"
+                        ? "/mnt/shared/bin:" + process.env.PATH
+                        : process.env.PATH
                 }
             },
             function(err, stdout, stderr) {

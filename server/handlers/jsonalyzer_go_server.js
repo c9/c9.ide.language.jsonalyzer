@@ -26,7 +26,14 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     try {
         child = child_process.execFile(
             "gofmt",
-            doc ? ["-e"]: ["-e", path],
+            {
+                args: doc ? ["-e"]: ["-e", path],
+                env: {
+                    PATH: process.platform === "linux"
+                        ? "/mnt/shared/bin:" + process.env.PATH
+                        : process.env.PATH
+                }
+            },
             function(err, stdout, stderr) {
                 if (err && err.code === "ENOENT") {
                     err = new Error("No go/gofmt installation found");

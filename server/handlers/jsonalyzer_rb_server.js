@@ -26,7 +26,16 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     try {
         child = child_process.execFile(
             "ruby",
-            doc ? ["-wc"]: ["-wc", path],
+            {
+                args: doc ? ["-wc"]: ["-wc", path],
+                env: {
+                    LC_ALL: "en_US.UTF-8",
+                    LANG: "en_US.UTF-8",
+                    PATH: process.platform === "linux"
+                        ? "/mnt/shared/bin:" + process.env.PATH
+                        : process.env.PATH
+                }
+            },
             function(err, stdout, stderr) {
                 if (err && err.code === "ENOENT") {
                     err = new Error("No ruby installation found");
