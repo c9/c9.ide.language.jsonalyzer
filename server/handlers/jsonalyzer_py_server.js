@@ -7,7 +7,6 @@
 define(function(require, exports, module) {
 
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
-var child_process = require("child_process");
 var fs = require("fs");
 var crypto = require("crypto");
 var pathSep = require("path").sep;
@@ -41,15 +40,16 @@ handler.init = function(options, callback) {
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (!doc)
-        return exec(path, callback);
+        return this.$exec(path, callback);
     
     var tempFile = getTempFile() + ".py";
+    var that = this;
     fs.writeFile(tempFile, doc, "utf8", function(err) {
         if (err) {
             err.code = "EFATAL";
             return callback(err);
         }
-        exec(tempFile, function(err, summary, markers) {
+        that.$exec(tempFile, function(err, summary, markers) {
             fs.unlink(tempFile, function() {
                 if (err) console.error(err);
                 callback(err, summary, markers);
@@ -66,61 +66,37 @@ function getTempFile() {
         .replace(/[+\/]+/g, "");
 }
 
-function exec(path, callback) {
-    try {
-        var child = child_process.execFile(
-            "pylint",
-            {
-                args: OPTIONS.concat(path),
-                env: {
-                    LC_ALL: "en_US.UTF-8",
-                    LANG: "en_US.UTF-8",
-                    PATH: process.platform === "linux"
-                        ? "/mnt/shared/bin:" + process.env.PATH
-                        : process.env.PATH
-                }
-            },
-            function(err, stdout, stderr) {
-                if (err && err.code === "ENOENT") {
-                    err = new Error("No pylint installation found");
-                    err.code = "EFATAL";
-                    return callback(err);
-                }
-    
-                var markers = [];
-                
-                stdout.split("\n").forEach(function(line) {
-                    var match = line.match(/(\d+):(\d+): \[([^\]]+)\] (.*)/);
-                    if (!match)
-                        return;
-                    var row = match[1];
-                    var column = match[2];
-                    var code = match[3];
-                    var message = match[4];
-                    markers.push({
-                        pos: {
-                            sl: parseInt(row, 10) - 1,
-                            sc: parseInt(column, 10)
-                        },
-                        message: message,
-                        code: code,
-                        level: getLevel(code)
-                    });
+handler.$exec = function(path, callback) {
+    this.$lint(
+        "pylint",
+        OPTIONS.concat(path),
+        function(err, stdout, stderr) {
+            if (err) return callback(err);
+
+            var markers = [];
+            
+            stdout.split("\n").forEach(function(line) {
+                var match = line.match(/(\d+):(\d+): \[([^\]]+)\] (.*)/);
+                if (!match)
+                    return;
+                var row = match[1];
+                var column = match[2];
+                var code = match[3];
+                var message = match[4];
+                markers.push({
+                    pos: {
+                        sl: parseInt(row, 10) - 1,
+                        sc: parseInt(column, 10)
+                    },
+                    message: message,
+                    code: code,
+                    level: getLevel(code)
                 });
-                
-                callback(null, null, markers);
-            }
-        );
-    
-        child.stdin.on("error", function(e) {
-            // Ignore; execFile will handle process result
-        });
-    }
-    catch (err) {
-        // Out of memory or other fatal error?
-        err.code = "EFATAL";
-        return callback(err);
-    }
+            });
+            
+            callback(null, null, markers);
+        }
+    );
 }
 
 function getLevel(code) {

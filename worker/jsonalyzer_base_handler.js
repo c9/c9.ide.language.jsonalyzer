@@ -8,6 +8,10 @@ define(function(require, exports, module) {
 
 var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
 var workerUtil = require("plugins/c9.ide.language/worker_util");
+// require child_process only if we're server-side
+var child_process = typeof process === "undefined"
+    ? null
+    : arguments[0]("child_process");
 
 /**
  * The jsonalyzer analysis plugin base class.
@@ -26,7 +30,7 @@ module.exports = {
      * 
      * Must be overridden by inheritors.
      */
-    elanguages: [],
+    languages: [],
     
     /**
      * The extensions this handler applies to,
@@ -161,6 +165,59 @@ module.exports = {
         );
     },
     
+    /**
+     * Invoke a linter using child_process.
+     * Only available for server-side plugins.
+     * 
+     * @param {String} linter
+     * @param {String[]} args
+     * @param {String} [stdin]
+     * @param {Function} callback
+     * @param {Object} callback.err
+     * @param {String} callback.stdout
+     * @param {String} callback.stderr
+     * @param {Number} callback.code
+     */
+    $lint: function(linter, args, stdin, callback) {
+        if (!callback)
+            return this.$lint(linter, args, null, stdin);
+        if (!child_process)
+            return callback(new Error("Only implemented for server-side plugins"));
+        try {
+            var child = child_process.execFile(
+                linter,
+                {
+                    args: args,
+                    env: {
+                        PATH: process.platform === "linux"
+                            ? "/mnt/shared/bin:" + process.env.PATH
+                            : process.env.PATH
+                    }
+                },
+                function(err, stdout, stderr) {
+                    if (err && err.code === "ENOENT") {
+                        err = new Error("No " + linter + " installation found");
+                        err.code = "EFATAL";
+                        return callback(err);
+                    }
+                    
+                    callback(null, stdout, stderr, err ? err.code : 0);
+                }
+            );
+
+            child.stdin.on("error", function(e) {
+                // Ignore; execFile will handle process result
+            });
+    
+            if (stdin)
+                child.stdin.end(stdin);
+        }
+        catch (err) {
+            // Out of memory or other fatal error?
+            err.code = "EFATAL";
+            callback(err);
+        }
+    }
 };
 
 });

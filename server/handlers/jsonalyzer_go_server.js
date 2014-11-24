@@ -7,7 +7,6 @@
 define(function(require, exports, module) {
 
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
-var child_process = require("child_process");
 
 var handler = module.exports = Object.create(PluginBase);
 
@@ -22,57 +21,32 @@ handler.init = function(options, callback) {
 };
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
-    var child;
-    try {
-        child = child_process.execFile(
-            "gofmt",
-            {
-                args: doc ? ["-e"]: ["-e", path],
-                env: {
-                    PATH: process.platform === "linux"
-                        ? "/mnt/shared/bin:" + process.env.PATH
-                        : process.env.PATH
-                }
-            },
-            function(err, stdout, stderr) {
-                if (err && err.code === "ENOENT") {
-                    err = new Error("No go/gofmt installation found");
-                    err.code = "EFATAL";
-                    return callback(err);
-                }
-    
-                var markers = [];
-                
-                stderr.split("\n").forEach(function(line) {
-                    var match = line.match(/^[^:]*:([^:]*):([^:]*): (.*)/);
-                    if (!match)
-                        return;
-                    var row = match[1];
-                    var column = match[2]; // unused, might go stale too soon
-                    var message = match[3];
-                    markers.push({
-                        pos: { sl: row - 1 },
-                        message: message,
-                        level: "error"
-                    });
+    this.$lint(
+        "gofmt",
+        doc ? ["-e"]: ["-e", path],
+        doc,
+        function(err, stdout, stderr, code) {
+            if (err) return callback(err);
+            
+            var markers = [];
+            
+            stderr.split("\n").forEach(function(line) {
+                var match = line.match(/^[^:]*:([^:]*):([^:]*): (.*)/);
+                if (!match)
+                    return;
+                var row = match[1];
+                var column = match[2]; // unused, might go stale too soon
+                var message = match[3];
+                markers.push({
+                    pos: { sl: row - 1 },
+                    message: message,
+                    level: "error"
                 });
-                
-                callback(null, null, markers);
-            }
-        );
-    }
-    catch (err) {
-        // Out of memory or other fatal error?
-        err.code = "EFATAL";
-        return callback(err);
-    }
-    
-    child.stdin.on("error", function(e) {
-        // Ignore; execFile will handle process result
-    });
-    
-    if (doc)
-        child.stdin.end(doc);
+            });
+            
+            callback(null, null, markers);
+        }
+    );
 };
 
 });

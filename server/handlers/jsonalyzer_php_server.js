@@ -7,7 +7,6 @@
 define(function(require, exports, module) {
 
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
-var child_process = require("child_process");
 
 var handler = module.exports = Object.create(PluginBase);
 
@@ -22,56 +21,30 @@ handler.init = function(options, callback) {
 };
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
-    var child;
-    try {
-        child = child_process.execFile(
-            "php",
-            {
-                args: doc ? ["-l"]: ["-l", path],
-                env: {
-                    PATH: process.platform === "linux"
-                        ? "/mnt/shared/bin:" + process.env.PATH
-                        : process.env.PATH
-                }
-            },
-            function(err, stdout, stderr) {
-                if (err && err.code === "ENOENT") {
-                    err = new Error("No php installation found");
-                    err.code = "EFATAL";
-                    return callback(err);
-                }
-    
-                var markers = [];
-                
-                (stdout + stderr).split("\n").forEach(function(line) {
-                    var match = line.match(/^(?:Parse error: )?(.*?) in (?:.*?) on line (\d+)/);
-                    if (!match)
-                        return;
-                    var message = match[1];
-                    var row = match[2];
-                    markers.push({
-                        pos: { sl: parseInt(row, 10) - 1 },
-                        message: message,
-                        level: message.match(/error/) ? "error": "warning"
-                    });
+    this.$lint(
+        "php",
+        doc ? ["-l"]: ["-l", path],
+        function(err, stdout, stderr) {
+            if (err) return callback(err);
+            
+            var markers = [];
+            
+            (stdout + stderr).split("\n").forEach(function(line) {
+                var match = line.match(/^(?:Parse error: )?(.*?) in (?:.*?) on line (\d+)/);
+                if (!match)
+                    return;
+                var message = match[1];
+                var row = match[2];
+                markers.push({
+                    pos: { sl: parseInt(row, 10) - 1 },
+                    message: message,
+                    level: message.match(/error/) ? "error": "warning"
                 });
-                
-                callback(null, null, markers);
-            }
-        );
-    }
-    catch (err) {
-        // Out of memory or other fatal error?
-        err.code = "EFATAL";
-        return callback(err);
-    }
-    
-    child.stdin.on("error", function(e) {
-        // Ignore; execFile will handle process result
-    });
-    
-    if (doc)
-        child.stdin.end(doc);
+            });
+            
+            callback(null, null, markers);
+        }
+    );
 };
 
 });
