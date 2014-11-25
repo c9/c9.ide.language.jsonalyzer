@@ -8,8 +8,9 @@ define(function(require, exports, module) {
 
 var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
 var workerUtil = require("plugins/c9.ide.language/worker_util");
+
 // require child_process only if we're server-side
-var child_process = typeof process === "undefined"
+var child_process = typeof process === "undefined" || !process.version
     ? null
     : arguments[0]("child_process");
 
