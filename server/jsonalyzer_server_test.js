@@ -226,6 +226,60 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                     done();
                 });
                 
+                it("shows syntax error markers for php scripts", function(done) {
+                    tabs.openFile("test_broken.php", function(err, _tab) {
+                        tab = _tab;
+                        tabs.focusTab(tab);
+                        session = tab.document.getSession().session;
+                        
+                        session.on("changeAnnotation", testAnnos);
+                        testAnnos();
+                        
+                        function testAnnos() {
+                            if (!session.getAnnotations().length)
+                                return;
+                            session.off("changeAnnotation", testAnnos);
+                            done();
+                        }
+                    });
+                });
+                
+                it("shows syntax error markers for go scripts", function(done) {
+                    tabs.openFile("test_broken.go", function(err, _tab) {
+                        tab = _tab;
+                        tabs.focusTab(tab);
+                        session = tab.document.getSession().session;
+                        
+                        session.on("changeAnnotation", testAnnos);
+                        testAnnos();
+                        
+                        function testAnnos() {
+                            if (!session.getAnnotations().length)
+                                return;
+                            session.off("changeAnnotation", testAnnos);
+                            done();
+                        }
+                    });
+                });
+                
+                it("shows syntax error markers for ruby scripts", function(done) {
+                    tabs.openFile("test_broken.rb", function(err, _tab) {
+                        tab = _tab;
+                        tabs.focusTab(tab);
+                        session = tab.document.getSession().session;
+                        
+                        session.on("changeAnnotation", testAnnos);
+                        testAnnos();
+                        
+                        function testAnnos() {
+                            if (!session.getAnnotations().length)
+                                return;
+                            session.off("changeAnnotation", testAnnos);
+                            done();
+                        }
+                    });
+                });
+                
                 it('does completion without going to the server', function beginTest(done) {
                     // Wait for analysis to complete
                     if (!session.getAnnotations().length)
