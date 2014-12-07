@@ -24,6 +24,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     this.$lint(
         "php",
         doc ? ["-l"]: ["-l", path],
+        doc,
         function(err, stdout, stderr) {
             if (err) return callback(err);
             
