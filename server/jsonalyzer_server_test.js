@@ -185,7 +185,7 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
             });
             
             describe("analysis", function(){
-                this.timeout(10000);
+                this.timeout(30000);
                 var tab;
                 var session;
                 var worker;
