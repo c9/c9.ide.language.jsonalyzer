@@ -75,6 +75,8 @@ function findImportsInAST(path, ast) {
     if (!ast)
         return [];
     
+    return []; // Don't import anything now that tern does this for us
+    
     var basePath = path.match(/^(.*?)(\/[^\/]+)?$/)[1];
     return ast.collectTopDown(
         'Call(Var("require"), [String(required)])', function(b) {
