@@ -89,7 +89,7 @@ function toCompletionResult(file, name, priority, entry) {
         id: name,
         name: fullName,
         replaceText: name + braces,
-        icon: "unknown2",
+        icon: "kind" in entry ? entry.kind : "unknown2",
         meta: file,
         doc: entry.doc,
         docHead: entry.docHead,

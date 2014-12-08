@@ -54,6 +54,10 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
             return;
         ctagsUtil.findMatchingTags(path, doc, tag, EXTRACT_DOCS, GUESS_FARGS, results);
     });
+    for (var p in results) {
+        if (results[p][0])
+            results[p][0].kind = null;
+    }
     callback(null, { properties: results });
 };
 
