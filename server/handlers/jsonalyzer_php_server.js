@@ -31,7 +31,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
             var markers = [];
             
             (stdout + stderr).split("\n").forEach(function(line) {
-                var match = line.match(/^(?:Parse error: )?(.*?) in (?:.*?) on line (\d+)/);
+                var match = line.match(/(?:Parse error: )(.*?) in (?:.*?) on line (\d+)/);
                 if (!match)
                     return;
                 var message = match[1];
