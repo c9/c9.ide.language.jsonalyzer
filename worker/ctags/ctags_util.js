@@ -40,7 +40,7 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
                 break;
             results.push(line.match(/^\s*#\s*(.*)/)[1]);
         }
-        return filterDocumentation(results.join("\n"));
+        return this.filterDocumentation(results.join("\n"));
     }
 
     // """ python docstrings """
@@ -73,7 +73,7 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
                 rows.push(lines[end.sl].substr(0, end.sc));
                 if (end.sl === cur)
                     rows = ["", line.substring(col + 3, end.sc)];
-                return filterDocumentation(rows.join("\n"));
+                return this.filterDocumentation(rows.join("\n"));
             }
         }
     }
@@ -191,14 +191,15 @@ function getOffsetRow(contents, offset) {
     }
 }
 
-function filterDocumentation(doc) {
+module.exports.filterDocumentation = function(doc) {
     return escapeHtml(doc)
-        .replace(/\n\s*\*\s*|\n\s*/g, "\n")
+        .replace(/(\n|^)[ \t]*\*+[ \t]*/g, "\n")
+        .trim()
         .replace(/\n\n(?!@)/g, "<br/><br/>")
         .replace(/\n@(\w+)/, "<br/>\n@$1") // separator between summary and rest
         .replace(/\n@param (\w+)/g, "<br/>\n<b>@param</b> <i>$1</i>")
         .replace(/\n@(\w+)/g, "<br/>\n<b>@$1</b>");
-}
+};
 
 function escapeHtml(str) {
     return str
