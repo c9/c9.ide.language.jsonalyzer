@@ -47,10 +47,6 @@ define(function(require, exports, module) {
                 path: "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker",
                 contents: require("text!./server/mock_jsonalyzer_worker.js")
             },
-            {
-                path: "plugins/c9.ide.language.jsonalyzer/worker/architect_resolver_worker",
-                contents: require("text!./server/mock_architect_resolver_worker.js")
-            },
             // Real helpers
             {
                 path: "plugins/c9.ide.language/complete_util",

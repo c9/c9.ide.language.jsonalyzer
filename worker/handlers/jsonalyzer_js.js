@@ -10,7 +10,6 @@ var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_w
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
 var pathUtil = require("plugins/c9.ide.language.javascript.infer/path");
-var architectResolver = require("../architect_resolver_worker");
 
 var TAGS = [
     {
@@ -33,13 +32,9 @@ var EXTRACT_DOCS = true;
 
 var handler = module.exports = Object.create(PluginBase);
 
-handler.extensions = ["js"];
+handler.extensions = ["js", "jsx"];
 
-handler.languages = ["javascript"];
-
-handler.init = function(options, callback) {
-    architectResolver.init(jsonalyzer, callback);
-};
+handler.languages = ["javascript", "jsx"];
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")
@@ -64,15 +59,10 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
 handler.analyzeOthers = handler.analyzeCurrentAll;
 
 handler.findImports = function(path, doc, ast, options, callback) {
-    var archImports = architectResolver.findImports(path, doc, ast, {}, function(err, archImports) {
-        if (err)
-            console.log(err);
-        
-        var openFiles = ctagsUtil.findMatchingOpenFiles(path);
-        var astImports = findImportsInAST(path, ast);
+    var openFiles = ctagsUtil.findMatchingOpenFiles(path);
+    var astImports = findImportsInAST(path, ast);
 
-        callback(null, (archImports || []).concat(openFiles, astImports));
-    });
+    callback(null, openFiles.concat(astImports));
 };
 
 function findImportsInAST(path, ast) {
