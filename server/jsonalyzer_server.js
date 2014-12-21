@@ -243,8 +243,8 @@ function loadPlugin(path, contents, callback) {
         def(sandbox.require, sandbox.exports, sandbox.module);
     };
     
-    var script = vm.createScript(contents.replace(/^\#\!.*/, ''), path);
     try {
+        var script = vm.createScript(contents.replace(/^\#\!.*/, ''), path);
         var pathJS = path.replace(/(\.js)?$/, ".js");
         script.runInNewContext(sandbox, pathJS);
     } catch (e) {
