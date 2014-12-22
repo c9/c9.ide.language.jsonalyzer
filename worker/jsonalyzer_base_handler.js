@@ -185,10 +185,7 @@ module.exports = {
         if (!child_process)
             return callback(new Error("Only implemented for server-side plugins"));
         try {
-            var child = child_process.execFile(
-                linter,
-                {
-                    args: args,
+            var child = child_process.execFile(linter, args, {
                     env: {
                         PATH: process.platform === "linux"
                             ? "/mnt/shared/bin:" + process.env.PATH
