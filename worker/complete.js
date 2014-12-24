@@ -15,6 +15,9 @@ module.exports.init = function(_handler) {
 };
 
 module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
+    if (currentNode && currentNode.cons === "PropertyInit") // HACK for javascript
+        return callback();
+
     var lines = doc.getAllLines();
     var line = lines[pos.row];
     var identifier = completeUtil.retrievePrecedingIdentifier(line, pos.column, workerUtil.getIdentifierRegex());
