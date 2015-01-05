@@ -40,7 +40,7 @@ handler.init = function(options, callback) {
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (!doc)
-        return this.$exec(path, callback);
+        return this.$exec(path, doc, callback);
     
     var tempFile = getTempFile() + ".py";
     var that = this;
@@ -49,7 +49,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
             err.code = "EFATAL";
             return callback(err);
         }
-        that.$exec(tempFile, function(err, summary, markers) {
+        that.$exec(tempFile, doc, function(err, summary, markers) {
             fs.unlink(tempFile, function() {
                 if (err) console.error(err);
                 callback(err, summary, markers);
@@ -66,7 +66,8 @@ function getTempFile() {
         .replace(/[+\/]+/g, "");
 }
 
-handler.$exec = function(path, callback) {
+handler.$exec = function(path, doc, callback) {
+    var starImport = /from\s+[^\s]+\s+import\s+\*/.test(doc);
     this.$lint(
         "pylint",
         OPTIONS.concat(path),
@@ -83,9 +84,14 @@ handler.$exec = function(path, callback) {
                 var column = match[2];
                 var code = match[3];
                 var message = match[4];
-
+                var level = getLevel(code);
+                
                 if (/print statement used/.test(message))
                     return;
+                if (starImport && /undefined variable/i.test(message)) {
+                    level = "info";
+                    message += "?";
+                }
                     
                 markers.push({
                     pos: {
@@ -94,7 +100,7 @@ handler.$exec = function(path, callback) {
                     },
                     message: message,
                     code: code,
-                    level: getLevel(code)
+                    level: level
                 });
             });
             
