@@ -18,8 +18,8 @@ var OPTIONS = [
     "-e", "E", 
     "-e", "F", 
     "-e", "W0101", // Unreachable code
-    "-e", "W0109",  // Duplicate key in dictionary
-    "-e", "W0199",  // Assert called on a 2-tuple. Did you mean \'assert x,y\'?
+    "-e", "W0109", // Duplicate key in dictionary
+    "-e", "W0199", // Assert called on a 2-tuple. Did you mean \'assert x,y\'?
     "-e", "W0612", // Unused variable
     "-e", "W0602", // Used global without assignment
     "-r", "n", 
@@ -83,6 +83,10 @@ handler.$exec = function(path, callback) {
                 var column = match[2];
                 var code = match[3];
                 var message = match[4];
+
+                if (/print statement used/.test(message))
+                    return;
+                    
                 markers.push({
                     pos: {
                         sl: parseInt(row, 10) - 1,
