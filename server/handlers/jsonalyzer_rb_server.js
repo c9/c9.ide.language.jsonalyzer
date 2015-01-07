@@ -23,7 +23,7 @@ handler.init = function(options, callback) {
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     this.$lint(
         "ruby",
-        doc ? ["-wc"]: ["-wc", path],
+        doc ? ["-wc", "-Ku"]: ["-wc", path],
         doc,
         function(err, stdout, stderr) {
             if (err) return callback(err);
