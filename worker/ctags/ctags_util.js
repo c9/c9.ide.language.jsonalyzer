@@ -202,6 +202,18 @@ module.exports.filterDocumentation = function(doc) {
         .replace(/\n@(\w+)/g, "<br/>\n<b>@$1</b>");
 };
 
+module.exports.getParameterDocs = function(doc) {
+    var result = {};
+    doc && doc.replace(
+        /@param (?:\{[^}]*\} )?([^ ]*)\s+([^@]*)/g,
+        function(input, name, description) {
+            result["_" + name] = description;
+            return input;
+        }
+    )
+    return result;
+};
+
 function escapeHtml(str) {
     return str
         .replace(/&/g, "&amp;")
