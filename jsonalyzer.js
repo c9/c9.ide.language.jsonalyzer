@@ -1,7 +1,7 @@
 /*
  * jsonalyzer multi-file analysis plugin
  *
- * @copyright 2012, Ajax.org B.V.
+ * @copyright 2013, Ajax.org B.V.
  * @author Lennart Kats <lennart add c9.io>
  */
 define(function(require, exports, module) {
