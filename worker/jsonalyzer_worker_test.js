@@ -1,5 +1,4 @@
 /*global describe it before after beforeEach afterEach define*/
-"use client";
 "use server";
 "use strict";
 
