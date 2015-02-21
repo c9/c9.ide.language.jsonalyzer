@@ -50,7 +50,8 @@ define(function(require, exports, module) {
             worker.sender.on("jsonalyzerCallServerResult", function onResult(e) {
                 if (e.data.id !== options.id)
                     return;
-                worker.sender.off(onResult);
+                
+                worker.sender.off("jsonalyzerCallServerResult", onResult);
 
                 var err = e.data.result[0];
                 if (err && err.code === "EFATAL") {
