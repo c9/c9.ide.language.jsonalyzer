@@ -1,6 +1,7 @@
 /*global describe it before after beforeEach afterEach define*/
 "use server";
 "use strict";
+"use mocha";
 
 if (typeof define === "undefined") {
     require("amd-loader");
@@ -31,6 +32,7 @@ handler.analyze = function(doc, ast, callback) {
 };
 
 describe("jsonalyzer handler", function(){
+    this.timeout(30000);
     
     before(function(callback) {
         handler.sender = {
