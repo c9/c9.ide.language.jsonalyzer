@@ -195,7 +195,7 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                         worker = result;
                         done();
                     });
-                })
+                });
                 
                 // Setup
                 beforeEach(function(done) {
@@ -205,7 +205,7 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                     // tab.close() isn't quite synchronous, wait for it :(
                     complete.closeCompletionBox();
                     setTimeout(function() {
-                        tabs.openFile("test_broken.sh", function(err, _tab) {
+                        tabs.openFile("/test_broken.sh", function(err, _tab) {
                             tab = _tab;
                             session = tab.document.getSession().session;
                             expect(session).to.not.equal(null);
@@ -227,7 +227,7 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                 });
                 
                 it("shows syntax error markers for php scripts", function(done) {
-                    tabs.openFile("test_broken.php", function(err, _tab) {
+                    tabs.openFile("/test_broken.php", function(err, _tab) {
                         tab = _tab;
                         tabs.focusTab(tab);
                         session = tab.document.getSession().session;
@@ -245,7 +245,7 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                 });
                 
                 it("shows syntax error markers for go scripts", function(done) {
-                    tabs.openFile("test_broken.go", function(err, _tab) {
+                    tabs.openFile("/test_broken.go", function(err, _tab) {
                         tab = _tab;
                         tabs.focusTab(tab);
                         session = tab.document.getSession().session;
@@ -263,7 +263,7 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                 });
                 
                 it("shows syntax error markers for ruby scripts", function(done) {
-                    tabs.openFile("test_broken.rb", function(err, _tab) {
+                    tabs.openFile("/test_broken.rb", function(err, _tab) {
                         tab = _tab;
                         tabs.focusTab(tab);
                         session = tab.document.getSession().session;
