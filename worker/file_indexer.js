@@ -91,7 +91,7 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
                 console.error("[jsonalyzer] error finding imports for " + path + ": " + err);
                 imports = [];
             }
-            imports = imports.filter(function(i) {
+            imports = (imports || []).filter(function(i) {
                 // Don't return self or unanalyzeable imports
                 return i !== path;
             });
