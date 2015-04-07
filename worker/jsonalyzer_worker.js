@@ -76,6 +76,14 @@ worker.init = function(callback) {
             languageWorker.$lastWorker.onUpdate();
         }
     });
+    worker.sender.on("jsonalyzerUnregister", function(event) {
+        handlers.unregisterHandler(event.data.modulePath);
+        worker.sender.emit("jsonalyzerUnregistered", { modulePath: event.data.modulePath });
+    });
+    worker.sender.on("jsonalyzerUnregisterServer", function(event) {
+        handlersServer.unregisterHandler(event.data.modulePath);
+        worker.sender.emit("jsonalyzerUnregisteredServer", { modulePath: event.data.modulePath });
+    });
     
     directoryIndexer.init(this);
     fileIndexer.init(this);

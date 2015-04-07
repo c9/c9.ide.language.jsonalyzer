@@ -426,22 +426,46 @@ define(function(require, exports, module) {
             if (typeof options === "function")
                 return registerWorkerHandler(path, contents, {}, options);
             
-            language.getWorker(function(err, worker) {
-                plugin.once("initWorker", function() {
-                    if (err) return console.error(err);
-                    
-                    worker.emit("jsonalyzerRegister", { data: {
-                        modulePath: path,
-                        contents: contents,
-                        options: options
-                    }});
-                    
-                    worker.on("jsonalyzerRegistered", function listen(e) {
-                        if (e.data.modulePath !== path)
-                            return;
-                        worker.off(listen);
-                        callback && callback(e.err);
-                    });
+            plugin.once("initWorker", function() {
+                worker.emit("jsonalyzerRegister", { data: {
+                    modulePath: path,
+                    contents: contents,
+                    options: options
+                }});
+                
+                worker.on("jsonalyzerRegistered", function listen(e) {
+                    if (e.data.modulePath !== path)
+                        return;
+                    worker.off(listen);
+                    callback && callback(e.err);
+                });
+            });
+        }
+        
+        function unregisterWorkerHandler(path, callback) {
+            plugin.once("initWorker", function() {
+                
+                worker.emit("jsonalyzerUnregister", { data: { modulePath: path }});
+                
+                worker.on("jsonalyzerUnregistered", function listen(e) {
+                    if (e.data.modulePath !== path)
+                        return;
+                    worker.off(listen);
+                    callback && callback(e.err);
+                });
+            });
+        }
+        
+        function unregisterServerHandler(path, callback) {
+            plugin.once("initServer", function() {
+                
+                worker.emit("jsonalyzerUnregisterServer", { data: { modulePath: path }});
+                
+                worker.on("jsonalyzerUnregisteredServer", function listen(e) {
+                    if (e.data.modulePath !== path)
+                        return;
+                    worker.off(listen);
+                    callback && callback(e.err);
                 });
             });
         }
@@ -468,6 +492,14 @@ define(function(require, exports, module) {
             registerWorkerHandler: registerWorkerHandler,
             
             /**
+             * Unregister a web worker-based handler.
+             * 
+             * @param {String} path
+             * @param {Function} [callback]
+             */
+            unregisterWorkerHandler: unregisterWorkerHandler,
+            
+            /**
              * Register a new server-based handler.
              *
              * @param {String} path
@@ -478,7 +510,17 @@ define(function(require, exports, module) {
             registerServerHandler: registerServerHandler,
             
             /**
+             * Unregister a server-based handler.
+             * 
+             * @param {String} path
+             * @param {Function} [callback]
+             */
+            unregisterServerHandler: unregisterServerHandler,
+            
+            /**
              * Register a new server-based handler helper.
+             * Helpers can't be unregistered,
+             * but they can be overwritten.
              *
              * @param {String} path
              * @param {String} [contents]
