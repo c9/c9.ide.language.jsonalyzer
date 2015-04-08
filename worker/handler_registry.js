@@ -37,6 +37,10 @@ module.exports.HandlerRegistry = function() {
             });
         },
         
+        unregisterHandler: function(source) {
+            handlers = handlers.filter(function(h) { return !(h.$source && source === h.$source); });
+        },
+        
         getHandlerFor: function(path, language) {
             var match = path && path.match(/\.([^/.]*)$/);
             var extension = match && match[1] || "";
