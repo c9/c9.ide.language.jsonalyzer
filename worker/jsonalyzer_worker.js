@@ -104,6 +104,11 @@ worker.loadPlugin = function(modulePath, contents, callback) {
     // This follows the same approach as c9.ide.language/worker.register();
     // see the comments there for more background.
     if (contents) {
+        contents = contents.replace(/^(define\()(function|["'])/m, function(_, def, arg1) {
+            if (arg1 == "function")
+                return def + "'" + modulePath + "',[]," + arg1;
+            return _;
+        });
         try {
             eval.call(null, contents);
         } catch (e) {
