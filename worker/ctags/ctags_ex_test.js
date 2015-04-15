@@ -1,5 +1,4 @@
 /*global describe it before after beforeEach afterEach */
-"use strict";
 "use client";
 
 if (typeof define === "undefined") {
@@ -9,6 +8,7 @@ if (typeof define === "undefined") {
 }
 
 define(function(require, exports, module) {
+"use strict";
 
 var assert = require("ace/test/assertions");
 var ctags_ex = require("./ctags_ex");

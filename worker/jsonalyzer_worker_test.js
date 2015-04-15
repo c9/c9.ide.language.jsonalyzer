@@ -3,9 +3,10 @@
 "use strict";
 "use mocha";
 
+require("../../../test/setup_paths");
+
 if (typeof define === "undefined") {
     require("amd-loader");
-    require("../../../test/setup_paths");
     require("c9/inline-mocha")(module);
 }
 
