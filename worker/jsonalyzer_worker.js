@@ -110,7 +110,7 @@ worker.loadPlugin = function(modulePath, contents, callback) {
             return _;
         });
         try {
-            eval.call(null, contents);
+            eval.call(null, contents + "\n//@ sourceURL=" + modulePath);
         } catch (e) {
             return callback("Could not load language handler " + modulePath + ": " + e);
         }
