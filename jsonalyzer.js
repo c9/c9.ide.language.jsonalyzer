@@ -10,7 +10,7 @@ define(function(require, exports, module) {
         "Plugin", "commands", "language", "c9", "watcher",
         "save", "language.complete", "dialog.error", "ext",
         "collab", "collab.connect", "language.worker_util_helper",
-        "error_handler"
+        "error_handler", "installer"
     ];
     main.provides = [
         "jsonalyzer"
@@ -33,6 +33,7 @@ define(function(require, exports, module) {
         var async = require("async");
         var collab = imports.collab;
         var collabConnect = imports["collab.connect"];
+        var installer = imports.installer;
         var readTabOrFile = imports["language.worker_util_helper"].readTabOrFile;
 
         var extendToken = options.extendToken;
@@ -88,6 +89,8 @@ define(function(require, exports, module) {
             );
             setTimeout(function() {
                 setTimeout(function() { // wait a bit longer in case we were in the debugger
+                    if (useCollab && !installer.isInstalled("c9.ide.collab"))
+                        return;
                     if (!loadedWorker)
                         warning = showError("Language worker could not be loaded; some language features have been disabled");
                 }, 50);
