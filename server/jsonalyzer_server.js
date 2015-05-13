@@ -219,42 +219,31 @@ function callHandler(handlerPath, method, args, options, callback) {
 }
 
 function loadPlugin(path, contents, callback) {
-    var sandbox = {};
-    var exports = {};
-    
     if (!path || path.match(/^\.|\.js$/))
         return callback(new Error("Illegal module name: " + path));
     if (!contents)
         return callback(new Error("No contents provided: " + path));
 
-    sandbox.exports = exports;
-    sandbox.module = {
-        exports: exports
-    };
-    sandbox.global = sandbox;
-    sandbox.require = createRequire(path, plugins);
-    sandbox.console = console;
-    sandbox.process = process;
-    sandbox.setTimeout = setTimeout;
-    sandbox.setInterval = setInterval;
-    sandbox.clearTimeout = clearTimeout;
-    sandbox.clearInterval = clearInterval;
-    sandbox.define = function(def) {
-        def(sandbox.require, sandbox.exports, sandbox.module);
-    };
     
+    var exports = {};
+    var module = { exports: exports };
+    var require = createRequire(path, plugins);
+
     try {
-        var script = vm.createScript(contents.replace(/^\#\!.*/, ''), path);
         var pathJS = path.replace(/(\.js)?$/, ".js");
-        script.runInNewContext(sandbox, pathJS);
+        var script = "(function(require, exports, module) {"
+            + "var define = function(def) { def(require, exports, module) };"
+            + contents.replace(/^\#\!.*/, '')
+            + "})";
+        vm.runInThisContext(script, {filename: pathJS})(require, exports, module);
     } catch (e) {
         console.error("Error loading " + path + ":", e.stack);
         e.message = ("Error loading " + path + ": " + e.message);
         return callback(e);
     }
 
-    plugins[path] = sandbox.module.exports;
-    callback(null, sandbox.module.exports);
+    plugins[path] = module.exports;
+    callback(null, module.exports);
 }
 
 function createRequire(path, localDefs) {
