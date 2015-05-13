@@ -235,7 +235,8 @@ function loadPlugin(path, contents, callback) {
             + "var define = function(def) { def(require, exports, module) };"
             + contents.replace(/^\#\!.*/, '')
             + "})";
-        vm.runInThisContext(script, {filename: pathJS})(require, exports, module);
+        // using pathJS instead of {filename: pathJS} for compatibility with node 0.10
+        vm.runInThisContext(script, pathJS)(require, exports, module);
     } catch (e) {
         console.error("Error loading " + path + ":", e.stack);
         e.message = ("Error loading " + path + ": " + e.message);
