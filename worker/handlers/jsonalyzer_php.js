@@ -14,7 +14,7 @@ var TAGS = [
     { regex: /(?:^|\n)\s*(?:abstract\s+)?class ([^ ]*)/g, kind: "package" },
     { regex: /(?:^|\n)\s*interface ([^ ]*)/g, kind: "package" },
     {
-        regex: /(?:^|\n)\s*(?:public\s+|static\s+|abstract\s+|protected\s+|private\s+)*function ([^ (]*)/g,
+        regex: /(?:^|\n)\s*(?:public\s+|static\s+|abstract\s+|protected\s+|private\s+|final\s+)*function ([^ (]*)/g,
         kind: "method"
     },
     {
