@@ -113,7 +113,7 @@ module.exports = {
     /**
      * Analyze the other/imported files.
      * 
-     * May not be overridden by inheritors.
+     * May be overridden by inheritors.
      * 
      * @param {String} paths
      * @param {Object} options

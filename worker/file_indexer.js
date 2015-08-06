@@ -168,6 +168,9 @@ function consumeQueue() {
                 assert(!errs || Array.isArray(errs));
                 updateQueueWatcher();
                 
+                if (!results)
+                    return next();
+                
                 // Help debuggers
                 var pathsCopy = task.paths.slice();
                 var resultsCopy = (results || []).slice();
