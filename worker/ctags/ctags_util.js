@@ -40,7 +40,7 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
                 break;
             results.push(line.match(/^\s*#\s*(.*)/)[1]);
         }
-        return this.filterDocumentation(results.join("\n"));
+        return filterDocumentation(results.join("\n"));
     }
 
     // """ python docstrings """
@@ -73,7 +73,7 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
                 rows.push(lines[end.sl].substr(0, end.sc));
                 if (end.sl === cur)
                     rows = ["", line.substring(col + 3, end.sc)];
-                return this.filterDocumentation(rows.join("\n"));
+                return filterDocumentation(rows.join("\n"));
             }
         }
     }
@@ -191,7 +191,7 @@ var getOffsetRow = module.exports.getOffsetRow = function(contents, offset) {
     }
 }
 
-module.exports.filterDocumentation = function(doc) {
+var filterDocumentation = module.exports.filterDocumentation = function(doc) {
     return escapeHtml(doc)
         .replace(/(\n|^)[ \t]*\*+[ \t]*/g, "\n")
         .trim()
