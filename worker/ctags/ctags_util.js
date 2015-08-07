@@ -198,7 +198,7 @@ var filterDocumentation = module.exports.filterDocumentation = function(doc) {
         .replace(/@(param|event|method|class|constructor|fires?|throws?|returns?|internal|ignore)/, "<br/>@$1")
         .replace(/\n\n(?!@)/g, "<br/><br/>")
         .replace(/\n@(\w+)/, "<br/>\n@$1") // separator between summary and rest
-        .replace(/@(param|event|method|class|constructor|fires?|throws?|returns?|internal|ignore) ({[\w\.]+} )?(\[?[\w\.]+\]?)/g, "<br/>\n<b>@$1</b> <i>$2$3</i>&nbsp;")
+        .replace(/@(param|event|method|class|constructor|fires?|throws?|returns?|internal|ignore) ({[\w\.]+} )?(\[?[\w\.]+\]?)/g, "<b>@$1</b> <i>$2$3</i>&nbsp;")
         .replace(/\n@(\w+)/g, "<br/>\n<b>@$1</b>");
 };
 
