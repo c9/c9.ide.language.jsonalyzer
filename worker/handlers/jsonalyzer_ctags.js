@@ -18,9 +18,9 @@ var handler = module.exports = Object.create(PluginBase);
 
 var IDLE_TIME = 50;
 
-handler.languages = [".*"];
+handler.languages = ctags.languages;
 
-handler.extensions = [].concat.apply([], ctags.LANGUAGES.map(function(l) { return l.extensions; }));
+handler.extensions = ctags.extensions;
 
 handler.isGeneric = true;
 
@@ -40,7 +40,8 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     // And also, we don't care about saves, just about changes
     if ((options.service === "complete" || options.isSave) && index.get(path))
         return callback(null, index.get(path));
-    
+    if (options.language)
+        path = ctags.pathForLanguage(options.language, path);
     ctags.analyze(path, doc, callback);
 };
 
