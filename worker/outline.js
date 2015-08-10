@@ -39,20 +39,26 @@ function createOutline(name, entry, defaultIndent, parent) {
         return result;
     assert(!Array.isArray(entry.properties));
     
-    var lastEntry;
     for (var uname in entry.properties) {
         entry.properties[uname].forEach(function(prop) {
-            var itemParent = findParent(prop, lastEntry);
-            lastEntry = createOutline(uname.substr(1), prop, indent + 1, itemParent);
-            itemParent.items.push(lastEntry);
+            result.items.push(createOutline(uname.substr(1), prop, indent + 1, result));
         });
     }
     
     // Sort out-of-order parsed outline; not needed with flat/indent outline
     result.items = sortOutline(result.items);
+    var candidateParent;
+    result.items = result.items.filter(function(prop) {
+        var parent = findParent(prop);
+        if (parent !== result)
+            parent.items.push(prop);
+        else
+            candidateParent = prop;
+        return parent === result;
+    });
     return result;
     
-    function findParent(prop, candidateParent) {
+    function findParent(prop) {
         if (!prop.indent || prop.indent <= indent || !candidateParent)
             return result;
         
@@ -72,7 +78,6 @@ function sortOutline(items) {
 function addDisplayPos(outline, parent) {
     if (!outline.items)
         return outline;
-    var last;
     outline.displayPos = outline.displayPos || outline.pos;
     for (var i = 0; i < outline.items.length; i++) {
         var item = outline.items[i];
