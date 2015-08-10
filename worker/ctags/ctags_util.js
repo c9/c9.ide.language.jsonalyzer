@@ -109,7 +109,7 @@ module.exports.findMatchingTags = function(path, docValue, tag, guessFargs, extr
         var doc, docHead;
         if (extractDocumentation && line) {
             docHead = line.length > MAX_DOCHEAD_LENGTH
-                ? line.substr(MAX_DOCHEAD_LENGTH) + "..."
+                ? line.substr(line.length - MAX_DOCHEAD_LENGTH) + "..."
                 : line;
             doc = _self.extractDocumentationAtRow(lines, row);
         }

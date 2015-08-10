@@ -2,6 +2,7 @@ define(function(require, exports, module) {
 
 var fileIndexer = require("./file_indexer");
 var assert = require("c9/assert");
+var ctagsUtil = require("./ctags/ctags_util");
 var handler;
 
 module.exports.init = function(_handler) {
@@ -27,9 +28,12 @@ module.exports.outline = function(doc, ast, callback) {
 
 function createOutline(name, entry, defaultIndent, parent) {
     var indent = entry.indent || defaultIndent;
+    var fullName = entry.guessFargs
+        ? name + ctagsUtil.guessFargs(entry.docHead, name)
+        : name;
     var result = {
         icon: entry.icon || entry.kind,
-        name: name,
+        name: fullName,
         pos: { sl: entry.row, sc: entry.column },
         items: [],
         indent: indent,
