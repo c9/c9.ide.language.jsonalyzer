@@ -10,6 +10,7 @@ define(function(require, exports, module) {
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_rb",
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_ctags",
             "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_go",
+            "plugins/c9.ide.language.jsonalyzer/worker/handlers/jsonalyzer_make",
         ],
         
         helpersWorker: [],

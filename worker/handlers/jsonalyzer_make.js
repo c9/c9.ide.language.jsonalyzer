@@ -16,15 +16,12 @@ var TAGS = [
 ];
 var GUESS_FARGS = false;
 var EXTRACT_DOCS = false;
-var LANGUAGES = ["makefile"];
-var EXTENSIONS = [""];
 
 var handler = module.exports = Object.create(PluginBase);
 
-handler.init = function(options, callback) {
-    jsonalyzer.registerHandler(this, LANGUAGES[0], LANGUAGES, EXTENSIONS);
-    callback();
-};
+handler.languages = ["makefile"];
+
+handler.extensions = [];
 
 handler.supportedPaths = "(^|\/)Makefile.*";
 
