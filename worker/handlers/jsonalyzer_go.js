@@ -12,8 +12,8 @@ var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_u
 
 var TAGS = [
     { regex: /(?:^|\n)\s*package\s+([^\s\(]+)/g, kind: "package" },
-    { regex: /(?:^|\n)\s*type\s+([^\s\(]+)/g, kind: "method2" },
-    { regex: /(?:^|\n)\s*func\s+([^\s\r\(]+)/g, kind: "method" },
+    { regex: /(?:^|\n)\s*type\s+([^\s\(]+)/g, kind: "method2", indent: 1 },
+    { regex: /(?:^|\n)\s*func\s+([^\s\r\(]+)/g, kind: "method", indent: 1 },
     {
         regex: new RegExp(
             "(?:^|\\n)\\s*import\\s+([^ \\(]+)"

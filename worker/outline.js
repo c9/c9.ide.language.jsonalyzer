@@ -15,7 +15,7 @@ module.exports.outline = function(doc, ast, callback) {
             return callback(); // can't pass error to this callback
         }
         
-        var result = createOutline(null, entry);
+        var result = createOutline(null, entry, -1);
         var rootInfo = {
             displayPos: { el: doc.getLength() - 1 }
         };
@@ -25,23 +25,42 @@ module.exports.outline = function(doc, ast, callback) {
     });
 };
 
-function createOutline(name, entry) {
+function createOutline(name, entry, defaultIndent, parent) {
+    var indent = entry.indent || defaultIndent;
     var result = {
         icon: entry.icon || entry.kind,
         name: name,
         pos: { sl: entry.row, sc: entry.column },
-        items: []
+        items: [],
+        indent: indent,
+        parent: parent,
     };
     if (!entry.properties)
         return result;
     assert(!Array.isArray(entry.properties));
+    
+    var lastEntry;
     for (var uname in entry.properties) {
         entry.properties[uname].forEach(function(prop) {
-            result.items.push(createOutline(uname.substr(1), prop));
+            var itemParent = findParent(prop, lastEntry);
+            lastEntry = createOutline(uname.substr(1), prop, indent + 1, itemParent);
+            itemParent.items.push(lastEntry);
         });
     }
+    
+    // Sort out-of-order parsed outline; not needed with flat/indent outline
     result.items = sortOutline(result.items);
     return result;
+    
+    function findParent(prop, candidateParent) {
+        if (!prop.indent || prop.indent <= indent || !candidateParent)
+            return result;
+        
+        if (candidateParent.indent >= prop.indent)
+            return findParent(prop, candidateParent.parent);
+            
+        return candidateParent;
+    }
 }
 
 function sortOutline(items) {
@@ -54,6 +73,7 @@ function addDisplayPos(outline, parent) {
     if (!outline.items)
         return outline;
     var last;
+    outline.displayPos = outline.displayPos || outline.pos;
     for (var i = 0; i < outline.items.length; i++) {
         var item = outline.items[i];
         var next = outline.items[i + 1];

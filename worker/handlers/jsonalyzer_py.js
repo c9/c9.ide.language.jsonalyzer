@@ -12,9 +12,9 @@ var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_u
 
 var TAGS = [
     { regex: /(?:^|\n)\s*class\s+([^ \(:]+)/g, kind: "package" },
-    { regex: /(?:^|\n)\s*def\s+(?!_)([^ \(:]+)/g, kind: "method" },
-    { regex: /(?:^|\n)\s*def\s+(?!__[^ \(:]+__)(_[^ \(]*)/g, kind: "method2" },
-    { regex: /(?:^|\n)\s*def\s+(__[^ \(:]+__)/g, kind: "property" },
+    { regex: /(?:^|\n)\s*def\s+(?!_)([^ \(:]+)/g, kind: "method", indent: 1 },
+    { regex: /(?:^|\n)\s*def\s+(?!__[^ \(:]+__)(_[^ \(]*)/g, kind: "method2", indent: 1 },
+    { regex: /(?:^|\n)\s*def\s+(__[^ \(:]+__)/g, kind: "property", indent: 1 },
     {
         regex: new RegExp(
             "(?:^|\\n)\\s*import\\s+([^ \\(]+)"

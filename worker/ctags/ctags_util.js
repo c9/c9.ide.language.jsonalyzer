@@ -130,7 +130,8 @@ module.exports.findMatchingTags = function(path, docValue, tag, guessFargs, extr
             docHead: docHead,
             guessFargs: guessFargs,
             doc: doc,
-            kind: tag.kind
+            kind: tag.kind,
+            indent: tag.indent,
         });
         return fullMatch;
     });
@@ -189,7 +190,7 @@ var getOffsetRow = module.exports.getOffsetRow = function(contents, offset) {
             return result;
         result++;
     }
-}
+};
 
 var filterDocumentation = module.exports.filterDocumentation = function(doc) {
     return escapeHtml(doc)
@@ -210,7 +211,7 @@ module.exports.getParameterDocs = function(doc) {
             result["_" + name] = description;
             return input;
         }
-    )
+    );
     return result;
 };
 
