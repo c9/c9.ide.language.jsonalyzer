@@ -68,6 +68,8 @@ function getCompletionResults(path, priority, identifier, summary, skipPos, skip
             // when we use a cached summary
             if (skipPos && e.row === skipPos.row && !isDefinedInLine(skipLine, name, skipPos, identifier))
                 return;
+            if (e.noComplete)
+                return;
             results.push(toCompletionResult(file, name, priority, e));
         });
     }
