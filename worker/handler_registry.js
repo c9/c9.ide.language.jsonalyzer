@@ -50,7 +50,7 @@ module.exports.HandlerRegistry = function() {
             var results = handlers.filter(function(p) {
                 if (p.disabled) return false;
                 if (language && language.match(p.supportedLanguages)) return true;
-                if (extension.match(p.supportedExtensions)) return true;
+                if (p.supportedExtensions && extension.match(p.supportedExtensions)) return true;
                 if (p.supportedPaths && path && path.match(p.supportedPaths)) return true;
                 return false;
             });
