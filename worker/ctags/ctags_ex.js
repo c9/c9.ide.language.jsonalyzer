@@ -58,58 +58,43 @@ var CTAGS_OPTIONS = [
 ];
 
 /**
- * All languages supported by ctags_ex, with their file extensions, ace syntax names,
+ * All languages supported by ctags_ex, with their file extensions,
  * and whether it's possible to guess the formal arguments of
  * functions (i.e., they use parantheses + comma separated arguments).
  */
 var LANGUAGES = module.exports.LANGUAGES = [
-    { guessFargs: true,  extensions: ["as"], name: "actionscript" },
-    { guessFargs: false, extensions: ["asm", "a"], name: "assembly_x86" },
-    { guessFargs: true,  extensions: ["sh"], name: "sh" },
-    { guessFargs: true,  extensions: ["js"], name: "javascript" },
-    { guessFargs: true,  extensions: ["html"], name: "html" },
-    { guessFargs: true,  extensions: ["coffee"], name: "coffee" },
+    { guessFargs: true,  extensions: ["as"] },
+    { guessFargs: false, extensions: ["asm", "a"] },
+    { guessFargs: true,  extensions: ["sh"] },
+    { guessFargs: true,  extensions: ["js", "html"] },
+    { guessFargs: true,  extensions: ["coffee"] },
     { guessFargs: true,  extensions: ["bas"] },
     { guessFargs: true,  extensions: ["asp"] },
-    { guessFargs: true,  extensions: ["cpp", "c", "cc", "cxx", "h", "hh", "hpp"], name: "c_cpp" },
-    { guessFargs: true,  extensions: ["cs"], name: "csharp" },
-    { guessFargs: false, extensions: ["e", "ge"], extractDocs: false, name: "eiffel" },
-    { guessFargs: true,  extensions: ["erl", "hrl"], name: "erlang" },
+    { guessFargs: true,  extensions: ["c", "cc", "cpp", "cxx", "h", "hh", "hpp"] },
+    { guessFargs: true,  extensions: ["cs"] },
+    { guessFargs: false, extensions: ["e", "ge"], extractDocs: false}, // Eiffel
+    { guessFargs: true,  extensions: ["erl", "hrl"] },
     { guessFargs: false, extensions: ["f", "for", "ftn", "f77", "f90", "f95"] }, // Fortran
     { guessFargs: true,  extensions: ["lisp", "cl", "lsp"] },
-    { guessFargs: true,  extensions: ["lua"], name: "lua" },
-    { guessFargs: false, extensions: ["cob"], name: "cobol" },
-    { guessFargs: true,  extensions: ["pas", "p"], name: "pascal" },
-    { guessFargs: true,  extensions: ["scm", "sm", "scheme", "oak"], name: "scheme" },
-    { guessFargs: true,  extensions: ["pl", "pm"], name: "perl" },
-    { guessFargs: false, extensions: ["prolog"], name: "prolog" },
-    { guessFargs: false, extensions: ["ltx", "tex", "bib", "sty", "cls", "clo"], name: "latex" },
-    { guessFargs: true,  extensions: ["php", "php3", "phtml", "inc"], name: "php" },
-    { guessFargs: true,  extensions: ["py"], name: "python" },
+    { guessFargs: true, extensions: ["lua"] },
+    { guessFargs: false, extensions: ["cob"] },
+    { guessFargs: true,  extensions: ["pas", "p"] },
+    { guessFargs: true,  extensions: ["scm", "sm", "scheme", "oak"] },
+    { guessFargs: true,  extensions: ["pl", "pm"] },
+    { guessFargs: false, extensions: ["prolog"] },
+    { guessFargs: false, extensions: ["ltx", "tex", "bib", "sty", "cls", "clo"] },
+    { guessFargs: true,  extensions: ["php", "php3", "phtml", "inc"] },
+    { guessFargs: true,  extensions: ["py"] },
+    { guessFargs: true,  extensions: ["sh"] },
     { guessFargs: false, extensions: ["y", "ym"] },
-    { guessFargs: true,  extensions: ["java"], name: "java" },
-    { guessFargs: true,  extensions: ["rb", "ru"], name: "ruby" },
+    { guessFargs: true,  extensions: ["java"] },
+    { guessFargs: true,  extensions: ["rb", "ru"] },
     { guessFargs: true,  extensions: ["ss"] }
 ];
-
-module.exports.languages = LANGUAGES.map(function(l) { return l.name; }).filter(Boolean);
-module.exports.extensions = [].concat.apply([], LANGUAGES.map(function(l) { return l.extensions; }));
 
 // ctags.FS_createPath("/", "etc", true, true);
 // ctags.FS_createDataFile("/etc", ".ctags", "--help\n" + CTAGS_OPTIONS.join("\n"), true, true);
 util.init(module.exports);
-
-module.exports.pathForLanguage = function(language, path) {
-    var ext = path.match(/[^./]*$/)[0];
-    LANGUAGES.some(function(r) {
-        if (r.name == language) {
-            if (r.extensions.indexOf(ext) == -1)
-                path = "tmp." + r.extensions[0];
-            return true;
-        }
-    });
-    return path;
-};
 
 module.exports.analyze = function(path, doc, callback) {
     if (!doc)
