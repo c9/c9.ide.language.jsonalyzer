@@ -48,16 +48,12 @@ module.exports.HandlerRegistry = function() {
                 return null;
             
             var results = handlers.filter(function(p) {
-                return language
-                    && !p.isGeneric
-                    && !p.disabled
-                    && language.match(p.supportedLanguages);
-            }).concat(
-            handlers.filter(function(p) {
-                return !p.disabled
-                    && extension.match(p.supportedExtensions)
-                    && (!p.supportedPaths || (path && path.match(p.supportedPaths)));
-            }));
+                if (p.disabled) return false;
+                if (language && language.match(p.supportedLanguages)) return true;
+                if (extension.match(p.supportedExtensions)) return true;
+                if (p.supportedPaths && path && path.match(p.supportedPaths)) return true;
+                return false;
+            });
             
             // Defer ctags handler
             if (results.length > 1)
