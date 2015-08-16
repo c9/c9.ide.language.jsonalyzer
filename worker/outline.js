@@ -53,7 +53,7 @@ function createOutline(name, entry, defaultIndent, parent) {
     result.items = sortOutline(result.items);
     var candidateParent;
     result.items = result.items.filter(function(prop) {
-        var parent = findParent(prop);
+        var parent = findParent(prop, candidateParent);
         if (parent !== result)
             parent.items.push(prop);
         else
@@ -62,14 +62,14 @@ function createOutline(name, entry, defaultIndent, parent) {
     });
     return result;
     
-    function findParent(prop) {
-        if (!prop.indent || prop.indent <= indent || !candidateParent)
+    function findParent(prop, parent) {
+        if (!prop.indent || prop.indent <= indent || !parent)
             return result;
         
-        if (candidateParent.indent >= prop.indent)
-            return findParent(prop, candidateParent.parent);
+        if (parent.indent >= prop.indent)
+            return findParent(prop, parent.parent);
             
-        return candidateParent;
+        return parent;
     }
 }
 
