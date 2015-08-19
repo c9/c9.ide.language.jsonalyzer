@@ -34,7 +34,6 @@ worker.$isInited = false;
 worker.DEBUG = true;
 worker.KIND_DEFAULT = scopeAnalyzer.KIND_DEFAULT;
 worker.KIND_PACKAGE = scopeAnalyzer.KIND_PACKAGE;
-worker.GUID_PREFIX = "project:";
 
 worker.init = function(callback) {
     worker.sender.on("onlinechange", function(event) {
