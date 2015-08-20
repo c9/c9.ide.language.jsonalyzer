@@ -181,7 +181,7 @@ function getCompatibleExtensions(extension) {
 
 var getOffsetRow = module.exports.getOffsetRow = function(contents, offset) {
     var result = 0;
-    var lastIndex = offset;
+    var lastIndex = offset + 1;
     for (;;) {
         lastIndex = lastIndex === 0
             ? -1
