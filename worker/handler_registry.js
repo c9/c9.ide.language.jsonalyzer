@@ -13,6 +13,7 @@ module.exports.HandlerRegistry = function() {
             if (existing.length || handlers.indexOf(handler) > -1)
                 return;
             
+            handler.sender = options.sender;
             if (handler.init)
                 handler.init(options, function(err) {
                     if (err)

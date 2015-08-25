@@ -51,7 +51,10 @@ worker.init = function(callback) {
             plugin.$source = event.data.modulePath;
             
             var oldHandler = worker.getHandlerFor(worker.path, worker.language);
-            handlers.registerHandler(plugin, worker, event.data.options);
+            var options = event.data.options || {};
+            
+            options.sender = worker.sender;
+            handlers.registerHandler(plugin, worker, options);
             if (oldHandler !== worker.getHandlerFor(worker.path, worker.language)) {
                 // Invalidate cache; reanalyze
                 index.markStale(oldHandler);
