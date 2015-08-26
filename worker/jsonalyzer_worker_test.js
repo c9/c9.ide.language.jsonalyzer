@@ -1,7 +1,7 @@
 /*global describe it before after beforeEach afterEach define*/
 "use server";
 "use strict";
-"use mocha";
+
 
 require("../../../test/setup_paths");
 
