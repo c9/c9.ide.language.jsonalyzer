@@ -200,11 +200,11 @@ var filterDocumentation = module.exports.filterDocumentation = function(doc) {
         .replace(/(\n|^)[ \t]*\*+[ \t]*/g, "\n")
         .trim()
         // Initial newline before first parameter
-        .replace(/@(param|event|method|class|constructor|fires?|throws?|returns?|internal|ignore)/, "<br/>@$1")
+        .replace(/@(param|public|private|platform|event|method|function|class|constructor|fires?|throws?|returns?|internal|ignore)/, "<br/>@$1")
         // .replace(/\n@(\w+)/, "<br/>\n@$1")
         // Paragraphs
         .replace(/\n\n(?!@)/g, "<br/><br/>")
-        .replace(/@(param|event|method|class|constructor|fires?|throws?|returns?|internal|ignore) ({[\w\.]+} )?(\[?[\w\.]+\]?)/g, "<br><b>@$1</b> <i>$2$3</i>&nbsp;")
+        .replace(/@(param|public|private|platform|event|method|function|class|constructor|fires?|throws?|returns?|internal|ignore) ({[\w\.]+} )?(\[?[\w\.]+\]?)/g, "<br><b>@$1</b> <i>$2$3</i>&nbsp;")
         .replace(/\n@(\w+)/g, "<br/>\n<b>@$1</b>")
         .replace(/&lt;(\/?)code&gt;/g, "<$1tt>")
         .replace(/&lt;(\/?)(b|i|em)&gt;/g, "<$1$2>");
@@ -215,7 +215,7 @@ module.exports.getParameterDocs = function(doc) {
     doc && doc.replace(
         /@param (?:\{[^}]*\} )?([^ ]*)\s+([^@]*)/g,
         function(input, name, description) {
-            result["_" + name] = description;
+            result["_" + name] = filterDocumentation(description);
             return input;
         }
     );
