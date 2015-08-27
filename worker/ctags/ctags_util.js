@@ -193,14 +193,21 @@ var getOffsetRow = module.exports.getOffsetRow = function(contents, offset) {
 };
 
 var filterDocumentation = module.exports.filterDocumentation = function(doc) {
+    // We prettify doc strings here since we don't have a nice
+    // system for it elsewhere that does it on demand.
+    // For now this kinda works and is pretty fast.
     return escapeHtml(doc)
         .replace(/(\n|^)[ \t]*\*+[ \t]*/g, "\n")
         .trim()
+        // Initial newline before first parameter
         .replace(/@(param|event|method|class|constructor|fires?|throws?|returns?|internal|ignore)/, "<br/>@$1")
+        // .replace(/\n@(\w+)/, "<br/>\n@$1")
+        // Paragraphs
         .replace(/\n\n(?!@)/g, "<br/><br/>")
-        .replace(/\n@(\w+)/, "<br/>\n@$1") // separator between summary and rest
-        .replace(/@(param|event|method|class|constructor|fires?|throws?|returns?|internal|ignore) ({[\w\.]+} )?(\[?[\w\.]+\]?)/g, "<b>@$1</b> <i>$2$3</i>&nbsp;")
-        .replace(/\n@(\w+)/g, "<br/>\n<b>@$1</b>");
+        .replace(/@(param|event|method|class|constructor|fires?|throws?|returns?|internal|ignore) ({[\w\.]+} )?(\[?[\w\.]+\]?)/g, "<br><b>@$1</b> <i>$2$3</i>&nbsp;")
+        .replace(/\n@(\w+)/g, "<br/>\n<b>@$1</b>")
+        .replace(/&lt;(\/?)code&gt;/g, "<$1tt>")
+        .replace(/&lt;(\/?)(b|i|em)&gt;/g, "<$1$2>");
 };
 
 module.exports.getParameterDocs = function(doc) {
