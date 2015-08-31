@@ -207,7 +207,8 @@ var filterDocumentation = module.exports.filterDocumentation = function(doc) {
         .replace(/@(param|public|private|platform|event|method|function|class|constructor|fires?|throws?|returns?|internal|ignore) ({[\w\.]+} )?(\[?[\w\.]+\]?)/g, "<br><b>@$1</b> <i>$2$3</i>&nbsp;")
         .replace(/\n@(\w+)/g, "<br/>\n<b>@$1</b>")
         .replace(/&lt;(\/?)code&gt;/g, "<$1tt>")
-        .replace(/&lt;(\/?)(b|i|em)&gt;/g, "<$1$2>");
+        .replace(/&lt;(\/?)(b|i|em|br|a) ?\/?&gt;/g, "<$1$2>")
+        .replace(/&lt;(a\s+(target=('|&quot;)[^"'&]*('|&quot;)\s+)?href=('|&quot;)(https?:\/\/|#)[^"'&]*('|&quot;)\s*(target=('|&quot;)[^"'&]*('|&quot;)\s*)?)&gt;/g, '<$1 target="_docs">');
 };
 
 module.exports.getParameterDocs = function(doc) {
