@@ -13,7 +13,7 @@ define(function(require, exports, module) {
         var plugin = new Plugin("Ajax.org", main.consumes);
 
         plugin.freezePublicAPI({
-            
+            isMaster: function() { return true; }
         });
         
         register(null, {
