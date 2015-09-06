@@ -159,7 +159,7 @@ module.exports.analyze = function(path, doc, callback) {
     // Since the above should run synchronously, we should be done by now;
     // make sure our callback is called
     if (!isDone) {
-        callback(ctags.getLog() || "ctags analysis failed (callback not called)");
+        callback(ctags.getLog() || "ctags analysis failed");
         callback = function() {
             throw new Error("Callback called too late");
         };
