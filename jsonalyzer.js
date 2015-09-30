@@ -325,8 +325,9 @@ define(function(require, exports, module) {
                 
                 var resultArgs = response && response.result || [err];
                 resultArgs[0] = resultArgs[0] || err;
-                if (err && err.code === "EFATAL")
+                if (err) { 
                     errorHandler.reportError(err);
+                }
                 plugin.once("initWorker", function() {
                     worker.emit(
                         "jsonalyzerCallServerResult",
