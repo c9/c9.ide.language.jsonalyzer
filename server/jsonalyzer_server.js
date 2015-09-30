@@ -54,7 +54,7 @@ function getClientDoc(path, options, callback) {
             path: path,
             options: options
         };
-        done();
+        done(timeoutError);
     }, 20000);
 
     var docId = path.replace(/^\//, "");
