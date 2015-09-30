@@ -49,7 +49,12 @@ function getClientDoc(path, options, callback) {
         return done(new Error("No collab server found and cannot use local value"));
 
     var timeout = setTimeout(function() {
-        done(new Error("Collab server failed to provide document contents"));
+        var timeoutError = new Error("Collab server failed to provide document contents");
+        timeoutError.customData = {
+            path: path,
+            options: options
+        };
+        done();
     }, 20000);
 
     var docId = path.replace(/^\//, "");
@@ -58,7 +63,14 @@ function getClientDoc(path, options, callback) {
         /*["revNum"],*/
         function(err, result) {
             if (err) return done(err);
-            if (!result) return done(new Error("Unable to open document or document not found"));
+            if (!result) {
+                var noResultError = new Error("Unable to open document or document not found");
+                noResultError.customData = {
+                    path: path,
+                    options: options
+                };
+                return done(noResultError);
+            }
             
             if (options.revNum <= result.revNum)
                 return collabServer.getDocument(docId, ["revNum", "contents"], done);

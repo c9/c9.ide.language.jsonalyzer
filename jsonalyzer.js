@@ -326,7 +326,7 @@ define(function(require, exports, module) {
                 var resultArgs = response && response.result || [err];
                 resultArgs[0] = resultArgs[0] || err;
                 if (err) { 
-                    errorHandler.reportError(err);
+                    errorHandler.reportError(err, err.customData);
                 }
                 plugin.once("initWorker", function() {
                     worker.emit(
