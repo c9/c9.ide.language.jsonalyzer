@@ -58,7 +58,7 @@ function getClientDoc(path, options, callback) {
         /*["revNum"],*/
         function(err, result) {
             if (err) return done(err);
-            if (!result) return done(new Error(new Error("Unable to open document or document not found")));
+            if (!result) return done(new Error("Unable to open document or document not found"));
             
             if (options.revNum <= result.revNum)
                 return collabServer.getDocument(docId, ["revNum", "contents"], done);
