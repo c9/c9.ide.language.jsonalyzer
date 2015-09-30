@@ -52,7 +52,7 @@ function getClientDoc(path, options, callback) {
         var timeoutError = new Error("Collab server failed to provide document contents");
         timeoutError.customData = {
             path: path,
-            options: options
+            revNum: options.revNum
         };
         done(timeoutError);
     }, 20000);
@@ -67,7 +67,7 @@ function getClientDoc(path, options, callback) {
                 var noResultError = new Error("Unable to open document or document not found");
                 noResultError.customData = {
                     path: path,
-                    options: options
+                    revNum: options.revNum
                 };
                 return done(noResultError);
             }
