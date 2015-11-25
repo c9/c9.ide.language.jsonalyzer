@@ -16,16 +16,12 @@ var TAGS = [
     { regex: /(?:^|\n)\s*<(form|h1|body|head)\b/g, kind: "method", indent: 1 },
     
     // Angular
-    { regex: /\sng-app="([A-Za-z0-9$_\.]+)/g, kind: "property", indent: 1 },
-    { regex: /\sng-app='([A-Za-z0-9$_\.]+)/g, kind: "property", indent: 1 },
-    { regex: /\sng-controller="([A-Za-z0-9$_\.]+)/g, kind: "property", indent: 1 },
-    { regex: /\sng-controller='([A-Za-z0-9$_\.]+)/g, kind: "property", indent: 1 },
+    { regex: /\sng-app=["']([A-Za-z0-9$_\.]+)/g, kind: "property", indent: 1 },
+    { regex: /\sng-controller=["']([A-Za-z0-9$_\.]+)/g, kind: "property", indent: 1 },
     { regex: /\sng-repeat="[^\"]+ in ([^\"]+)/g, kind: "property2", indent: 1 },
     { regex: /\sng-repeat='[^\']+ in ([^\']+)/g, kind: "property2", indent: 1 },
-    { regex: /\sng-click="([A-Za-z0-9$_\.]+)/g, kind: "property2", indent: 1 },
-    { regex: /\sng-click='([A-Za-z0-9$_\.]+)/g, kind: "property2", indent: 1 },
-    { regex: /\sng-model="([A-Za-z0-9$_\.]+)/g, kind: "property2", indent: 1 },
-    { regex: /\sng-model='([A-Za-z0-9$_\.]+)/g, kind: "property2", indent: 1 },
+    { regex: /\sng-click=["']([A-Za-z0-9$_\.]+)/g, kind: "property2", indent: 1 },
+    { regex: /\sng-model=["']([A-Za-z0-9$_\.]+)/g, kind: "property2", indent: 1 },
     
     // Knockout
     { regex: /\sdata-bind="[^"]*\b(?:foreach|click|value|checked):\s*(?:\$root\.)?([A-Za-z0-9$_\.]+)/g, kind: "property2", indent: 1 },
