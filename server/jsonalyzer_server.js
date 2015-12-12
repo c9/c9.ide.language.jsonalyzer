@@ -164,8 +164,7 @@ function callHandler(handlerPath, method, args, options, callback) {
     var revNum;
     var isDone;
 
-    // We need to catch any errors thrown by  the handler or collab to make
-    // sure we never crash.
+    // Be extra defensive about collab errors
     try {
         setupCall();
     } catch (e) {
@@ -206,7 +205,14 @@ function callHandler(handlerPath, method, args, options, callback) {
     }
     
     function doCall() {
-        handler[method].apply(handler, args.concat(done));
+        // Be extra defensive about handler errors
+        try {
+            handler[method].apply(handler, args.concat(done));
+        } catch (e) {
+            if (isDone)
+                throw e;
+            done(e);
+        }
     }
     
     function done(err) {
