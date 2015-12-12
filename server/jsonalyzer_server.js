@@ -154,14 +154,6 @@ function getHandlerList(callback) {
     callback(null, { handlers: Object.keys(handlers) });
 }
 
-function arrayToObject(array) {
-    var obj = {};
-    for (var i = 0; i < array.length; i++) {
-        obj[array[i]] = true;
-    }
-    return obj;
-}
-
 function callHandler(handlerPath, method, args, options, callback) {
     var handler = handlers[handlerPath];
     if (!handler)
@@ -186,6 +178,7 @@ function callHandler(handlerPath, method, args, options, callback) {
         switch (method) {
             case "analyzeCurrent":
             case "findImports":
+            case "invoke":
                 var clientPath = args[0];
                 var osPath = options.filePath;
                 

@@ -170,6 +170,8 @@ module.exports = {
      * Invoke a linter using child_process.
      * Only available for server-side plugins.
      * 
+     * See {@link language.worker_util#execAnalysis} for invoking linters directly from a worker.
+     * 
      * @param {String} linter
      * @param {String[]} args
      * @param {String} [stdin]
