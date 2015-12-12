@@ -99,7 +99,8 @@ function toCompletionResult(file, name, priority, entry) {
         doc: entry.doc,
         docHead: entry.docHead,
         priority: priority,
-        isGeneric: true
+        isGeneric: true,
+        guessTooltip: true,
     };
 }
 
