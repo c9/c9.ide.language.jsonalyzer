@@ -21,7 +21,7 @@ handler.languages = [];
 handler.maxCallInterval = handler.CALL_INTERVAL_MIN;
 
 handler.invoke = function(path, doc, ast, options, callback) {
-    if (options.useStdin)
+    if (!options.useTempFile)
         return this.$doInvoke(path, doc, options, callback);
 
     var tempFile = getTempFile() + paths.extname(path);
@@ -46,7 +46,7 @@ handler.$doInvoke = function(path, doc, options, callback) {
         (options.args || []).map(function(arg) {
             return arg.replace(/\$FILE\b/, path);
         }),
-        options.useStdin && doc,
+        !options.useTempFile && doc,
         callback
     );
 };
