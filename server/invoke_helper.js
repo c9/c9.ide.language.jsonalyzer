@@ -42,7 +42,7 @@ handler.invoke = function(path, doc, ast, options, callback) {
 
 handler.$doInvoke = function(path, doc, options, callback) {
     this.$lint(
-        options.file,
+        options.command,
         (options.args || []).map(function(arg) {
             return arg.replace(/\$FILE\b/, path);
         }),
