@@ -43,9 +43,14 @@ module.exports = {
     extensions: [],
     
     /**
-     * The maximum interval between calls for server-side handlers.
+     * The maximum interval between calls for server-side handlers,
+     * e.g. 2000 to allow for a delay of maximally 2000ms between
+     * two calls. Lower numbers put heavier load on the workspace.
      * 
-     * Should be overridden by server-side inheritors.
+     * May be overridden by server-side inheritors.
+     * 
+     * @see {@link #CALL_INTERVAL_MIN}   The suggested minimal value of 500ms.
+     * @see {@link #CALL_INTERVAL_BASIC} The default value of 1200ms.
      */
     maxCallInterval: 2000,
     

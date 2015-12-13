@@ -249,7 +249,7 @@ define(function(require, exports, module) {
             var handlerPath = event.data.handlerPath;
             var method = event.data.method;
             var args = event.data.args;
-            var maxCallInterval = event.data.maxCallInterval || 2000;
+            var maxCallInterval = event.data.maxCallInterval != null ? event.data.maxCallInterval : 2000;
             var value;
             var revNum;
             var tries = [];
