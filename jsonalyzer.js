@@ -52,6 +52,7 @@ define(function(require, exports, module) {
         var worker;
         var server;
         var pendingServerCall;
+        var queuedCalls = {};
         var lastServerCall = Date.now();
         var serverLoading = false;
         
@@ -250,6 +251,8 @@ define(function(require, exports, module) {
             var method = event.data.method;
             var args = event.data.args;
             var maxCallInterval = event.data.maxCallInterval != null ? event.data.maxCallInterval : 2000;
+            var semaphore = event.data.semaphore;
+            var timeout = event.data.timeout || 15000;
             var value;
             var revNum;
             var tries = [];
@@ -292,18 +295,25 @@ define(function(require, exports, module) {
                 }
             }
                 
-            function doCall() {
-                if (pendingServerCall !== doCall) {
+            function doCall(abort) {
+                if (abort || pendingServerCall !== doCall) {
                     var err = new Error("Superseded by later call, aborted");
                     err.code = "ESUPERSEDED";
                     return done(err);
                 }
+                if (semaphore && queuedCalls[semaphore]) {
+                    queuedCalls[semaphore].queued && queuedCalls[semaphore].queued(true);
+                    queuedCalls[semaphore].queued = doCall;
+                }
+                queuedCalls[semaphore] = {
+                    running: doCall
+                };
                 
                 var watcher = setTimeout(function watch() {
                     if (!c9.connected)
                         return plugin.once("initServer", function() { setTimeout(watch, 2000) });
                     console.warn("Did not receive a response from handler call to " + handlerPath + ":" + method);
-                }, 15000);
+                }, timeout);
                 
                 server.callHandler(
                     handlerPath, method, args,
@@ -314,6 +324,11 @@ define(function(require, exports, module) {
                     },
                     function(err, response) {
                         clearTimeout(watcher);
+                        if (queuedCalls[semaphore]) {
+                            var queued = queuedCalls[semaphore].queued;
+                            delete queuedCalls[semaphore];
+                            queued && queued();
+                        }
                         done(err, response);
                     }
                 );
