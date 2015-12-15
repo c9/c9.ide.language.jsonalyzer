@@ -17,6 +17,10 @@ define(function(require, exports, module) {
         
         handlersServer: [
             {
+                path: "plugins/c9.ide.language.jsonalyzer/server/invoke_helper",
+                contents: require("text!./server/invoke_helper.js")
+            },
+            {
                 path: "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_sh_server",
                 contents: require("text!./server/handlers/jsonalyzer_sh_server.js")
             },
@@ -31,10 +35,6 @@ define(function(require, exports, module) {
             {
                 path: "plugins/c9.ide.language.jsonalyzer/server/handlers/jsonalyzer_go_server",
                 contents: require("text!./server/handlers/jsonalyzer_go_server.js")
-            },
-            {
-                path: "plugins/c9.ide.language.jsonalyzer/server/invoke_helper",
-                contents: require("text!./server/invoke_helper.js")
             },
         ],
         
