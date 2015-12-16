@@ -304,6 +304,7 @@ define(function(require, exports, module) {
                 if (semaphore && queuedCalls[semaphore]) {
                     queuedCalls[semaphore].queued && queuedCalls[semaphore].queued(true);
                     queuedCalls[semaphore].queued = doCall;
+                    return;
                 }
                 queuedCalls[semaphore] = {
                     running: doCall
