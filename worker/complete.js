@@ -22,6 +22,10 @@ module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
     var line = lines[pos.row];
     var identifier = completeUtil.retrievePrecedingIdentifier(line, pos.column, workerUtil.getIdentifierRegex());
     
+    // Try not to complete anything if we appear to be in a property access expression
+    if (line[pos.column - identifier.length - 1] === ".")
+        return callback();
+    
     getCurrentLazy(handler.path, doc, fullAst, function(err, result, imports) {
         if (err)
             console.log("[jsonalyzer] Warning: could not analyze " + handler.path + ": " + err);
