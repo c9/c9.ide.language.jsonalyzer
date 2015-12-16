@@ -13,6 +13,7 @@ var pathSep = require("path").sep;
 var TEMPDIR = process.env.TMP || process.env.TMPDIR || process.env.TEMP || '/tmp';
 
 var handler = module.exports = Object.create(PluginBase);
+var workspaceDir;
  
 handler.extensions = [];
 
@@ -20,12 +21,19 @@ handler.languages = [];
 
 handler.maxCallInterval = handler.CALL_INTERVAL_MIN;
 
+handler.init = function(options, callback) {
+    workspaceDir = options.workspaceDir;
+    callback();
+};
+
 handler.invoke = function(path, doc, ast, options, callback) {
     if (options.overrideLine) {
         var lines = doc.toString().split(/\r\n|\n|\r/);
         lines[options.overrideLineRow] = options.overrideLine;
         doc = lines.join("\n");
     }
+    if (options.cwd && options.cwd[0] != "/")
+        options.cwd = workspaceDir + "/" + options.cwd;
     
     if (!options.useTempFile)
         return this.$doInvoke(path, doc, options, callback);

@@ -180,17 +180,29 @@ module.exports = {
      * @param {String} linter
      * @param {String[]} args
      * @param {String} [stdin]
+     * @param {Object} [options]
+     * @param {String} [options.cwd]
+     * @param {String} [options.maxBuffer]
+     * @param {String} [options.timeout]
      * @param {Function} callback
      * @param {Object} callback.err
      * @param {String} callback.stdout
      * @param {String} callback.stderr
      * @param {Number} callback.code
      */
-    $lint: function(linter, args, stdin, callback) {
+    $lint: function(linter, args, stdin, options, callback) {
+        if (!options)
+            return callback(linter, args, null, null, arguments[2]);
         if (!callback)
-            return this.$lint(linter, args, null, stdin);
+            return typeof stdin === "string"
+                ? this.$lint(linter, args, stdin, null, arguments[3])
+                : this.$lint(linter, args, null, arguments[2], arguments[3]);
         if (!child_process)
             return callback(new Error("Only implemented for server-side plugins"));
+        
+        options = options || {};
+        options.maxBuffer = options.maxBuffer || 200 * 1024;
+        
         try {
             var child = child_process.execFile(linter, args, {
                     env: {
