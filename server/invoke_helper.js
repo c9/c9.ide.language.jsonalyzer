@@ -27,10 +27,12 @@ handler.init = function(options, callback) {
 };
 
 handler.invoke = function(path, doc, ast, options, callback) {
-    if (options.overrideLine) {
+    if (options.overrideLine != null) {
         var lines = doc.toString().split(/\r\n|\n|\r/);
-        lines[options.overrideLineRow] = options.overrideLine;
-        doc = lines.join("\n");
+        if (lines[options.overrideLineRow] !== options.overrideLine) {
+            lines[options.overrideLineRow] = options.overrideLine;
+            doc = lines.join("\n");
+        }
     }
     if (options.cwd && options.cwd[0] != "/")
         options.cwd = workspaceDir + "/" + options.cwd;
