@@ -40,7 +40,7 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
                 break;
             results.push(line.match(/^\s*#\s*(.*)/)[1]);
         }
-        return filterDocumentation(results.join("\n"));
+        return workerUtil.filterDocumentation(results.join("\n"));
     }
 
     // """ python docstrings """
@@ -73,7 +73,7 @@ module.exports.extractDocumentationAtRow = function(lines, row) {
                 rows.push(lines[end.sl].substr(0, end.sc));
                 if (end.sl === cur)
                     rows = ["", line.substring(col + 3, end.sc)];
-                return filterDocumentation(rows.join("\n"));
+                return workerUtil.filterDocumentation(rows.join("\n"));
             }
         }
     }
@@ -192,31 +192,17 @@ var getOffsetRow = module.exports.getOffsetRow = function(contents, offset) {
     }
 };
 
-var filterDocumentation = module.exports.filterDocumentation = function(doc) {
-    // We prettify doc strings here since we don't have a nice
-    // system for it elsewhere that does it on demand.
-    // For now this kinda works and is pretty fast.
-    return escapeHtml(doc)
-        .replace(/(\n|^)[ \t]*\*+[ \t]*/g, "\n")
-        .trim()
-        // Initial newline before first parameter
-        .replace(/@(param|public|private|platform|event|method|function|class|constructor|fires?|throws?|returns?|internal|ignore)/, "<br/>@$1")
-        // .replace(/\n@(\w+)/, "<br/>\n@$1")
-        // Paragraphs
-        .replace(/\n\n(?!@)/g, "<br/><br/>")
-        .replace(/@(param|public|private|platform|event|method|function|class|constructor|fires?|throws?|returns?|internal|ignore) ({[\w\.]+} )?(\[?[\w\.]+\]?)/g, "<br><b>@$1</b> <i>$2$3</i>&nbsp;")
-        .replace(/\n@(\w+)/g, "<br/>\n<b>@$1</b>")
-        .replace(/&lt;(\/?)code&gt;/g, "<$1tt>")
-        .replace(/&lt;(\/?)(b|i|em|br|a) ?\/?&gt;/g, "<$1$2>")
-        .replace(/&lt;(a\s+(target=('|&quot;)[^"'&]*('|&quot;)\s+)?href=('|&quot;)(https?:\/\/|#)[^"'&]*('|&quot;)\s*(target=('|&quot;)[^"'&]*('|&quot;)\s*)?)&gt;/g, '<$1 target="_docs">');
-};
+/**
+ * @deprecated Use {@link language.worker_util#filterDocumentation} instead.
+ */
+module.exports.filterDocumentation = workerUtil.filterDocumentation;
 
 module.exports.getParameterDocs = function(doc) {
     var result = {};
     doc && doc.replace(
         /@param (?:\{[^}]*\} )?([^ ]*)\s+([^@]*)/g,
         function(input, name, description) {
-            result["_" + name] = filterDocumentation(description);
+            result["_" + name] = workerUtil.filterDocumentation(description);
             return input;
         }
     );
