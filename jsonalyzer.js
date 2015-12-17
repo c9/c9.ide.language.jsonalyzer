@@ -340,7 +340,15 @@ define(function(require, exports, module) {
                     return setTimeout(retryConnect, 50); // try again
                 
                 var resultArgs = response && response.result || [err];
-                resultArgs[0] = resultArgs[0] || err;
+                
+                // Add serializable error argument
+                err = resultArgs[0] || err;
+                resultArgs[0] = err && {
+                    message: err.message,
+                    stack: err.stack,
+                    code: err.code,
+                };
+                
                 if (err) { 
                     errorHandler.reportError(err, err.customData);
                 }
