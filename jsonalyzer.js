@@ -349,7 +349,7 @@ define(function(require, exports, module) {
                     code: err.code,
                 };
                 
-                if (err) { 
+                if (err && err.code != "ESUPERSEDED") { 
                     errorHandler.reportError(err, err.customData);
                 }
                 plugin.once("initWorker", function() {
