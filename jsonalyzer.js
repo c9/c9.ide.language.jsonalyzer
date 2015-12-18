@@ -315,6 +315,10 @@ define(function(require, exports, module) {
                     if (!c9.connected)
                         return plugin.once("initServer", function() { setTimeout(watch, 2000) });
                     console.warn("Did not receive a response from handler call to " + handlerPath + ":" + method);
+                    var err = new Error("Timeout");
+                    err.code = "ETIMEDOUT";
+                    done(err);
+                    done = function() { console.log("Late reply from server:", arguments) };
                 }, timeout);
                 
                 server.callHandler(
@@ -350,7 +354,7 @@ define(function(require, exports, module) {
                     code: err.code,
                 };
                 
-                if (err && err.code != "ESUPERSEDED") { 
+                if (err && ["ESUPERSEDED", "ETIMEDOUT"].indexOf(err.code) === -1) { 
                     errorHandler.reportError(err, err.customData);
                 }
                 plugin.once("initWorker", function() {
