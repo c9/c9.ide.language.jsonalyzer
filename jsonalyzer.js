@@ -53,7 +53,7 @@ define(function(require, exports, module) {
         var server;
         var pendingServerCall;
         var queuedCalls = {};
-        var lastServerCall = Date.now();
+        var lastServerCall = {};
         var serverLoading = false;
         
         var loaded = false;
@@ -261,10 +261,11 @@ define(function(require, exports, module) {
             
             function setupCall() {
                 // Throttle server calls
-                var waitTime = lastServerCall + maxCallInterval - Date.now();
-                if (waitTime > 0)
+                var waitTime = lastServerCall[handlerPath] + maxCallInterval - Date.now();
+                if (waitTime > 0) {
                     return setTimeout(setupCall, waitTime);
-                lastServerCall = Date.now();
+                }
+                lastServerCall[handlerPath] = Date.now();
                 
                 if (useCollab) {
                     var collabDoc = collab.getDocument(filePath);
