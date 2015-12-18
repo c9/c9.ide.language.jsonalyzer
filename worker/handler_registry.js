@@ -26,16 +26,16 @@ module.exports.HandlerRegistry = function() {
             handler.guidName = languages.join("");
             assert(languages && extensions, "Handlers must have a languages and extensions property");
             
-            handler.supportedLanguages = "";
-            handler.supportedExtensions = "";
+            handler.supportedLanguages = "$.";
+            handler.supportedExtensions = "$.";
             handlers.push(handler);
             languages.forEach(function(e) {
                 supportedLanguages += (supportedLanguages ? "|^" : "^") + e;
-                handler.supportedLanguages += (handler.supportedLanguages ? "|^" : "^") + e + "$";
+                handler.supportedLanguages += "|^" + e + "$";
             });
             extensions.forEach(function(e) {
                 supportedExtensions += (supportedExtensions ? "|^" : "^") + e + "$";
-                handler.supportedExtensions += (handler.supportedExtensions ? "|^" : "^") + e + "$";
+                handler.supportedExtensions += "|^" + e + "$";
             });
         },
         
