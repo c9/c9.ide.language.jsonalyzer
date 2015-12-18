@@ -18,6 +18,7 @@ define(function(require, exports, module) {
                 callServer({
                     handlerPath: descriptor.path,
                     maxCallInterval: descriptor.properties.maxCallInterval,
+                    semaphore: handler.$source,
                     filePath: path,
                     method: "analyzeCurrent",
                     args: [path, null, null, options]
