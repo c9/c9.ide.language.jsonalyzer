@@ -1,5 +1,5 @@
 /*global describe it before after beforeEach afterEach */
-"use client";
+"use server";
 
 if (typeof define === "undefined") {
     require("amd-loader");
@@ -12,6 +12,9 @@ define(function(require, exports, module) {
 
 var assert = require("ace/test/assertions");
 var ctags_ex = require("./ctags_ex");
+var worker = require("plugins/c9.ide.language/worker");
+
+worker.$lastWorker = {};
 
 describe("ctags_ex", function(){
 
