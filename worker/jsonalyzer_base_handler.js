@@ -192,7 +192,7 @@ module.exports = {
      */
     $lint: function(linter, args, stdin, options, callback) {
         if (!options)
-            return callback(linter, args, null, null, arguments[2]);
+            return this.$lint(linter, args, null, {}, arguments[2]);
         if (!callback)
             return typeof stdin === "string"
                 ? this.$lint(linter, args, stdin, null, arguments[3])
