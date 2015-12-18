@@ -191,12 +191,11 @@ module.exports = {
      * @param {Number} callback.code
      */
     $lint: function(linter, args, stdin, options, callback) {
-        if (!options)
-            return this.$lint(linter, args, null, {}, arguments[2]);
-        if (!callback)
-            return typeof stdin === "string"
-                ? this.$lint(linter, args, stdin, null, arguments[3])
-                : this.$lint(linter, args, null, arguments[2], arguments[3]);
+        callback = arguments[4] || arguments[3] || arguments[2];
+        options = typeof arguments[3] == "object" && arguments[3]
+            || typeof arguments[2] == "object" && arguments[2];
+        stdin = typeof arguments[2] == "string" && arguments[2];
+
         if (!child_process)
             return callback(new Error("Only implemented for server-side plugins"));
         
