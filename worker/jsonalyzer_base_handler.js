@@ -175,6 +175,10 @@ module.exports = {
      * Invoke a linter using child_process.
      * Only available for server-side plugins.
      * 
+     * As many linters return non-zero a exit code when errors are found,
+     * this function does not return an err for non-zero exits.
+     * It passes an additional argument originalErr for clients interested in those.
+     * 
      * See {@link language.worker_util#execAnalysis} for invoking linters directly from a worker.
      * 
      * @param {String} linter
@@ -188,7 +192,7 @@ module.exports = {
      * @param {Object} callback.err
      * @param {String} callback.stdout
      * @param {String} callback.stderr
-     * @param {Number} callback.code
+     * @param {Number} callback.originalErr
      */
     $lint: function(linter, args, stdin, options, callback) {
         var a = arguments;
@@ -218,7 +222,7 @@ module.exports = {
                         return callback(err);
                     }
                     
-                    callback(null, stdout, stderr, err ? err.code : 0);
+                    callback(null, stdout, stderr, err);
                 }
             );
 

@@ -25,7 +25,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         "gofmt",
         doc ? ["-e"]: ["-e", path],
         doc,
-        function(err, stdout, stderr, code) {
+        function(err, stdout, stderr) {
             if (err) return callback(err);
             
             var markers = [];

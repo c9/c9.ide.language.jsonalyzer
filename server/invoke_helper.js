@@ -63,7 +63,10 @@ handler.$doInvoke = function(path, doc, options, callback) {
             return arg.replace(/\$FILE\b/, path);
         }),
         !options.useTempFile && doc,
-        callback
+        options,
+        function(err, stdout, stderr, originalErr) {
+            callback(err || originalErr, stdout, stderr);
+        }
     );
 };
         
