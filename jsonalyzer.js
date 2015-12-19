@@ -253,6 +253,7 @@ define(function(require, exports, module) {
             var maxCallInterval = event.data.maxCallInterval != null ? event.data.maxCallInterval : 2000;
             var semaphore = event.data.semaphore;
             var timeout = event.data.timeout || 15000;
+            var timeoutWatcher;
             var value;
             var revNum;
             var tries = [];
@@ -311,7 +312,7 @@ define(function(require, exports, module) {
                     running: doCall
                 };
                 
-                var watcher = setTimeout(function watch() {
+                timeoutWatcher = setTimeout(function watch() {
                     if (!c9.connected)
                         return plugin.once("initServer", function() { setTimeout(watch, 2000) });
                     console.warn("Did not receive a response from handler call to " + handlerPath + ":" + method);
@@ -329,20 +330,26 @@ define(function(require, exports, module) {
                         revNum: revNum
                     },
                     function(err, response) {
-                        clearTimeout(watcher);
-                        if (queuedCalls[semaphore]) {
-                            var queued = queuedCalls[semaphore].queued;
-                            delete queuedCalls[semaphore];
-                            queued && queued();
-                        }
                         done(err, response);
                     }
                 );
             }
             
+            var isDone;
             function done(err, response) {
                 if (err && err.code == "EDISCONNECT")
                     return setTimeout(retryConnect, 50); // try again
+                
+                if (isDone)
+                    return;
+                clearTimeout(timeoutWatcher);
+                isDone = true;
+
+                if (queuedCalls[semaphore]) {
+                    var queued = queuedCalls[semaphore].queued;
+                    delete queuedCalls[semaphore];
+                    queued && queued();
+                }
                 
                 var resultArgs = response && response.result || [err];
                 

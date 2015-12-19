@@ -50,12 +50,13 @@ function getClientDoc(path, options, callback) {
 
     var timeout = setTimeout(function() {
         var timeoutError = new Error("Collab server failed to provide document contents");
+        timeoutError.code = "ECOLLAB";
         timeoutError.customData = {
             path: path,
             revNum: options.revNum
         };
         done(timeoutError);
-    }, 20000);
+    }, 15000);
 
     var docId = path.replace(/^\//, "");
     collabServer.getDocument(
