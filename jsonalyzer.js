@@ -303,14 +303,16 @@ define(function(require, exports, module) {
                     err.code = "ESUPERSEDED";
                     return done(err);
                 }
-                if (semaphore && queuedCalls[semaphore]) {
-                    queuedCalls[semaphore].queued && queuedCalls[semaphore].queued(true);
-                    queuedCalls[semaphore].queued = doCall;
+                if (semaphore && queuedCalls[semaphore]) { // previous call already running
+                    var queued = queuedCalls[semaphore].queued;
+                    delete queuedCalls[semaphore];
+                    queued && queued(true); // abort any other queued call
+                    queuedCalls[semaphore] = {
+                        queued: doCall,
+                    };
                     return;
                 }
-                queuedCalls[semaphore] = {
-                    running: doCall
-                };
+                queuedCalls[semaphore] = {};
                 
                 timeoutWatcher = setTimeout(function watch() {
                     if (!c9.connected)
