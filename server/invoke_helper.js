@@ -65,7 +65,7 @@ handler.$doInvoke = function(path, doc, options, callback) {
         options.mode != "tempfile" && doc,
         options,
         function(err, stdout, stderr, originalErr) {
-            callback(err || originalErr, stdout, stderr);
+            callback(err || originalErr, stdout, stderr, Date.now() - start);
         }
     );
 };
