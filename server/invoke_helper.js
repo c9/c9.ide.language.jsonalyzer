@@ -37,7 +37,7 @@ handler.invoke = function(path, doc, ast, options, callback) {
     if (options.cwd && options.cwd[0] != "/")
         options.cwd = workspaceDir + "/" + options.cwd;
     
-    if (!options.useTempFile)
+    if (options.mode !== "tempfile")
         return this.$doInvoke(path, doc, options, callback);
 
     var tempFile = getTempFile() + paths.extname(path);
@@ -62,7 +62,7 @@ handler.$doInvoke = function(path, doc, options, callback) {
         (options.args || []).map(function(arg) {
             return arg.replace(/\$FILE\b/, path);
         }),
-        !options.useTempFile && doc,
+        options.mode != "tempfile" && doc,
         options,
         function(err, stdout, stderr, originalErr) {
             callback(err || originalErr, stdout, stderr);

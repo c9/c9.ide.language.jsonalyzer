@@ -159,7 +159,7 @@ worker.analyze = function(doc, ast, callback, minimalAnalysis) {
         
     fileIndexer.analyzeCurrent(worker.path, fullDoc, ast, {}, function(err, result, imports, markers) {
         if (err)
-            console.error("[jsonalyzer] Warning: could not analyze " + worker.path + ": " + err);
+            console.error("[jsonalyzer] Warning: could not analyze " + worker.path + ": " + (err.stack || err));
             
         // Analyze imports without blocking other analyses
         if (imports && imports.length)
