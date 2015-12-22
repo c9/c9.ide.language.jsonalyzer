@@ -57,6 +57,7 @@ handler.invoke = function(path, doc, ast, options, callback) {
 };
 
 handler.$doInvoke = function(path, doc, options, callback) {
+    var start = Date.now();
     this.$lint(
         options.command,
         (options.args || []).map(function(arg) {
