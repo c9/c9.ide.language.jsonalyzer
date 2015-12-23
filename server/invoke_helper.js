@@ -47,10 +47,10 @@ handler.invoke = function(path, doc, ast, options, callback) {
             err.code = "EFATAL";
             return callback(err);
         }
-        that.$doInvoke(tempFile, doc, options, function(err, stdout, stderr) {
+        that.$doInvoke(tempFile, doc, options, function(err, stdout, stderr, meta) {
             fs.unlink(tempFile, function(err2) {
                 if (err2) console.error(err2);
-                callback(err, stdout, stderr);
+                callback(err, stdout, stderr, meta);
             });
         });
     });

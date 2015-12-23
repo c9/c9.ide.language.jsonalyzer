@@ -216,9 +216,8 @@ function callHandler(handlerPath, method, args, options, callback) {
         }
     }
     
-    function done(err) {
+    function done(/*err, arg... */) {
         isDone = true;
-        if (err) return callback(err);
         
         return callback(
             null,
