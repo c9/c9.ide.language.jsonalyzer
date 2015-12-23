@@ -363,9 +363,6 @@ define(function(require, exports, module) {
                     code: err.code,
                 };
                 
-                if (err && ["ESUPERSEDED", "ETIMEDOUT"].indexOf(err.code) === -1) { 
-                    errorHandler.reportError(err, err.customData);
-                }
                 plugin.once("initWorker", function() {
                     worker.emit(
                         "jsonalyzerCallServerResult",
