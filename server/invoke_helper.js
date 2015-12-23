@@ -9,6 +9,7 @@ define(function(require, exports, module) {
 var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_base_handler");
 var paths = require("path");
 var fs = require("fs");
+var crypto = require("crypto");
 var pathSep = require("path").sep;
 var TEMPDIR = process.env.TMP || process.env.TMPDIR || process.env.TEMP || '/tmp';
 
