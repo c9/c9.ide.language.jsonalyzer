@@ -79,6 +79,8 @@ worker.init = function(callback) {
         }
     });
     worker.sender.on("jsonalyzerUnregister", function(event) {
+        if (window.require)
+            window.require.modules[event.data.modulePath] = null;
         handlers.unregisterHandler(event.data.modulePath);
         worker.sender.emit("jsonalyzerUnregistered", { modulePath: event.data.modulePath });
     });
