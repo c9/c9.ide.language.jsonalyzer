@@ -106,7 +106,6 @@ function memoStrings(json, dictStart, dictLength) {
         dict.dictStart = dictStart;
     }
     
-    dict = dict.slice(dictStart, dictLength);
     var newDictStart = dictLength;
     var dictMap = {};
     dict.forEach(function(value, index) {
