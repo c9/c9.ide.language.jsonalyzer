@@ -98,7 +98,14 @@ function getTempFile() {
 }
 
 var dict = [];
+dict.dictStart = 0;
 function memoStrings(json, dictStart, dictLength) {
+    if (dictStart > dict.dictStart) {
+        for (var i = dict.dictStart; i < dictStart; i++)
+            delete dict[i];
+        dict.dictStart = dictStart;
+    }
+    
     dict = dict.slice(dictStart, dictLength);
     var newDictStart = dictLength;
     var dictMap = {};
