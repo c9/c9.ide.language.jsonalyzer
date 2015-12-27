@@ -151,8 +151,8 @@ worker.onDocumentOpen = function(path, doc, oldPath, callback) {
     fileIndexer.analyzeOthers([path]);
 };
 
-worker.analyze = function(doc, ast, callback, minimalAnalysis) {
-    if (minimalAnalysis && index.get(worker.path) || !worker.path)
+worker.analyze = function(doc, ast, options, callback) {
+    if (options.minimalAnalysis && index.get(worker.path) || !worker.path)
         return callback();
     
     // Ignore embedded languages and just use the full document,
