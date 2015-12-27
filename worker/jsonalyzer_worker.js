@@ -159,7 +159,7 @@ worker.analyze = function(doc, ast, options, callback) {
     // since we can't handle multiple segments in the index atm
     var fullDoc = this.doc.getValue();
         
-    fileIndexer.analyzeCurrent(worker.path, fullDoc, ast, {}, function(err, result, imports, markers) {
+    fileIndexer.analyzeCurrent(worker.path, fullDoc, ast, options, function(err, result, imports, markers) {
         if (err)
             console.error("[jsonalyzer] Warning: could not analyze " + worker.path + ": " + (err.stack || err));
             
