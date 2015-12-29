@@ -16,18 +16,18 @@ module.exports.init = function(_handler) {
     handler = _handler;
 };
 
-module.exports.jumpToDefinition = function(doc, fullAst, pos, options, callback) {
+module.exports.jumpToDefinition = function(doc, fullAst, pos, currentNode, callback) {
     var line = doc.getLine(pos.row);
     var docValue = doc.getValue();
     var identifier = workerUtil.getIdentifier(line, pos.column);
 
     // We don't specify an editor service here, so we bypass caching mechanisms
-    var indexOptions = {};
+    var options = {};
     var that = this;
-    fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, indexOptions, function(err, summary, imports) {
+    fileIndexer.analyzeCurrent(handler.path, docValue, fullAst, options, function(err, summary, imports) {
         if (err) {
             if (err.code === "ESUPERSEDED")
-                return that.jumpToDefinition(doc, fullAst, pos, options, callback);
+                return that.jumpToDefinition(doc, fullAst, pos, currentNode, callback);
             console.error(err);
             return callback(); // can't pass error to this callback
         }

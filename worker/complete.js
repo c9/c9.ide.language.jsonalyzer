@@ -14,8 +14,8 @@ module.exports.init = function(_handler) {
     handler = _handler;
 };
 
-module.exports.complete = function(doc, fullAst, pos, options, callback) {
-    if (options.node && options.node.cons === "PropertyInit") // HACK for javascript
+module.exports.complete = function(doc, fullAst, pos, currentNode, callback) {
+    if (currentNode && currentNode.cons === "PropertyInit") // HACK for javascript
         return callback();
 
     var lines = doc.getAllLines();

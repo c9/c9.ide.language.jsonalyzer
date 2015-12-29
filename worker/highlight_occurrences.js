@@ -15,7 +15,7 @@ module.exports.init = function(_handler) {
     handler = _handler;
 };
 
-module.exports.highlightOccurrences = function(doc, fullAst, pos, options, callback) {
+module.exports.highlightOccurrences = function(doc, fullAst, pos, currentNode, callback) {
     var summary = index.get(handler.path);
     if (!summary)
         return callback(); // we're closed, come back later

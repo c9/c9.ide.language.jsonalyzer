@@ -10,13 +10,13 @@ module.exports.init = function(_handler) {
     handler = _handler;
 };
 
-module.exports.getRefactorings = function(doc, fullAst, pos, options, callback) {
+module.exports.getRefactorings = function(doc, fullAst, pos, currentNode, callback) {
     findEntries(doc, fullAst, pos, function(pos, identifier, hasEntries) {
         callback({ refactorings: hasEntries ? ["renameVariable"] : [] });
     });
 };
 
-module.exports.getRenamePositions = function(doc, fullAst, pos, options, callback) {
+module.exports.getRenamePositions = function(doc, fullAst, pos, currentNode, callback) {
     findEntries(doc, fullAst, pos, function(pos, identifier, hasEntries) {
         if (!hasEntries)
             return callback();

@@ -111,7 +111,7 @@ module.exports.pathForLanguage = function(language, path) {
     return path;
 };
 
-module.exports.analyze = function(path, doc, options, callback) {
+module.exports.analyze = function(path, doc, callback) {
     if (!doc)
         return callback("No contents");
     

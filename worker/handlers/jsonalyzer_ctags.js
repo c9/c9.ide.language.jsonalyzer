@@ -42,7 +42,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         return callback(null, index.get(path));
     if (options.language)
         path = ctags.pathForLanguage(options.language, path);
-    ctags.analyze(path, doc, options, callback);
+    ctags.analyze(path, doc, callback);
 };
 
 handler.analyzeOthers = function(paths, options, callback) {
