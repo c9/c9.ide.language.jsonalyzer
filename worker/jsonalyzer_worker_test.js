@@ -26,10 +26,10 @@ var Document = require("ace/document").Document;
 // Auto-init handler.doc
 var analyzed = 0;
 var realAnalyze = handler.analyze.bind(handler);
-handler.analyze = function(doc, ast, callback) {
+handler.analyze = function(doc, ast, options, callback) {
     handler.doc = typeof doc === "string" ? new Document(doc) : doc;
     analyzed++;
-    realAnalyze(doc, ast, callback);
+    realAnalyze(doc, ast, options, callback);
 };
 
 describe("jsonalyzer handler", function(){
@@ -84,6 +84,7 @@ describe("jsonalyzer handler", function(){
         handler.analyze(
             "class C { void foo() {} void bar() {} }",
             null,
+            {},
             function(err) {
                 assert(!err, err);
                 var result = index.get("/testfile.cs");
@@ -100,6 +101,7 @@ describe("jsonalyzer handler", function(){
         handler.analyze(
             "function javascript() {}",
             null,
+            {},
             function(markers) {
                 assert(!markers, "No markers expected");
                 var result = index.get("/testfile.js");
@@ -129,7 +131,7 @@ describe("jsonalyzer handler", function(){
             new Document("f \nfunction foo() {}"),
             null,
             { row: 0, column: 1 },
-            null,
+            {},
             function(results) {
                 assert(results && results.length > 0);
                 assert.equal(results[0].name, "foo");
@@ -143,7 +145,7 @@ describe("jsonalyzer handler", function(){
             new Document("f function foo() {}"),
             null,
             { row: 0, column: 1 },
-            null,
+            {},
             function(results) {
                 assert(results && results.length > 0);
                 assert.equal(results[0].name, "foo");
@@ -153,13 +155,13 @@ describe("jsonalyzer handler", function(){
     });
     it("doesn't immediately reanalyze when it completes your code", function(done) {
         handler.path = "/testfile.cs";
-        handler.analyze("f \nfunction foo() {}", null, function() {
+        handler.analyze("f \nfunction foo() {}", null, {}, function() {
             var analyzedBefore = analyzed;
             handler.complete(
                 new Document("f \nfunction foo() {}"),
                 null,
                 { row: 0, column: 1 },
-                null,
+                {},
                 function(results) {
                     assert.equal(analyzedBefore, analyzed);
                     done();
@@ -187,14 +189,14 @@ describe("jsonalyzer handler", function(){
         // Update function for second file results
         worker.$lastWorker.completeUpdate = function() {
             handler.complete(
-                new Document(file1.contents), null, file1.cursor, null,
+                new Document(file1.contents), null, file1.cursor, {},
                 onFullComplete
             );
         };
         
         // Trigger on first file
         handler.complete(
-            new Document(file1.contents), null, file1.cursor, null,
+            new Document(file1.contents), null, file1.cursor, {},
             function(results) {
                 // it won't be here yet
                 assert.equal(results.length, 0);
@@ -229,14 +231,14 @@ describe("jsonalyzer handler", function(){
         // Update function for second file results
         worker.$lastWorker.completeUpdate = function() {
             handler.complete(
-                new Document(file1.contents), null, file1.cursor, null,
+                new Document(file1.contents), null, file1.cursor, {},
                 onFullComplete
             );
         };
         
         // Trigger on first file
         handler.complete(
-            new Document(file1.contents), null, file1.cursor, null,
+            new Document(file1.contents), null, file1.cursor, {},
             function(results) {
                 // it won't be here yet
                 assert.equal(results.length, 0);
@@ -250,7 +252,7 @@ describe("jsonalyzer handler", function(){
                 assert(false, "completeUpdate may only be called once");
             };
             handler.complete(
-                new Document(file1.contents), null, file1.cursor, null,
+                new Document(file1.contents), null, file1.cursor, {},
                 function(results) {
                     assert(results && results.length > 0);
                     done();
@@ -278,7 +280,7 @@ describe("jsonalyzer handler", function(){
         
         // Trigger on first file
         handler.jumpToDefinition(
-            new Document(file1.contents), null, file1.cursor, null,
+            new Document(file1.contents), null, file1.cursor, {},
             function(results) {
                 assert(results && results.length, "Results expected: " + JSON.stringify(results));
                 assert.equal(results.length, 1);
@@ -308,7 +310,7 @@ describe("jsonalyzer handler", function(){
         
         // Trigger on first file
         handler.jumpToDefinition(
-            new Document(file1.contents), null, file1.cursor, null,
+            new Document(file1.contents), null, file1.cursor, {},
             function(results) {
                 assert(results, "Results expected");
                 assert.equal(results[0].path, file2.path);
@@ -319,7 +321,7 @@ describe("jsonalyzer handler", function(){
 
                 // Jump again
                 handler.jumpToDefinition(
-                    new Document(file1.contents), null, file1.cursor, null,
+                    new Document(file1.contents), null, file1.cursor, {},
                     function(results) {
                         assert(results, "Results expected");
                         assert.equal(results[0].path, file2.path);
@@ -388,7 +390,7 @@ describe("jsonalyzer handler", function(){
         
         // Trigger on first file
         handler.jumpToDefinition(
-            new Document(file1.contents), null, file1.cursor, null,
+            new Document(file1.contents), null, file1.cursor, {},
             function(results) {
                 assert(results, "Results expected");
                 assert.equal(results[0].icon, "package");
@@ -432,7 +434,7 @@ describe("jsonalyzer handler", function(){
                           function foo() {}"),
             null,
             { row: 0, column: 1 },
-            null,
+            {},
             function(results) {
                 assert(results && results.length > 0);
                 assert.equal(results[0].name, "foo");
@@ -448,7 +450,7 @@ describe("jsonalyzer handler", function(){
                           foo() {}"),
             null,
             { row: 0, column: 1 },
-            null,
+            {},
             function(results) {
                 assert(results && results.length > 0);
                 assert.equal(results[0].name, "foo");
@@ -465,7 +467,7 @@ describe("jsonalyzer handler", function(){
                             return true"),
             null,
             { row: 1, column: 0 },
-            null, // above breakpoint
+            {}, // above breakpoint
             function(results) {
                 assert(results && results.length > 0);
                 assert.equal(results[0].name, "bar");
@@ -483,7 +485,7 @@ describe("jsonalyzer handler", function(){
                             return true"),
             null,
             { row: 1, column: 0 },
-            null, // above breakpoint
+            {}, // above breakpoint
             function(results) {
                 assert(results && results.length > 0);
                 assert.equal(results[0].name, "bar");
@@ -540,6 +542,7 @@ describe("jsonalyzer handler", function(){
         handler.analyze(
             "function phpfun() {}",
             null,
+            {},
             function(markers) {
                 assert(!markers, "No markers expected");
                 var result = index.get("/testfile.php");
@@ -567,6 +570,7 @@ describe("jsonalyzer handler", function(){
                 }\
             });",
             null,
+            {},
             function(markers) {
                 assert(!markers, "No markers expected");
                 var result = index.get("/testfile.js");
@@ -590,7 +594,7 @@ describe("jsonalyzer handler", function(){
         
         handler.path = file1.path;
         handler.getRefactorings(
-            new Document(file1.contents), null, file1.cursor, null,
+            new Document(file1.contents), null, file1.cursor, {},
             function(results) {
                 assert(results.refactorings && results.refactorings.length, "Results expected");
                 done();
@@ -607,7 +611,7 @@ describe("jsonalyzer handler", function(){
         
         handler.path = file1.path;
         handler.getRefactorings(
-            new Document(file1.contents), null, file1.cursor, null,
+            new Document(file1.contents), null, file1.cursor, {},
             function(results) {
                 assert(!results.refactorings || !results.refactorings.length, "No results expected");
                 done();
@@ -624,7 +628,7 @@ describe("jsonalyzer handler", function(){
         
         handler.path = file1.path;
         handler.getRenamePositions(
-            new Document(file1.contents), null, file1.cursor, null,
+            new Document(file1.contents), null, file1.cursor, {},
             function(results) {
                 assert(!results, "No results expected");
                 done();
@@ -649,7 +653,7 @@ describe("jsonalyzer handler", function(){
         
         handler.path = file1.path;
         handler.getRenamePositions(
-            new Document(file1.contents), null, file1.cursor, null,
+            new Document(file1.contents), null, file1.cursor, {},
             function(results) {
                 assert(results);
                 assert.equal(results.length, "Parent".length);
@@ -673,7 +677,7 @@ describe("jsonalyzer handler", function(){
         handler.path = file1.path;
         fileIndexer.analyzeCurrent(file1.path, file1.contents, null, {}, function() {
             handler.highlightOccurrences(
-                new Document(file1.contents), null, file1.cursor, null,
+                new Document(file1.contents), null, file1.cursor, {},
                 function(results) {
                     assert(results);
                     assert.equal(results.markers.length, 2);
@@ -697,7 +701,7 @@ describe("jsonalyzer handler", function(){
         handler.path = file1.path;
         fileIndexer.analyzeCurrent(file1.path, file1.contents, null, {}, function() {
             handler.highlightOccurrences(
-                new Document(file1.contents), null, file1.cursor, null,
+                new Document(file1.contents), null, file1.cursor, {},
                 function(results) {
                     assert(!results, results);
                     done();
@@ -717,7 +721,7 @@ describe("jsonalyzer handler", function(){
         handler.path = file1.path;
         fileIndexer.analyzeCurrent(file1.path, file1.contents, null, {}, function() {
             handler.highlightOccurrences(
-                new Document(file1.contents), null, file1.cursor, null,
+                new Document(file1.contents), null, file1.cursor, {},
                 function(results) {
                     assert(!results, results);
                     done();
@@ -730,6 +734,7 @@ describe("jsonalyzer handler", function(){
         handler.analyze(
             "# hello",
             null,
+            {},
             function(markers) {
                 assert(!markers, "No markers expected");
                 var result = index.get("/testfile.md");
