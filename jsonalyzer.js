@@ -356,7 +356,7 @@ define(function(require, exports, module) {
                 var resultArgs = response && response.result || [err];
                 
                 // Add serializable error argument
-                err = resultArgs[0] || err;
+                err = err || resultArgs[0];
                 resultArgs[0] = err && {
                     message: err.message,
                     stack: err.stack,
