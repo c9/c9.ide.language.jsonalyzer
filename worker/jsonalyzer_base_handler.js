@@ -206,15 +206,14 @@ module.exports = {
         
         options = options || {};
         options.maxBuffer = options.maxBuffer || 200 * 1024;
+        options.env = options.env || {};
+        options.env.PATH = process.platform === "linux"
+            ? "/mnt/shared/bin:" + (options.env.PATH || process.env.PATH)
+            : options.env.path || process.env.PATH;
         
         try {
-            var child = child_process.execFile(linter, args, {
-                    env: {
-                        PATH: process.platform === "linux"
-                            ? "/mnt/shared/bin:" + process.env.PATH
-                            : process.env.PATH
-                    }
-                },
+            var child = child_process.execFile(
+                linter, args, options,
                 function(err, stdout, stderr) {
                     if (err && err.code === "ENOENT") {
                         err = new Error("No " + linter + " installation found");
