@@ -216,7 +216,7 @@ module.exports = {
                 linter, args, options,
                 function(err, stdout, stderr) {
                     if (err && err.code === "ENOENT") {
-                        err = new Error("No " + linter + " installation found");
+                        err = new Error("ENOENT: No " + linter + " installation found");
                         err.code = "EFATAL";
                         return callback(err);
                     }
