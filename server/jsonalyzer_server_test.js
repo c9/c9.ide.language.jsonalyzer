@@ -295,8 +295,8 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                         worker.off("jsonalyzerCallServer", callServer);
                         done();
                     });
-                    tab.editor.ace.selection.setSelectionRange({ start: { row: 0, column: 1 }, end: { row: 1, column: 1 } });
-                    complete.deferredInvoke(true, tab.editor.ace);
+                    tab.editor.ace.selection.setSelectionRange({ start: { row: 1, column: 1 }, end: { row: 1, column: 1 } });
+                    complete.deferredInvoke(false, tab.editor.ace);
                 });
             });
         });
