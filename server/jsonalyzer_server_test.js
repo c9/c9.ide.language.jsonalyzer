@@ -165,6 +165,7 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
         });
         
         describe('ace', function() {
+            this.timeout(30000);
             before(function(done) {
                 apf.config.setProperty("allow-select", false);
                 apf.config.setProperty("allow-blur", false);
@@ -185,7 +186,6 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
             });
             
             describe("analysis", function(){
-                this.timeout(30000);
                 var tab;
                 var session;
                 var worker;
@@ -206,6 +206,7 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                     complete.closeCompletionBox();
                     setTimeout(function() {
                         tabs.openFile("/test_broken.sh", function(err, _tab) {
+                            if (err) return done(err);
                             tab = _tab;
                             session = tab.document.getSession().session;
                             expect(session).to.not.equal(null);
@@ -214,7 +215,7 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                                 done();
                             });
                         });
-                    }, 500);
+                    });
                 });
                 
                 it("shows syntax error markers for shell scripts", function beginTest(done) {
