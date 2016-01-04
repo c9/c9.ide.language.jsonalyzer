@@ -216,11 +216,11 @@ function callHandler(handlerPath, method, args, options, callback) {
         }
     }
     
-    function done(/*err, arg... */) {
+    function done(err/*, arg... */) {
         isDone = true;
         
         return callback(
-            null,
+            err,
             {
                 result: [].slice.apply(arguments),
                 revNum: revNum

@@ -69,23 +69,25 @@ define(function(require, exports, module) {
             // Load worker
             language.registerLanguageHandler(
                 "plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker",
-                function(err, langWorker) {
-                    if (err) {
-                        errorHandler.reportError(err);
-                        return showError("Could not load language worker: " + (err.message | err));
-                    }
-                    loadedWorker = true;
-                    worker = langWorker;
-                    watcher.on("change", onFileChange);
-                    watcher.on("directory", onDirChange);
-                    save.on("afterSave", onFileSave);
-                    c9.on("connect", onOnlineChange);
-                    c9.on("disconnect", onOnlineChange);
-                    worker.on("jsonalyzerCallServer", callServer);
-                    worker.emit("onlinechange", {data: { isOnline: c9.connected }});
-                    emit.sticky("initWorker");
-                    if (warning)
-                        hideError(warning);
+                function(err1, handler) {
+                    language.getWorker(function(err2, langWorker) {
+                        if (err1 || err2) {
+                            errorHandler.reportError(err1 || err2);
+                            return showError("Could not load language worker: " + (err1.message || err1 || err2.message || err2));
+                        }
+                        loadedWorker = true;
+                        worker = langWorker;
+                        watcher.on("change", onFileChange);
+                        watcher.on("directory", onDirChange);
+                        save.on("afterSave", onFileSave);
+                        c9.on("connect", onOnlineChange);
+                        c9.on("disconnect", onOnlineChange);
+                        worker.on("jsonalyzerCallServer", callServer);
+                        worker.emit("onlinechange", {data: { isOnline: c9.connected }});
+                        emit.sticky("initWorker");
+                        if (warning)
+                            hideError(warning);
+                    });
                 }
             );
             setTimeout(function() {
@@ -356,7 +358,7 @@ define(function(require, exports, module) {
                 var resultArgs = response && response.result || [err];
                 
                 // Add serializable error argument
-                err = resultArgs[0] || err;
+                err = err || resultArgs[0];
                 resultArgs[0] = err && {
                     message: err.message,
                     stack: err.stack,
