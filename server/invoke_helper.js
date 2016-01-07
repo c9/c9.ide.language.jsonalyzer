@@ -28,6 +28,7 @@ handler.init = function(options, callback) {
 };
 
 handler.invoke = function(path, doc, ast, options, callback) {
+    options.mode == options.mode || "stdin";
     if (options.overrideLine != null) {
         var lines = doc.toString().split(/\r\n|\n|\r/);
         if (lines[options.overrideLineRow] !== options.overrideLine) {
@@ -38,10 +39,13 @@ handler.invoke = function(path, doc, ast, options, callback) {
     if (options.cwd && options.cwd[0] != "/")
         options.cwd = workspaceDir + "/" + options.cwd;
     
-    if (options.mode !== "tempfile")
+    if (options.mode === "stdin")
         return this.$doInvoke(path, doc, options, callback);
 
-    var tempFile = getTempFile() + paths.extname(path);
+    var tempdir = options.mode === "tempfile"
+        ? TEMPDIR
+        : options.cwd || workspaceDir;
+    var tempFile = getTempFile(tempdir) + paths.extname(path);
     var that = this;
     fs.writeFile(tempFile, doc, "utf8", function(err) {
         if (err) {
@@ -64,7 +68,7 @@ handler.$doInvoke = function(path, doc, options, callback) {
         (options.args || []).map(function(arg) {
             return arg.replace(/\$FILE\b/, path);
         }),
-        options.mode != "tempfile" && doc,
+        options.mode === "stdin" && doc,
         options,
         function(err, stdout, stderr, originalErr) {
             callback(err || originalErr, stdout, stderr, Date.now() - start);
@@ -72,8 +76,8 @@ handler.$doInvoke = function(path, doc, options, callback) {
     );
 };
         
-function getTempFile() {
-    return TEMPDIR + pathSep + "c9_invoke_" + crypto
+function getTempFile(path) {
+    return path + pathSep + ".c9_invoke_" + crypto
         .randomBytes(6)
         .toString("base64")
         .slice(0, 6)
