@@ -35,6 +35,7 @@ define(function(require, exports, module) {
         var collabConnect = imports["collab.connect"];
         var installer = imports.installer;
         var readTabOrFile = imports["language.worker_util_helper"].readTabOrFile;
+        var jsonm = require("lib/jsonm/build/unpacker");
 
         var extendToken = options.extendToken;
         var useCollab = options.useCollab;
@@ -55,6 +56,7 @@ define(function(require, exports, module) {
         var queuedCalls = {};
         var lastServerCall = {};
         var serverLoading = false;
+        var unpacker;
         
         var loaded = false;
         function load() {
@@ -140,6 +142,7 @@ define(function(require, exports, module) {
                                 if (err && err.code === "EEXIST")
                                     err = null;
                                 server = _server;
+                                unpacker = new jsonm.Unpacker();
                                 next(err);
                             }
                         );
@@ -355,25 +358,27 @@ define(function(require, exports, module) {
                     queued && queued();
                 }
                 
-                var resultArgs = response && response.result || [err];
-                
-                // Add serializable error argument
-                err = err || resultArgs[0];
-                resultArgs[0] = err && {
-                    message: err.message,
-                    stack: err.stack,
-                    code: err.code,
-                };
-                
-                plugin.once("initWorker", function() {
-                    worker.emit(
-                        "jsonalyzerCallServerResult",
-                        { data: {
-                            handlerPath: handlerPath,
-                            result: resultArgs,
-                            id: event.data.id
-                        } }
-                    );
+                unpacker.unpack(response && response.result, function(err2, resultArgs) {
+                    resultArgs = resultArgs || [];
+                    
+                    // Add serializable error argument
+                    err = err || err2 || resultArgs[0];
+                    resultArgs[0] = err && {
+                        message: err.message,
+                        stack: err.stack,
+                        code: err.code,
+                    };
+                    
+                    plugin.once("initWorker", function() {
+                        worker.emit(
+                            "jsonalyzerCallServerResult",
+                            { data: {
+                                handlerPath: handlerPath,
+                                result: resultArgs,
+                                id: event.data.id
+                            } }
+                        );
+                    });
                 });
             }
             

@@ -69,6 +69,10 @@ define(function(require, exports, module) {
                 path: "plugins/c9.ide.language.javascript.infer/path",
                 contents: require("text!../c9.ide.language.javascript.infer/path.js")
             },
+            {
+                path: "jsonm/build/packer",
+                contents: require("text!lib/jsonm/build/packer.js")
+            },
         ],
     };
     

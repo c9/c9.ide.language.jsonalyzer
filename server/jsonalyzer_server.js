@@ -11,12 +11,13 @@ var plugins = {
     "c9/assert": assert
 };
 var vfs;
+var server;
+var packer;
 var handlers = {};
 
 module.exports = function(_vfs, options, register) {
     vfs = _vfs;
-    
-    register(null, {
+    server = {
         init: init,
         
         registerHandler: registerHandler,
@@ -26,7 +27,8 @@ module.exports = function(_vfs, options, register) {
         callHandler: callHandler,
         
         getHandlerList: getHandlerList
-    });
+    };
+    register(null, server);
 };
 
 function init(options, callback) {
@@ -113,10 +115,14 @@ function registerHandlers(list, options, callback) {
 }
 
 function registerHandler(handlerPath, contents, options, callback) {
+    options.server = server;
+    options.vfs = vfs;
     loadPlugin(handlerPath, contents, function(err, result) {
         if (err) return callback(err);
         
         handlers[handlerPath] = result;
+        if (handlerPath === "jsonm/build/packer")
+            packer = new result.Packer();
 
         if (!result.init)
             return done();
@@ -219,10 +225,11 @@ function callHandler(handlerPath, method, args, options, callback) {
     function done(err/*, arg... */) {
         isDone = true;
         
-        return callback(
+        var args = [].slice.apply(arguments);
+        callback(
             err,
             {
-                result: [].slice.apply(arguments),
+                result: packer.pack(args, { packStringDepth: 1 }),
                 revNum: revNum
             }
         );
