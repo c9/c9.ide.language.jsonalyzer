@@ -66,7 +66,7 @@ handler.$doInvoke = function(path, doc, options, callback) {
     this.$lint(
         options.command,
         (options.args || []).map(function(arg) {
-            return arg.replace(/\$FILE\b/, path);
+            return String(arg).replace(/\$FILE\b/, path);
         }),
         options.mode === "stdin" && doc,
         options,
