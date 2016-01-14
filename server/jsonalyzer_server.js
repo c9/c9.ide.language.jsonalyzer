@@ -75,8 +75,9 @@ function getClientDoc(path, options, callback) {
                 return done(noResultError);
             }
             
-            if (options.revNum <= result.revNum)
-                return collabServer.getDocument(docId, ["revNum", "contents"], done);
+            if (options.revNum <= result.revNum) {
+                return done(null, result);
+            }
             
             collabServer.emitter.on("afterEditUpdate", function wait(e) {
                 if (e.docId !== docId || e.doc.revNum < options.revNum)
