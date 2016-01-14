@@ -215,8 +215,8 @@ module.exports = {
             var child = child_process.execFile(
                 linter, args, options,
                 function(err, stdout, stderr) {
-                    if (err && err.code === "ENOENT") {
-                        err = new Error("ENOENT: No " + linter + " installation found");
+                    if (err && ["ENOENT", "EACCES"].indexOf(err.code) > -1) {
+                        err = new Error(err.code + ": No " + linter + " installation found");
                         err.code = "EFATAL";
                         return callback(err);
                     }
