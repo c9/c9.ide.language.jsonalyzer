@@ -76,6 +76,8 @@ function getClientDoc(path, options, callback) {
             }
             
             if (options.revNum <= result.revNum) {
+                if (!result.contents)
+                    return done(new Error("Collab server failed to provide document contents"));
                 return done(null, result);
             }
             
