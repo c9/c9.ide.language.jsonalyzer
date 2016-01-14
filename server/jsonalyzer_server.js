@@ -51,7 +51,7 @@ function getClientDoc(path, options, callback) {
         return done(new Error("No collab server found and cannot use local value"));
 
     var timeout = setTimeout(function() {
-        var timeoutError = new Error("Collab server failed to provide document contents");
+        var timeoutError = new Error("Collab server failed to provide document contents in time");
         timeoutError.code = "ECOLLAB";
         timeoutError.customData = {
             path: path,
@@ -63,9 +63,9 @@ function getClientDoc(path, options, callback) {
     var docId = path.replace(/^\//, "");
     collabServer.getDocument(
         docId,
-        /*["revNum"],*/
         function(err, result) {
             if (err) return done(err);
+            
             if (!result) {
                 var noResultError = new Error("Unable to open document or document not found");
                 noResultError.customData = {
@@ -75,8 +75,11 @@ function getClientDoc(path, options, callback) {
                 return done(noResultError);
             }
             
-            if (options.revNum <= result.revNum)
-                return collabServer.getDocument(docId, ["revNum", "contents"], done);
+            if (options.revNum <= result.revNum) {
+                if (!result.contents)
+                    return done(new Error("Collab server failed to provide document contents"));
+                return done(null, result);
+            }
             
             collabServer.emitter.on("afterEditUpdate", function wait(e) {
                 if (e.docId !== docId || e.doc.revNum < options.revNum)
