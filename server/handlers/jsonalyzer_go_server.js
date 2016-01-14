@@ -25,6 +25,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
         "gofmt",
         doc ? ["-e"]: ["-e", path],
         doc,
+        { env: { PATH: process.env.PATH + ":/opt/go/bin" } },
         function(err, stdout, stderr) {
             if (err) return callback(err);
             
