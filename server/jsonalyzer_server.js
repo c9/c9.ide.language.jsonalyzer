@@ -115,6 +115,7 @@ function registerHandlers(list, options, callback) {
 }
 
 function registerHandler(handlerPath, contents, options, callback) {
+    options = options || {};
     options.server = server;
     options.vfs = vfs;
     loadPlugin(handlerPath, contents, function(err, result) {
