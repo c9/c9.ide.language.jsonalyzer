@@ -145,10 +145,11 @@ worker.handlesLanguage = function(language, part) {
 worker.onDocumentOpen = function(path, doc, oldPath, callback) {
     // Check path validity if inited; otherwise do check later
     if (this.$isInited && !this.getHandlerFor(path, null))
-        return;
+        return callback();
     
     // Analyze any opened document to make completions more rapid
     fileIndexer.analyzeOthers([path]);
+    callback();
 };
 
 worker.analyze = function(doc, ast, options, callback) {
