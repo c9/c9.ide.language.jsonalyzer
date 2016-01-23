@@ -77,7 +77,7 @@ handler.$doInvoke = function(path, doc, options, callback) {
 };
         
 function getTempFile(path) {
-    return path + pathSep + ".c9_invoke_" + crypto
+    return path + pathSep + ".~c9_invoke_" + crypto
         .randomBytes(6)
         .toString("base64")
         .slice(0, 6)
