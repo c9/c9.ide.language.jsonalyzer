@@ -209,16 +209,16 @@ module.exports = {
         options.env = options.env || {};
         options.env.PATH = process.platform === "linux"
             ? "/mnt/shared/bin:" + (options.env.PATH || process.env.PATH)
-            : options.env.path || process.env.PATH;
+            : options.env.PATH || process.env.PATH;
         
         try {
             var child = child_process.execFile(
                 linter, args, options,
                 function(err, stdout, stderr) {
                     if (err && ["ENOENT", "EACCES"].indexOf(err.code) > -1) {
-                        err = new Error(err.code + ": No " + linter + " installation found");
+                        err = new Error(err.code + ": No " + (linter === "bash" ? "linter" : linter) + " installation found");
                         err.code = "EFATAL";
-                        return callback(err);
+                        return callback(err, stdout, stderr);
                     }
                     
                     callback(null, stdout, stderr, err);
