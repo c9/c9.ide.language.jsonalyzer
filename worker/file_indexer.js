@@ -58,13 +58,13 @@ indexer.analyzeCurrent = function(path, docValue, ast, options, callback) {
     lastPath = path;
     lastDocValue = docValue;
     
-    var watcher = setTimeout(function() {
-        console.log("Warning: did not receive a response for 20 seconds from " + plugin.$source);
-    }, 20000);
-    
     var language = worker.language;
     var plugin = worker.getHandlerFor(path, language);
     options.language = language;
+    
+    var watcher = setTimeout(function() {
+        console.log("Warning: did not receive a response for 20 seconds from " + plugin.$source);
+    }, 20000);
     return plugin.analyzeCurrent(path, docValue, ast, options, function(err, indexEntry, markers) {
         clearTimeout(watcher);
         if (err) {
