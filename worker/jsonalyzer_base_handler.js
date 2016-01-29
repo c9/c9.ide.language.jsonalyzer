@@ -210,6 +210,9 @@ module.exports = {
         options.env.PATH = process.platform === "linux"
             ? "/mnt/shared/bin:" + (options.env.PATH || process.env.PATH)
             : options.env.PATH || process.env.PATH;
+        for (var key in process.env) {
+            options.env[key] = options.env[key] != null ? options.env[key] : process.env[key];
+        }
         
         try {
             var child = child_process.execFile(
