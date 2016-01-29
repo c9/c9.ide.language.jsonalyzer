@@ -17,6 +17,7 @@ var handlers = {};
 
 module.exports = function(_vfs, options, register) {
     vfs = _vfs;
+    
     server = {
         init: init,
         
@@ -121,6 +122,7 @@ function registerHandler(handlerPath, contents, options, callback) {
     options = options || {};
     options.server = server;
     options.vfs = vfs;
+    options.workspaceDir = vfs.fsOptions.projectDir;
     loadPlugin(handlerPath, contents, function(err, result) {
         if (err) return callback(err);
         
