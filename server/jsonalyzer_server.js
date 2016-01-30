@@ -122,7 +122,8 @@ function registerHandler(handlerPath, contents, options, callback) {
     options = options || {};
     options.server = server;
     options.vfs = vfs;
-    options.workspaceDir = vfs.fsOptions.projectDir;
+    if (vfs.fsOptions)
+        options.workspaceDir = vfs.fsOptions.projectDir;
     loadPlugin(handlerPath, contents, function(err, result) {
         if (err) return callback(err);
         
