@@ -25,6 +25,7 @@ handler.maxCallInterval = handler.CALL_INTERVAL_MIN;
 
 handler.init = function(options, callback) {
     workspaceDir = options.workspaceDir;
+    homeDir = options.homeDir;
     callback();
 };
 
@@ -37,8 +38,9 @@ handler.invoke = function(path, doc, ast, options, callback) {
             doc = lines.join("\n");
         }
     }
-    if (options.cwd && options.cwd[0] != "/")
-        options.cwd = workspaceDir + "/" + options.cwd;
+    if (options.cwd)
+        options.cwd = makeAbsolute(options.cwd);
+    path = makeAbsolute(path);
     
     if (options.mode === "stdin")
         return this.$doInvoke(path, doc, options, callback);
@@ -83,6 +85,14 @@ function getTempFile(path) {
         .toString("base64")
         .slice(0, 6)
         .replace(/[+\/]+/g, "");
+}
+
+function makeAbsolute(path) {
+    if (path[0] === "~")
+        return homeDir + path.substr(1);
+    if (path[0] === "/")
+        return path;
+    return workspaceDir + "/" + path;
 }
 
 });
