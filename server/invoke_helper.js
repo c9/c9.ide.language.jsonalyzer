@@ -15,6 +15,7 @@ var TEMPDIR = process.env.TMP || process.env.TMPDIR || process.env.TEMP || '/tmp
 
 var handler = module.exports = Object.create(PluginBase);
 var workspaceDir;
+var homeDir;
  
 handler.extensions = [];
 
