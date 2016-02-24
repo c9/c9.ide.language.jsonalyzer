@@ -44,7 +44,10 @@ define(function(require, exports, module) {
         var maxTrySeriesTime = options.maxTrySeriesTime || 10000;
         var homeDir = options.homeDir.replace(/\/$/, "");
         var workspaceDir = options.workspaceDir.replace(/\/$/, "");
-        var serverOptions = {};
+        var serverOptions = {
+            workspaceDir: c9.workspaceDir,
+            homeDir: c9.home,
+        };
         for (var o in options) {
             if (typeof options[o] !== "function" && options.hasOwnProperty(o))
                 serverOptions[o] = options[o];
@@ -136,7 +139,7 @@ define(function(require, exports, module) {
                             {
                                 code: require("text!./server/jsonalyzer_server.js"),
                                 extendToken: extendToken,
-                                redefine: !server
+                                redefine: !server,
                             },
                             function onExtendVFS(err, _server) {
                                 if (err && err.code === "EEXIST")
@@ -146,6 +149,9 @@ define(function(require, exports, module) {
                                 next(err);
                             }
                         );
+                    },
+                    function callInit(next) {
+                        server.init(serverOptions, next);
                     },
                     function getLoadedHandlers(next) {
                         server.getHandlerList(function(err, result) {
@@ -183,9 +189,6 @@ define(function(require, exports, module) {
                             clearTimeout(wait);
                             next();
                         });
-                    },
-                    function callInit(next) {
-                        server.init(serverOptions, next);
                     },
                     function notifyWorker(next) {
                         plugin.once("initWorker", function() {

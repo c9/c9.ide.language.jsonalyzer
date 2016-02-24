@@ -11,6 +11,8 @@ var plugins = {
     "c9/assert": assert
 };
 var vfs;
+var workspaceDir;
+var homeDir;
 var server;
 var packer;
 var handlers = {};
@@ -35,6 +37,10 @@ module.exports = function(_vfs, options, register) {
 function init(options, callback) {
     if (!options.useCollab)
         return callback();
+    
+    workspaceDir = options.workspaceDir;
+    homeDir = options.homeDir;
+    console.log("INITING0", workspaceDir, homeDir)
 
     vfs.use("collab", {}, function(err, collab) {
         if (err)
@@ -122,11 +128,9 @@ function registerHandler(handlerPath, contents, options, callback) {
     options = options || {};
     options.server = server;
     options.vfs = vfs;
-    if (vfs.fsOptions) {
-        options.workspaceDir = vfs.fsOptions.projectDir;
-        options.homeDir = vfs.fsOptions.homeDir;
-    }
-    
+    options.workspaceDir = workspaceDir;
+    options.homeDir = homeDir;
+
     loadPlugin(handlerPath, contents, function(err, result) {
         if (err) return callback(err);
         
