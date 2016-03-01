@@ -130,11 +130,13 @@ function registerHandler(handlerPath, contents, options, callback) {
     options.vfs = vfs;
     options.workspaceDir = workspaceDir || vfs.fsOptions.projectDir;
     options.homeDir = homeDir;
+    options.defaultEnv = vfs.fsOptions.defaultEnv || {};
 
     loadPlugin(handlerPath, contents, function(err, result) {
         if (err) return callback(err);
         
         handlers[handlerPath] = result;
+        result.defaultEnv = options.defaultEnv;
         if (handlerPath === "jsonm/build/packer")
             packer = new result.Packer();
 

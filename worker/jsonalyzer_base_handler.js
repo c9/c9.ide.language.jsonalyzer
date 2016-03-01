@@ -207,9 +207,10 @@ module.exports = {
         options = options || {};
         options.maxBuffer = options.maxBuffer || 200 * 1024;
         options.env = options.env || {};
+        var PATH = options.env.PATH || this.defaultEnv && this.defaultEnv.PATH || process.env.PATH;
         options.env.PATH = process.platform === "linux"
-            ? "/mnt/shared/bin:" + (options.env.PATH || process.env.PATH)
-            : options.env.PATH || process.env.PATH;
+            ? "/mnt/shared/bin:" + PATH
+            : PATH;
         for (var key in process.env) {
             options.env[key] = options.env[key] != null ? options.env[key] : process.env[key];
         }
