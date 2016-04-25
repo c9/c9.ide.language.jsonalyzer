@@ -37,7 +37,6 @@ define(function(require, exports, module) {
         var readTabOrFile = imports["language.worker_util_helper"].readTabOrFile;
         var jsonm = require("lib/jsonm/build/unpacker");
 
-        var extendToken = options.extendToken;
         var useCollab = options.useCollab;
         var useSend = !options.useCollab && options.useSend;
         var maxTrySeriesLength = options.maxTrySeriesLength || 3;
@@ -65,6 +64,7 @@ define(function(require, exports, module) {
         function load() {
             if (loaded) return false;
             loaded = true;
+            if (c9.readOnly) return false;
             
             var loadedWorker;
             var warning;
@@ -138,7 +138,6 @@ define(function(require, exports, module) {
                             "jsonalyzer_server",
                             {
                                 code: require("text!./server/jsonalyzer_server.js"),
-                                extendToken: extendToken,
                                 redefine: !server,
                             },
                             function onExtendVFS(err, _server) {
