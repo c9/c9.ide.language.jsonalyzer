@@ -40,6 +40,7 @@ function init(options, callback) {
     
     workspaceDir = options.workspaceDir;
     homeDir = options.homeDir;
+    console.log("INITING0", workspaceDir, homeDir)
 
     vfs.use("collab", {}, function(err, collab) {
         if (err)
