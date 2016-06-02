@@ -8,7 +8,7 @@ define(function(require, exports, module) {
 
 var indexer = module.exports;
 var index = require("./semantic_index");
-var languageWorker = require("plugins/c9.ide.language/worker");
+var languageWorker = require("plugins/c9.ide.language.core/worker");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 var assert = require("c9/assert");
 var worker;
