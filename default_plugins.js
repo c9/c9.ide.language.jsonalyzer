@@ -41,7 +41,7 @@ define(function(require, exports, module) {
         helpersServer: [
             // Mock helpers
             {
-                path: "plugins/c9.ide.language/worker",
+                path: "plugins/c9.ide.language.core/worker",
                 contents: require("text!./server/mock_language_worker.js")
             },
             {

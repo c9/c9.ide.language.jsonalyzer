@@ -6,7 +6,7 @@
  */
 define(function(require, exports, module) {
 
-var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
+var asyncForEach = require("plugins/c9.ide.language.core/worker").asyncForEach;
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 
 // require child_process only if we're server-side

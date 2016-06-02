@@ -11,7 +11,7 @@ var PluginBase = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_b
 var jsonalyzer = require("plugins/c9.ide.language.jsonalyzer/worker/jsonalyzer_worker");
 var ctags = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_ex");
 var ctagsUtil = require("plugins/c9.ide.language.jsonalyzer/worker/ctags/ctags_util");
-var asyncForEach = require("plugins/c9.ide.language/worker").asyncForEach;
+var asyncForEach = require("plugins/c9.ide.language.core/worker").asyncForEach;
 var workerUtil = require("plugins/c9.ide.language/worker_util");
 
 var handler = module.exports = Object.create(PluginBase);

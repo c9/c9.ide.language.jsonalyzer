@@ -12,7 +12,7 @@ define(function(require, exports, module) {
 
 var assert = require("ace/test/assertions");
 var ctags_ex = require("./ctags_ex");
-var worker = require("plugins/c9.ide.language/worker");
+var worker = require("plugins/c9.ide.language.core/worker");
 
 worker.$lastWorker = {};
 

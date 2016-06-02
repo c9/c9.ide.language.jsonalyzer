@@ -7,9 +7,8 @@
 define(function(require, exports, module) {
 
 var baseLanguageHandler = require("plugins/c9.ide.language/base_handler");
-var languageWorker = require("plugins/c9.ide.language/worker");
+var languageWorker = require("plugins/c9.ide.language.core/worker");
 var index = require("./semantic_index");
-var assert = require("c9/assert");
 var jumptodef = require("./jumptodef");
 var complete = require("./complete");
 var outline = require("./outline");
@@ -105,7 +104,7 @@ worker.init = function(callback) {
 };
 
 worker.loadPlugin = function(modulePath, contents, callback) {
-    // This follows the same approach as c9.ide.language/worker.register();
+    // This follows the same approach as c9.ide.language.core/worker.register();
     // see the comments there for more background.
     if (contents) {
         contents = contents.replace(/^(define\()(function|["'])/m, function(_, def, arg1) {

@@ -15,7 +15,7 @@ define(function(require, exports, module) {
 var assert = require("ace/test/assertions");
 var async = require("async");
 var workerUtil = require("plugins/c9.ide.language/worker_util");
-var worker = require("plugins/c9.ide.language/worker");
+var worker = require("plugins/c9.ide.language.core/worker");
 var handler = require("./jsonalyzer_worker");
 var index = require("./semantic_index");
 var plugins = require("../default_plugins");
