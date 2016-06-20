@@ -58,9 +58,10 @@ handler.invoke = function(path, doc, ast, options, callback) {
         that.$doInvoke(tempFile, doc, options, done);
         
         function done(err, stdout, stderr, meta) {
+            callback(err, stdout, stderr, meta);
+            
             fs.unlink(tempFile, function(err2) {
-                if (err2) console.error(err2);
-                callback(err, stdout, stderr, meta);
+                if (err2) console.error("Error during cleanup:", err2);
             });
         }
     });
