@@ -158,6 +158,7 @@ worker.analyze = function(doc, ast, options, callback) {
     // Ignore embedded languages and just use the full document,
     // since we can't handle multiple segments in the index atm
     var fullDoc = this.doc.getValue();
+    this.language = this.doc.$language;
         
     fileIndexer.analyzeCurrent(worker.path, fullDoc, ast, options, function(err, result, imports, markers) {
         if (err)

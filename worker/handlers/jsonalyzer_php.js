@@ -34,8 +34,7 @@ var handler = module.exports = Object.create(PluginBase);
 
 handler.languages = ["php"];
 
-// TODO remove this when syntax_detector doesn't automatically change top syntax to html:
-handler.extensions = ["php", "php3", "php4", "php5", "module"];
+handler.extensions = ["php"];
 
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     if (doc === "")
