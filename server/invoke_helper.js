@@ -53,14 +53,17 @@ handler.invoke = function(path, doc, ast, options, callback) {
     fs.writeFile(tempFile, doc, "utf8", function(err) {
         if (err) {
             err.code = "EFATAL";
-            return callback(err);
+            return done(err);
         }
-        that.$doInvoke(tempFile, doc, options, function(err, stdout, stderr, meta) {
+        that.$doInvoke(tempFile, doc, options, done);
+        
+        function done(err, stdout, stderr, meta) {
+            callback(err, stdout, stderr, meta);
+            
             fs.unlink(tempFile, function(err2) {
-                if (err2) console.error(err2);
-                callback(err, stdout, stderr, meta);
+                if (err2) console.error("Error during cleanup:", err2);
             });
-        });
+        }
     });
 };
 
