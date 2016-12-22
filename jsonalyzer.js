@@ -348,6 +348,8 @@ define(function(require, exports, module) {
             function done(err, response) {
                 if (err && err.code == "EDISCONNECT")
                     return setTimeout(retryConnect, 50); // try again
+                if (err && err.code == "ECOLLAB")
+                    console.error(err);
                 
                 if (isDone)
                     return;
