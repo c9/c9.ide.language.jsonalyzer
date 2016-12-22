@@ -349,7 +349,7 @@ define(function(require, exports, module) {
                 if (err && err.code == "EDISCONNECT")
                     return setTimeout(retryConnect, 50); // try again
                 if (err && err.code == "ECOLLAB")
-                    console.error(err);
+                    errorHandler.reportError(err);
                 
                 if (isDone)
                     return;
