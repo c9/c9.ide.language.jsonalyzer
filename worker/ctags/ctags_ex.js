@@ -7,7 +7,7 @@
 define(function(require, exports, module) {
 
 // TODO: don't include this directly in packed worker
-var ctags = require("./ctags");
+var ctags = require("./ctags.min");
 
 var util = require("./ctags_util");
 
