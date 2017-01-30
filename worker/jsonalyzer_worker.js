@@ -18,7 +18,7 @@ var scopeAnalyzer = require('plugins/c9.ide.language.javascript/scope_analyzer')
 var directoryIndexer = require("./directory_indexer");
 var fileIndexer = require("./file_indexer");
 var ctagsUtil = require("./ctags/ctags_util");
-var ctagsEx =  require("./ctags/ctags_ex");
+var ctagsEx = require("./ctags/ctags_ex");
 var HandlerRegistry = require("./handler_registry").HandlerRegistry;
 var ServerHandlerWrapper = require("./server_handler_wrapper").ServerHandlerWrapper;
 require("treehugger/traverse"); // add traversal methods

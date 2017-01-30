@@ -16,7 +16,7 @@ var worker = require("plugins/c9.ide.language.core/worker");
 
 worker.$lastWorker = {};
 
-describe("ctags_ex", function(){
+describe("ctags_ex", function() {
 
     it("can parse simple .js", function(done) {
         var contents = "function hello() {}\nfunction thar() {}";

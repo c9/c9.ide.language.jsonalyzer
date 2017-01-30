@@ -63,33 +63,33 @@ var CTAGS_OPTIONS = [
  * functions (i.e., they use parantheses + comma separated arguments).
  */
 var LANGUAGES = module.exports.LANGUAGES = [
-    { guessFargs: true,  extensions: ["as"], name: "actionscript" },
+    { guessFargs: true, extensions: ["as"], name: "actionscript" },
     { guessFargs: false, extensions: ["asm", "a"], name: "assembly_x86" },
-    { guessFargs: true,  extensions: ["sh"], name: "sh" },
-    { guessFargs: true,  extensions: ["js"], name: "javascript" },
-    { guessFargs: true,  extensions: ["html"], name: "html" },
-    { guessFargs: true,  extensions: ["coffee"], name: "coffee" },
-    { guessFargs: true,  extensions: ["bas"] },
-    { guessFargs: true,  extensions: ["asp"] },
-    { guessFargs: true,  extensions: ["cpp", "c", "cc", "cxx", "h", "hh", "hpp"], name: "c_cpp" },
-    { guessFargs: true,  extensions: ["cs"], name: "csharp" },
+    { guessFargs: true, extensions: ["sh"], name: "sh" },
+    { guessFargs: true, extensions: ["js"], name: "javascript" },
+    { guessFargs: true, extensions: ["html"], name: "html" },
+    { guessFargs: true, extensions: ["coffee"], name: "coffee" },
+    { guessFargs: true, extensions: ["bas"]},
+    { guessFargs: true, extensions: ["asp"]},
+    { guessFargs: true, extensions: ["cpp", "c", "cc", "cxx", "h", "hh", "hpp"], name: "c_cpp" },
+    { guessFargs: true, extensions: ["cs"], name: "csharp" },
     { guessFargs: false, extensions: ["e", "ge"], extractDocs: false, name: "eiffel" },
-    { guessFargs: true,  extensions: ["erl", "hrl"], name: "erlang" },
-    { guessFargs: false, extensions: ["f", "for", "ftn", "f77", "f90", "f95"] }, // Fortran
-    { guessFargs: true,  extensions: ["lisp", "cl", "lsp"] },
-    { guessFargs: true,  extensions: ["lua"], name: "lua" },
+    { guessFargs: true, extensions: ["erl", "hrl"], name: "erlang" },
+    { guessFargs: false, extensions: ["f", "for", "ftn", "f77", "f90", "f95"]}, // Fortran
+    { guessFargs: true, extensions: ["lisp", "cl", "lsp"]},
+    { guessFargs: true, extensions: ["lua"], name: "lua" },
     { guessFargs: false, extensions: ["cob"], name: "cobol" },
-    { guessFargs: true,  extensions: ["pas", "p"], name: "pascal" },
-    { guessFargs: true,  extensions: ["scm", "sm", "scheme", "oak"], name: "scheme" },
-    { guessFargs: true,  extensions: ["pl", "pm"], name: "perl" },
+    { guessFargs: true, extensions: ["pas", "p"], name: "pascal" },
+    { guessFargs: true, extensions: ["scm", "sm", "scheme", "oak"], name: "scheme" },
+    { guessFargs: true, extensions: ["pl", "pm"], name: "perl" },
     { guessFargs: false, extensions: ["prolog"], name: "prolog" },
     { guessFargs: false, extensions: ["ltx", "tex", "bib", "sty", "cls", "clo"], name: "latex" },
-    { guessFargs: true,  extensions: ["php", "php3", "phtml", "inc"], name: "php" },
-    { guessFargs: true,  extensions: ["py"], name: "python" },
-    { guessFargs: false, extensions: ["y", "ym"] },
-    { guessFargs: true,  extensions: ["java"], name: "java" },
-    { guessFargs: true,  extensions: ["rb", "ru"], name: "ruby" },
-    { guessFargs: true,  extensions: ["ss"] }
+    { guessFargs: true, extensions: ["php", "php3", "phtml", "inc"], name: "php" },
+    { guessFargs: true, extensions: ["py"], name: "python" },
+    { guessFargs: false, extensions: ["y", "ym"]},
+    { guessFargs: true, extensions: ["java"], name: "java" },
+    { guessFargs: true, extensions: ["rb", "ru"], name: "ruby" },
+    { guessFargs: true, extensions: ["ss"]}
 ];
 
 module.exports.languages = LANGUAGES.map(function(l) { return l.name; }).filter(Boolean);

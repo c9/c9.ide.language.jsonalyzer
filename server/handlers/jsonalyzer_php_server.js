@@ -49,7 +49,7 @@ handler.analyzeCurrent = function(path, doc, ast, options, callback) {
                 markers.push({
                     pos: { sl: parseInt(row, 10) - 1 },
                     message: message,
-                    level: message.match(/error/) ? "error": "warning"
+                    level: message.match(/error/) ? "error" : "warning"
                 });
             });
             

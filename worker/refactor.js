@@ -12,7 +12,7 @@ module.exports.init = function(_handler) {
 
 module.exports.getRefactorings = function(doc, fullAst, pos, options, callback) {
     findEntries(doc, fullAst, pos, function(pos, identifier, hasEntries) {
-        callback({ refactorings: hasEntries ? ["renameVariable"] : [] });
+        callback({ refactorings: hasEntries ? ["renameVariable"] : []});
     });
 };
 
@@ -20,7 +20,7 @@ module.exports.getRenamePositions = function(doc, fullAst, pos, options, callbac
     findEntries(doc, fullAst, pos, function(pos, identifier, hasEntries) {
         if (!hasEntries)
             return callback();
-        workerUtil.getTokens(doc, [identifier, identifier+"()"], function(err, results) {
+        workerUtil.getTokens(doc, [identifier, identifier + "()"], function(err, results) {
             if (err)
                 callback();
             callback({

@@ -32,7 +32,7 @@ handler.analyze = function(doc, ast, options, callback) {
     realAnalyze(doc, ast, options, callback);
 };
 
-describe("jsonalyzer handler", function(){
+describe("jsonalyzer handler", function() {
     this.timeout(30000);
     
     before(function(callback) {

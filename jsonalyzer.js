@@ -88,7 +88,7 @@ define(function(require, exports, module) {
                         c9.on("connect", onOnlineChange);
                         c9.on("disconnect", onOnlineChange);
                         worker.on("jsonalyzerCallServer", callServer);
-                        worker.emit("onlinechange", {data: { isOnline: c9.connected }});
+                        worker.emit("onlinechange", { data: { isOnline: c9.connected }});
                         emit.sticky("initWorker");
                         if (warning)
                             hideError(warning);
@@ -217,17 +217,17 @@ define(function(require, exports, module) {
         
         function onFileChange(event) {
             if (worker)
-                worker.emit("filechange", {data: {path: event.path}});
+                worker.emit("filechange", { data: { path: event.path }});
         }
         
         function onFileSave(event) {
             if (!event.silentsave)
-                worker.emit("filechange", {data: {path: event.path, value: event.document && event.document.value, isSave: true}});
+                worker.emit("filechange", { data: { path: event.path, value: event.document && event.document.value, isSave: true }});
         }
         
         function onDirChange(event) {
             if (worker)
-                worker.emit("dirchange", {data: event});
+                worker.emit("dirchange", { data: event });
         }
         
         function onOnlineChange(event) {
@@ -235,7 +235,7 @@ define(function(require, exports, module) {
                 if (err)
                     console.error(err);
                     
-                worker.emit("onlinechange", {data: { isOnline: c9.connected }});
+                worker.emit("onlinechange", { data: { isOnline: c9.connected }});
             });
             
             if (!c9.connected) {
@@ -323,12 +323,12 @@ define(function(require, exports, module) {
                 
                 timeoutWatcher = setTimeout(function watch() {
                     if (!c9.connected)
-                        return plugin.once("initServer", function() { setTimeout(watch, 2000) });
+                        return plugin.once("initServer", function() { setTimeout(watch, 2000); });
                     console.warn("Did not receive a response from handler call to " + handlerPath + ":" + method);
                     var err = new Error("Timeout");
                     err.code = "ETIMEDOUT";
                     done(err);
-                    done = function() { console.log("Late reply from server:", arguments) };
+                    done = function() { console.log("Late reply from server:", arguments); };
                 }, timeout);
                 
                 server.callHandler(
@@ -380,7 +380,7 @@ define(function(require, exports, module) {
                                 handlerPath: handlerPath,
                                 result: resultArgs,
                                 id: event.data.id
-                            } }
+                            }}
                         );
                     });
                 });
@@ -520,7 +520,7 @@ define(function(require, exports, module) {
             });
         }
         
-        plugin.on("load", function(){
+        plugin.on("load", function() {
             load();
         });
         

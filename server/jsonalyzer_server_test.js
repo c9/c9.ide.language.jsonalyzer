@@ -178,13 +178,13 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
       
                 document.body.style.marginBottom = "33%";
                 
-                tabs.on("ready", function(){
+                tabs.on("ready", function() {
                     tabs.getPanes()[0].focus();
                     done();
                 });
             });
             
-            describe("analysis", function(){
+            describe("analysis", function() {
                 var tab;
                 var session;
                 var worker;
@@ -294,7 +294,7 @@ require(["lib/architect/architect", "lib/chai/chai", "plugins/c9.ide.language/co
                         worker.off("jsonalyzerCallServer", callServer);
                         done();
                     });
-                    tab.editor.ace.selection.setSelectionRange({ start: { row: 1, column: 1 }, end: { row: 1, column: 1 } });
+                    tab.editor.ace.selection.setSelectionRange({ start: { row: 1, column: 1 }, end: { row: 1, column: 1 }});
                     complete.deferredInvoke(false, tab.editor.ace);
                 });
             });

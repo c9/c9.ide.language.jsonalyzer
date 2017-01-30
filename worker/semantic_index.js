@@ -117,7 +117,7 @@ index.flattenSummary = function(summary, result) {
     
     var that = this;
     if (Array.isArray(summary)) {
-        summary.forEach(function(e) { that.flattenSummary(e, result)});
+        summary.forEach(function(e) { that.flattenSummary(e, result);});
         return result;
     }
     if (!summary || !summary.properties)
@@ -237,7 +237,7 @@ index.markStale = function(handler) {
         if (summaries[s].handler === handler)
             summaries[s].stale = true;
     }
-}
+};
 
 index.$clearAccessedSinceGC = function() {
     accessedSinceGC = {};

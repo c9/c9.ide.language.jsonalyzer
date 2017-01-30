@@ -23,9 +23,9 @@ handler.init = function(options, callback) {
 handler.analyzeCurrent = function(path, doc, ast, options, callback) {
     this.$lint(
         "gofmt",
-        doc ? ["-e"]: ["-e", path],
+        doc ? ["-e"] : ["-e", path],
         doc,
-        { env: { PATH: process.env.PATH + ":/opt/go/bin" } },
+        { env: { PATH: process.env.PATH + ":/opt/go/bin" }},
         function(err, stdout, stderr) {
             if (err) return callback(err);
             

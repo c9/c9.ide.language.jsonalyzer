@@ -203,7 +203,7 @@ function consumeQueue() {
         clearTimeout(queueWatcher);
         var callbacks = queueCallbacks;
         queueCallbacks = [];
-        callbacks.forEach(function(callback) { callback() });
+        callbacks.forEach(function(callback) { callback(); });
     }
     
     function updateQueueWatcher() {
