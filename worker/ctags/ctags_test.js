@@ -8,7 +8,7 @@ if (typeof define === "undefined") {
 
 var fs = require("fs");
 var assert = require("assert");
-var ctags = require("./ctags.js");
+var ctags = require("./ctags.min.js");
 
 function parseFile(filenameWithPath) {
     var content = fs.readFileSync(filenameWithPath);
